@@ -5,3 +5,7 @@
 - [Game BoyTM CPU Manual](http://marc.rawer.de/Gameboy/Docs/GBCPUman.pdf)
 
 - [pandocs](https://gbdev.io/pandocs/Specifications.html)
+
+## How to build
+1. git clone https://github.com/Microsoft/vcpkg.git
+2. cmake -B [build directory] -S . -DCMAKE_TOOLCHAIN_FILE=[path to vcpkg]/scripts/buildsystems/vcpkg.cmake

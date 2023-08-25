@@ -4,7 +4,10 @@ project(RM_GB_Emu)
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
-#add_subdirectory(Src)
+find_package(GTest CONFIG REQUIRED)
+find_package(restclient-cpp CONFIG REQUIRED)
+
 add_subdirectory(Tests)
+add_subdirectory(src)
 
 add_executable(RM_GB_Emu_App main.cpp)
