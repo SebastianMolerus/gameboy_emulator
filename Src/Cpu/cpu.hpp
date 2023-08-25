@@ -36,8 +36,7 @@ public:
     void fetch();
     void decode();
     void excute();
-
-
+    
     Registers registers;
 };
 

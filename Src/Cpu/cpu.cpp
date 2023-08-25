@@ -1,14 +1,17 @@
 #include "cpu.hpp"
 
 
-void Cpu::fetch() {
+void Cpu::fetch() 
+{
 
 }
 
-void Cpu::decode() {
+void Cpu::decode() 
+{
 
 }
 
-void Cpu::excute() {
+void Cpu::excute() 
+{
 
 }
