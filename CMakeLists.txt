@@ -11,3 +11,5 @@ add_subdirectory(Tests)
 add_subdirectory(src)
 
 add_executable(RM_GB_Emu_App main.cpp)
+
+target_link_libraries(RM_GB_Emu_App PRIVATE CartridgeLoader Cpu)
