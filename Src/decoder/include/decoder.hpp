@@ -10,8 +10,14 @@
 struct Operand
 {
     std::string name;
-    unsigned bytes;
-    bool immediate;
+
+    // default value (-1) as "not SET"
+    // 1 as TRUE
+    // 0 as FALSE
+    int8_t bytes{-1};
+    int8_t immediate{-1};
+    int8_t increment{-1};
+    int8_t decrement{-1};
 };
 
 struct Opcode

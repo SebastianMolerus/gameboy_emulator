@@ -6,10 +6,6 @@
 #include <unordered_map>
 #include <format>
 
-// TODO remove when done
-// typedef std::vector< string, Value > Object;
-// typedef std::vector< Value > Array;
-
 using namespace json_spirit;
 using namespace RestClient;
 
@@ -21,11 +17,18 @@ struct Decoder_exception : public std::exception
     using std::exception::exception;
 };
 
+void check_type(Value const &val, Value_type expected_type, std::string error_msg)
+{
+    if (val.type() != expected_type)
+        throw Decoder_exception(error_msg.c_str());
+}
+
 const char *DIFFERENT_JSON_FORMAT_EXPECTED = "Expected different Json format";
 
 const std::string OPCODE_MBR_MNEMONIC = "mnemonic";
 const std::string OPCODE_MBR_BYTES = "bytes";
 const std::string OPCODE_MBR_CYCLES = "cycles";
+const std::string OPCODE_MBR_OPERANDS = "operands";
 const std::string OPCODE_MBR_IMMEDIATE = "immediate";
 
 std::unordered_map<std::string, Opcode> OPCODE_CACHE;
@@ -58,6 +61,58 @@ void fill_cycles(Pair const &cycles, Opcode &new_opcode, std::string const &opco
     }
 }
 
+void fill_operands(Pair const &operands, Opcode &new_opcode, std::string const &opcode_hex)
+{
+    if (operands.value_.type() != Value_type::array_type)
+        throw Decoder_exception(std::format("Expected to have 'array' operands for {}", opcode_hex).c_str());
+
+    Array const arr = operands.value_.get_array();
+    for (auto const &object : arr)
+    {
+        if (object.type() != Value_type::obj_type)
+            throw Decoder_exception(std::format("Expected to have 'object' inside operand for {}", opcode_hex).c_str());
+
+        Operand new_operand;
+        // { name, immediate} , {name, bytes, immediate}
+        for (auto const &operand : object.get_obj())
+        {
+            if (operand.name_ == "name")
+            {
+                check_type(operand.value_, Value_type::str_type,
+                           "Expected that type of operand name is string, opcode =" + opcode_hex);
+                new_operand.name = operand.value_.get_str();
+            }
+            else if (operand.name_ == "immediate")
+            {
+                check_type(operand.value_, Value_type::bool_type,
+                           "Expected that type of operand immediate is bool, opcode =" + opcode_hex);
+                new_operand.immediate = operand.value_.get_bool();
+            }
+            else if (operand.name_ == "bytes")
+            {
+                check_type(operand.value_, Value_type::int_type,
+                           "Expected that type of operand bytes is int, opcode =" + opcode_hex);
+                new_operand.bytes = operand.value_.get_int();
+            }
+            else if (operand.name_ == "increment")
+            {
+                check_type(operand.value_, Value_type::bool_type,
+                           "Expected that type of operand increment is bool, opcode =" + opcode_hex);
+                new_operand.increment = operand.value_.get_bool();
+            }
+            else if (operand.name_ == "decrement")
+            {
+                check_type(operand.value_, Value_type::bool_type,
+                           "Expected that type of operand decrement is bool, opcode =" + opcode_hex);
+                new_operand.decrement = operand.value_.get_bool();
+            }
+            else
+                throw Decoder_exception(std::format("Unknown operand for {}", opcode_hex).c_str());
+        }
+        new_opcode.operands.push_back(std::move(new_operand));
+    }
+}
+
 void fill_immediate(Pair const &immediate, Opcode &new_opcode, std::string const &opcode_hex)
 {
     if (immediate.value_.type() != Value_type::bool_type)
@@ -82,8 +137,11 @@ void process_opcode(json_spirit::Pair const &opcode)
             fill_bytes(member, new_opcode, opcode.name_);
         else if (member.name_ == OPCODE_MBR_CYCLES)
             fill_cycles(member, new_opcode, opcode.name_);
+        else if (member.name_ == OPCODE_MBR_OPERANDS)
+            fill_operands(member, new_opcode, opcode.name_);
         else if (member.name_ == OPCODE_MBR_IMMEDIATE)
             fill_immediate(member, new_opcode, opcode.name_);
+        // FLAGS HERE
     }
 
     if (auto [_, result] = OPCODE_CACHE.insert_or_assign(opcode.name_, new_opcode); !result)
