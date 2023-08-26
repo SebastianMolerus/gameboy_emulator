@@ -18,7 +18,7 @@ struct Opcode
 {
     std::string mnemonic;
     unsigned bytes;
-    unsigned cycles;
+    std::vector<unsigned> cycles;
     std::vector<Operand> operands;
     std::array<std::string, 4> flags;
     bool immediate;

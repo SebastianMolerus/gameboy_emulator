@@ -25,21 +25,36 @@ const char *DIFFERENT_JSON_FORMAT_EXPECTED = "Expected different Json format";
 
 const std::string OPCODE_MBR_MNEMONIC = "mnemonic";
 const std::string OPCODE_MBR_BYTES = "bytes";
+const std::string OPCODE_MBR_CYCLES = "cycles";
 
 std::unordered_map<std::string, Opcode> OPCODE_CACHE;
 
-void fill_mnemonic(Pair const &mnemonic, Opcode &new_opcode)
+void fill_mnemonic(Pair const &mnemonic, Opcode &new_opcode, std::string const &opcode_hex)
 {
     if (mnemonic.value_.type() != Value_type::str_type)
-        throw Decoder_exception(std::format("Expected to have 'string' mnemonic for {}", mnemonic.name_).c_str());
+        throw Decoder_exception(std::format("Expected to have 'string' mnemonic for {}", opcode_hex).c_str());
     new_opcode.mnemonic = mnemonic.value_.get_str();
 }
 
-void fill_bytes(Pair const &bytes, Opcode &new_opcode)
+void fill_bytes(Pair const &bytes, Opcode &new_opcode, std::string const &opcode_hex)
 {
     if (bytes.value_.type() != Value_type::int_type)
-        throw Decoder_exception(std::format("Expected to have 'int' bytes for {}", bytes.name_).c_str());
+        throw Decoder_exception(std::format("Expected to have 'int' bytes for {}", opcode_hex).c_str());
     new_opcode.bytes = bytes.value_.get_int();
+}
+
+void fill_cycles(Pair const &cycles, Opcode &new_opcode, std::string const &opcode_hex)
+{
+    if (cycles.value_.type() != Value_type::array_type)
+        throw Decoder_exception(std::format("Expected to have 'array' cycles for {}", opcode_hex).c_str());
+    Array const arr = cycles.value_.get_array();
+
+    for (auto const &val : arr)
+    {
+        if (val.type() != Value_type::int_type)
+            throw Decoder_exception(std::format("Expected to have 'int' cycles for {} ", opcode_hex).c_str());
+        new_opcode.cycles.push_back(val.get_int());
+    }
 }
 
 void process_opcode(json_spirit::Pair const &opcode)
@@ -53,9 +68,11 @@ void process_opcode(json_spirit::Pair const &opcode)
     for (auto const &member : opcode_members)
     {
         if (member.name_ == OPCODE_MBR_MNEMONIC)
-            fill_mnemonic(member, new_opcode);
+            fill_mnemonic(member, new_opcode, opcode.name_);
         else if (member.name_ == OPCODE_MBR_BYTES)
-            fill_bytes(member, new_opcode);
+            fill_bytes(member, new_opcode, opcode.name_);
+        else if (member.name_ == OPCODE_MBR_CYCLES)
+            fill_cycles(member, new_opcode, opcode.name_);
     }
 
     if (auto [_, result] = OPCODE_CACHE.insert_or_assign(opcode.name_, new_opcode); !result)

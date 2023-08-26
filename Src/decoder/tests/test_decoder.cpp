@@ -2,8 +2,6 @@
 
 #include <decoder.hpp>
 
-#include <memory>
-
 // https://gbdev.io/gb-opcodes/Opcodes.json
 namespace
 {
@@ -50,4 +48,21 @@ TEST_F(DecoderTests, bytes)
 
     get_opcode("0x06", op);
     ASSERT_EQ(op.bytes, 2);
+}
+
+TEST_F(DecoderTests, cycles)
+{
+    Opcode op;
+    get_opcode("0x01", op);
+    ASSERT_EQ(op.cycles[0], 12);
+
+    get_opcode("0x07", op);
+    ASSERT_EQ(op.cycles[0], 4);
+
+    get_opcode("0x0A", op);
+    ASSERT_EQ(op.cycles[0], 8);
+
+    get_opcode("0x20", op);
+    ASSERT_EQ(op.cycles[0], 12);
+    ASSERT_EQ(op.cycles[1], 8);
 }
