@@ -24,14 +24,22 @@ struct Decoder_exception : public std::exception
 const char *DIFFERENT_JSON_FORMAT_EXPECTED = "Expected different Json format";
 
 const std::string OPCODE_MBR_MNEMONIC = "mnemonic";
+const std::string OPCODE_MBR_BYTES = "bytes";
 
 std::unordered_map<std::string, Opcode> OPCODE_CACHE;
 
 void fill_mnemonic(Pair const &mnemonic, Opcode &new_opcode)
 {
     if (mnemonic.value_.type() != Value_type::str_type)
-        throw Decoder_exception(std::format("Expected to have string mnemonic for {}", mnemonic.name_).c_str());
+        throw Decoder_exception(std::format("Expected to have 'string' mnemonic for {}", mnemonic.name_).c_str());
     new_opcode.mnemonic = mnemonic.value_.get_str();
+}
+
+void fill_bytes(Pair const &bytes, Opcode &new_opcode)
+{
+    if (bytes.value_.type() != Value_type::int_type)
+        throw Decoder_exception(std::format("Expected to have 'int' bytes for {}", bytes.name_).c_str());
+    new_opcode.bytes = bytes.value_.get_int();
 }
 
 void process_opcode(json_spirit::Pair const &opcode)
@@ -46,6 +54,8 @@ void process_opcode(json_spirit::Pair const &opcode)
     {
         if (member.name_ == OPCODE_MBR_MNEMONIC)
             fill_mnemonic(member, new_opcode);
+        else if (member.name_ == OPCODE_MBR_BYTES)
+            fill_bytes(member, new_opcode);
     }
 
     if (auto [_, result] = OPCODE_CACHE.insert_or_assign(opcode.name_, new_opcode); !result)
