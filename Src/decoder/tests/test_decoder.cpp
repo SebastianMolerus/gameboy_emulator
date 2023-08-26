@@ -66,3 +66,19 @@ TEST_F(DecoderTests, cycles)
     ASSERT_EQ(op.cycles[0], 12);
     ASSERT_EQ(op.cycles[1], 8);
 }
+
+TEST_F(DecoderTests, immediate)
+{
+    Opcode op;
+    get_opcode("0x0A", op);
+    ASSERT_FALSE(op.immediate);
+
+    get_opcode("0x2A", op);
+    ASSERT_FALSE(op.immediate);
+
+    get_opcode("0x0F", op);
+    ASSERT_TRUE(op.immediate);
+
+    get_opcode("0x1F", op);
+    ASSERT_TRUE(op.immediate);
+}

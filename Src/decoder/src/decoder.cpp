@@ -26,6 +26,7 @@ const char *DIFFERENT_JSON_FORMAT_EXPECTED = "Expected different Json format";
 const std::string OPCODE_MBR_MNEMONIC = "mnemonic";
 const std::string OPCODE_MBR_BYTES = "bytes";
 const std::string OPCODE_MBR_CYCLES = "cycles";
+const std::string OPCODE_MBR_IMMEDIATE = "immediate";
 
 std::unordered_map<std::string, Opcode> OPCODE_CACHE;
 
@@ -57,6 +58,14 @@ void fill_cycles(Pair const &cycles, Opcode &new_opcode, std::string const &opco
     }
 }
 
+void fill_immediate(Pair const &immediate, Opcode &new_opcode, std::string const &opcode_hex)
+{
+    if (immediate.value_.type() != Value_type::bool_type)
+        throw Decoder_exception(std::format("Expected to have 'bool' immediate for {}", opcode_hex).c_str());
+
+    new_opcode.immediate = immediate.value_.get_bool();
+}
+
 void process_opcode(json_spirit::Pair const &opcode)
 {
     if (opcode.value_.type() != Value_type::obj_type)
@@ -73,6 +82,8 @@ void process_opcode(json_spirit::Pair const &opcode)
             fill_bytes(member, new_opcode, opcode.name_);
         else if (member.name_ == OPCODE_MBR_CYCLES)
             fill_cycles(member, new_opcode, opcode.name_);
+        else if (member.name_ == OPCODE_MBR_IMMEDIATE)
+            fill_immediate(member, new_opcode, opcode.name_);
     }
 
     if (auto [_, result] = OPCODE_CACHE.insert_or_assign(opcode.name_, new_opcode); !result)
