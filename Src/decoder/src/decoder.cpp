@@ -1,6 +1,5 @@
 #include <decoder.hpp>
 
-#include <restclient-cpp/restclient.h>
 #include <json_spirit/json_spirit.h>
 
 #include <filesystem>

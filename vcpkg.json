@@ -1,7 +1,6 @@
 {
     "dependencies": [
         "gtest",
-        "restclient-cpp",
         "json-spirit"
     ]
 }
