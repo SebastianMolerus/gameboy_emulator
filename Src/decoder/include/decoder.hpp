@@ -1,8 +1,6 @@
 #ifndef DECODER_HPP
 #define DECODER_HPP
 
-#include <string>
-#include <vector>
 #include <array>
 
 /* DECODER API */

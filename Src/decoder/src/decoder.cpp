@@ -7,7 +7,6 @@
 #include <string_view>
 
 using namespace json_spirit;
-using namespace RestClient;
 
 namespace
 {

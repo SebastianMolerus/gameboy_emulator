@@ -4,7 +4,13 @@ find_library(js-var json_spirit)
 add_library(json_spirit STATIC IMPORTED)
 set_property(TARGET json_spirit PROPERTY IMPORTED_LOCATION ${js-var})
 
-target_link_libraries(decoder PRIVATE restclient-cpp json_spirit)
+find_path(json_spirit_header json_spirit
+          PATHS ${CMAKE_BINARY_DIR}/vcpkg_installed)
+
+set_property(TARGET json_spirit PROPERTY INTERFACE_INCLUDE_DIRECTORIES
+                                         ${json_spirit_header})
+
+target_link_libraries(decoder PRIVATE json_spirit)
 
 target_include_directories(
   decoder PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_LIST_DIR}/include>)
