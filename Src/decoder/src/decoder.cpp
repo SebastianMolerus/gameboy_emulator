@@ -25,6 +25,8 @@ constexpr std::array<const char *, 28> OPERANDS_STR{"$00", "$08", "$10", "$18", 
                                                     "B",   "BC",  "C",   "D",   "DE",  "E",   "H",   "HL",  "L", "NC",
                                                     "NZ",  "SP",  "Z",   "a16", "a8",  "e8",  "n16", "n8"};
 
+constexpr std::array<const char *, 7> FLAGS_STR{"Z", "N", "H", "C", "0", "1", "-"};
+
 std::array<Opcode, 256> OPCODES_CACHE;
 
 char const *OPCODE_MBR_MNEMONIC = "mnemonic";
@@ -32,6 +34,7 @@ char const *OPCODE_MBR_BYTES = "bytes";
 char const *OPCODE_MBR_CYCLES = "cycles";
 char const *OPCODE_MBR_OPERANDS = "operands";
 char const *OPCODE_MBR_IMMEDIATE = "immediate";
+char const *OPCODE_MBR_FLAGS = "flags";
 
 void fill_mnemonic(Pair const &mnemonic, Opcode &new_opcode)
 {
@@ -103,6 +106,30 @@ void fill_immediate(Pair const &immediate, Opcode &new_opcode)
     new_opcode.immediate = immediate.value_.get_bool();
 }
 
+void fill_flags(Pair const &flags, Opcode &new_opcode)
+{
+    auto find_flag = [](std::string_view to_find) {
+        auto result = std::find(FLAGS_STR.begin(), FLAGS_STR.end(), to_find);
+        assert(result != FLAGS_STR.end());
+        return *result;
+    };
+
+    Object const &obj = flags.value_.get_obj();
+    for (auto const &[name, value] : obj)
+    {
+        if (name == "Z")
+            new_opcode.flags[0] = find_flag(value.get_str());
+        else if (name == "N")
+            new_opcode.flags[1] = find_flag(value.get_str());
+        else if (name == "H")
+            new_opcode.flags[2] = find_flag(value.get_str());
+        else if (name == "C")
+            new_opcode.flags[3] = find_flag(value.get_str());
+        else
+            assert(false);
+    }
+}
+
 // {"0x01", Value}
 void process_opcode(json_spirit::Pair const &opcode)
 {
@@ -122,7 +149,10 @@ void process_opcode(json_spirit::Pair const &opcode)
             fill_operands(member, new_opcode);
         else if (member.name_ == OPCODE_MBR_IMMEDIATE)
             fill_immediate(member, new_opcode);
-        // FLAGS HERE
+        else if (member.name_ == OPCODE_MBR_FLAGS)
+            fill_flags(member, new_opcode);
+        else
+            assert(false);
     }
     ++hex;
 }

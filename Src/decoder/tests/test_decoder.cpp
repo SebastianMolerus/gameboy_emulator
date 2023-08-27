@@ -170,3 +170,34 @@ TEST_F(DecoderTests, operands_D)
     ASSERT_EQ(op3.decrement, -1);
     ASSERT_EQ(op3.bytes, 1);
 }
+
+TEST_F(DecoderTests, flags)
+{
+    Opcode op = get_opcode(0xF1);
+
+    ASSERT_EQ(op.flags[0], "Z");
+    ASSERT_EQ(op.flags[1], "N");
+    ASSERT_EQ(op.flags[2], "H");
+    ASSERT_EQ(op.flags[3], "C");
+
+    op = get_opcode(0xF8);
+
+    ASSERT_EQ(op.flags[0], "0");
+    ASSERT_EQ(op.flags[1], "0");
+    ASSERT_EQ(op.flags[2], "H");
+    ASSERT_EQ(op.flags[3], "C");
+
+    op = get_opcode(0x01);
+
+    ASSERT_EQ(op.flags[0], "-");
+    ASSERT_EQ(op.flags[1], "-");
+    ASSERT_EQ(op.flags[2], "-");
+    ASSERT_EQ(op.flags[3], "-");
+
+    op = get_opcode(0x04);
+
+    ASSERT_EQ(op.flags[0], "Z");
+    ASSERT_EQ(op.flags[1], "0");
+    ASSERT_EQ(op.flags[2], "H");
+    ASSERT_EQ(op.flags[3], "-");
+}

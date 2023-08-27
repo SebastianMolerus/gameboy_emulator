@@ -23,6 +23,7 @@ struct Opcode
     uint8_t bytes;
     std::array<uint8_t, 2> cycles{0xFF, 0xFF};
     std::array<Operand, 3> operands;
+    // Z, N, H, C
     std::array<const char *, 4> flags;
     bool immediate;
 };
