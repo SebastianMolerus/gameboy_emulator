@@ -9,8 +9,7 @@
 
 struct Operand
 {
-    std::string name;
-
+    const char *name{};
     // default value (-1) as "not SET"
     // 1 as TRUE
     // 0 as FALSE
@@ -22,17 +21,17 @@ struct Operand
 
 struct Opcode
 {
-    std::string mnemonic;
-    unsigned bytes;
-    std::vector<unsigned> cycles;
-    std::vector<Operand> operands;
-    std::array<std::string, 4> flags;
+    const char *mnemonic;
+    uint8_t bytes;
+    std::array<uint8_t, 2> cycles{0xFF, 0xFF};
+    std::array<Operand, 3> operands;
+    std::array<const char *, 4> flags;
     bool immediate;
 };
 
 // Call before any of get_opcode call
 bool load_opcodes() noexcept;
 
-bool get_opcode(std::string opcode_hex, Opcode &opcode) noexcept;
+Opcode &get_opcode(uint8_t opcode_hex) noexcept;
 
 #endif
