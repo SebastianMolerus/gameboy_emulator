@@ -3,6 +3,9 @@
 #include <filesystem>
 #include <span>
 
-bool load(std::filesystem::path &rPathToRom, std::span<char> buffer);
+namespace CartridgeLoader 
+{
+    bool load(std::filesystem::path &path_to_rom, std::span<uint8_t> buffer);
+}
 
 #endif /* CARTRIDGELOADER_HPP */ 

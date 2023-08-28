@@ -28,7 +28,7 @@ Or configure `settings.json` file
 
     "clang-format.executable": "clang-format",
     "clang-format.style": "file",
-    "clang-format.fallbackStyle": "Microsoft",
+    "clang-format.fallbackStyle": "microsoft",
     "clang-format.formatOnSave": true,
     "clang-format.formatOnType": true,
     "clang-format.arguments": [
