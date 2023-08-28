@@ -2,6 +2,7 @@
 #define DECODER_HPP
 
 #include <array>
+#include <cstdint>
 
 /* DECODER API */
 

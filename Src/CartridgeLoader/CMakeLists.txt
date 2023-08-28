@@ -1,2 +1,0 @@
-add_library(CartridgeLoader STATIC cartridgeloader.cpp)
-target_include_directories(CartridgeLoader INTERFACE ${CMAKE_CURRENT_LIST_DIR})

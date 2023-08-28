@@ -1,4 +1,3 @@
-#include "src/Cpu/Cpu.hpp"
 #include <iostream>
 
 using namespace std;
@@ -16,7 +15,5 @@ static void title()
 int main()
 {
     title();
-    Cpu cpu;
-    cout << "Register A: " << (int)cpu.registers.A << endl;
     return 0;
 }

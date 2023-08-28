@@ -1,6 +1,5 @@
 #include "cpu.hpp"
 
-
 void Cpu::fetch() 
 {
 
