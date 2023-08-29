@@ -1,9 +1,9 @@
 #ifndef CPU_HPP
 #define CPU_HPP
 
-#include <stack>
 #include <array>
 #include <cstdint>
+#include <stack>
 
 struct Cpu
 {
@@ -21,19 +21,19 @@ struct Cpu
         Flag F{};     // Flag register
 
         // BC
-        uint16_t BC {0};
-        uint8_t *C = (uint8_t*)&BC;
-        uint8_t *B = (((uint8_t*)&BC) +1);
-        
+        uint16_t BC{0};
+        uint8_t *C = (uint8_t *)&BC;
+        uint8_t *B = (((uint8_t *)&BC) + 1);
+
         // DE
-        uint16_t DE {0};
-        uint8_t *E = (uint8_t*)&DE;
-        uint8_t *D = (((uint8_t*)&DE) +1);
-        
+        uint16_t DE{0};
+        uint8_t *E = (uint8_t *)&DE;
+        uint8_t *D = (((uint8_t *)&DE) + 1);
+
         // HL
-        uint16_t HL {0};
-        uint8_t *L = (uint8_t*)&HL;
-        uint8_t *H = (((uint8_t*)&HL) +1);
+        uint16_t HL{0};
+        uint8_t *L = (uint8_t *)&HL;
+        uint8_t *H = (((uint8_t *)&HL) + 1);
 
         // Stack Pointer
         uint16_t SP{0};
@@ -43,7 +43,7 @@ struct Cpu
 
     Registers registers;
     std::stack<uint8_t> stack;
-    std::array<uint8_t, 1024*256>memory;
+    std::array<uint8_t, 1024 * 256> memory;
 
     void reset();
     void clear_flags();
