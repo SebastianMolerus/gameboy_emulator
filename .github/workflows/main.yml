@@ -11,13 +11,13 @@ jobs:
     env:
       VCPKG_ROOT: 'C:\vcpkg'
     steps:
-      - name: Setup Vcpkg
-        uses: friendlyanon/setup-vcpkg@v1
-        with: { committish: 2cf957350da28ad032178a974607f59f961217d9 }
       - name: Checkout repo
         uses: actions/checkout@v3
         with:
          fetch-depth: '2'   
+      - name: Setup Vcpkg
+        uses: friendlyanon/setup-vcpkg@v1
+        with: { committish: 2cf957350da28ad032178a974607f59f961217d9 }
       - name: CMake Configure
         run: cmake -B build -D "CMAKE_TOOLCHAIN_FILE=${{env.VCPKG_ROOT}}/scripts/buildsystems/vcpkg.cmake"
       - name: CMake Build
