@@ -11,8 +11,6 @@ jobs:
     env:
       VCPKG_ROOT: 'C:\vcpkg'
     steps:
-      - name: Workspace
-        run: echo ${{ github.workspace }}
       - name: Checkout repo
         uses: actions/checkout@v3
         with:
