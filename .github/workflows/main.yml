@@ -7,10 +7,11 @@ on:
 
 jobs:
   build:
-    runs-on: windows-2019, ubuntu-18.04
+    runs-on: windows-2019
     env:
       vcpkgDirectory: '${{ github.workspace }}/vcpkg'
     steps:
+      - name: Install CMake
       - uses: lukka/get-cmake@latest
       - name: Checkout repo
         uses: actions/checkout@v3
