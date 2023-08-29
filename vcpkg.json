@@ -1,6 +1,5 @@
 {
     "dependencies": [
-        "gtest",
-        "json-spirit"
+        "gtest"
     ]
 }
