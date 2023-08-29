@@ -4,10 +4,13 @@ on:
   branches:
     - main
  workflow_dispatch:
-
 jobs:
   build:
-    runs-on: windows-2019
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [windows-2019]
+        configuration: [Debug, Release]
     env:
       VCPKG_ROOT: 'C:\vcpkg'
     steps:
@@ -15,11 +18,13 @@ jobs:
         uses: actions/checkout@v3
         with:
          fetch-depth: '2'   
+      - name: Setup Ninja
+        uses: ashutoshvarma/setup-ninja@master
       - name: Setup Vcpkg
         uses: friendlyanon/setup-vcpkg@v1
         with: { committish: 2cf957350da28ad032178a974607f59f961217d9 }
       - name: CMake Configure
-        run: cmake -S ${{github.workspace}} -B ${{github.workspace}}/build -D "CMAKE_TOOLCHAIN_FILE=${{env.VCPKG_ROOT}}/scripts/buildsystems/vcpkg.cmake"
+        run: cmake -S ${{github.workspace}} -B ${{github.workspace}}/build -G Ninja -D "CMAKE_TOOLCHAIN_FILE=${{env.VCPKG_ROOT}}/scripts/buildsystems/vcpkg.cmake" -DCMAKE_BUILD_TYPE:STRING=${{ matrix.configuration }}
       - name: CMake Build
         run: cmake --build ${{github.workspace}}/build
          
