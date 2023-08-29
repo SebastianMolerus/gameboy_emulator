@@ -10,11 +10,11 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [windows-2019]
+        os: [windows-2019, ubuntu-latest]
         configuration: [Debug, Release]
         compiler: [clang]
-    env:
-      VCPKG_ROOT: 'C:\vcpkg'
+    #env:
+      #VCPKG_ROOT: 'C:\vcpkg'
     steps:
       - name: Checkout repo
         uses: actions/checkout@v3
