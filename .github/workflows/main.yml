@@ -21,22 +21,28 @@ jobs:
         uses: rlalik/setup-cpp-compiler@master
         with:
           compiler: clang-latest
+          
       - name: Use compiler
         shell: bash
         env:
             CC: ${{ steps.install_cc.outputs.cc }}
             CXX: ${{ steps.install_cc.outputs.cxx }}
+            
       - name: Checkout repo
         uses: actions/checkout@v3
         with:
          fetch-depth: '2'   
+         
       - name: Setup Ninja
         uses: ashutoshvarma/setup-ninja@master
+        
       - name: Setup Vcpkg
         uses: friendlyanon/setup-vcpkg@v1
         with: { committish: 2cf957350da28ad032178a974607f59f961217d9 }
+        
       - name: CMake Configure
         run: cmake -S ${{github.workspace}} -B ${{github.workspace}}/build -G Ninja -D "CMAKE_TOOLCHAIN_FILE=${{env.VCPKG_ROOT}}/scripts/buildsystems/vcpkg.cmake" -DCMAKE_BUILD_TYPE:STRING=${{ matrix.configuration }} -DCMAKE_CXX_COMPILER=${{env.CXX}} -DCMAKE_C_COMPILER=${{env.CC}}
+      
       - name: CMake Build
         run: cmake --build ${{github.workspace}}/build
          
