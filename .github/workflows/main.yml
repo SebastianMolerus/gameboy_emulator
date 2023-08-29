@@ -16,6 +16,6 @@ jobs:
         with:
          fetch-depth: '2'   
       - name: Run CMake with manifest mode vcpkg
-        run: cmake -B build -D "CMAKE_TOOLCHAIN_FILE=$VCPKG_ROOT/scripts/buildsystems/vcpkg.cmake"
+        run: cmake -B build -D "CMAKE_TOOLCHAIN_FILE=${{env.VCPKG_ROOT}}/scripts/buildsystems/vcpkg.cmake"
          
       
