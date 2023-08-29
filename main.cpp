@@ -1,7 +1,7 @@
-// #include "cartridge_loader.hpp"
-// #include "cpu.hpp"
-// #include <cstdint>
-// #include <filesystem>
+#include "cartridge_loader.hpp"
+#include "cpu.hpp"
+#include <cstdint>
+#include <filesystem>
 #include <iostream>
 
 using namespace std;
