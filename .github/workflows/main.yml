@@ -11,8 +11,8 @@ jobs:
     env:
       vcpkgDirectory: '${{ github.workspace }}/vcpkg'
     steps:
-      - name: Install CMake
-      - uses: lukka/get-cmake@latest
+      - name: Setup vcpkg
+        uses: lukka/run-vcpkg@v11
       - name: Checkout repo
         uses: actions/checkout@v3
         with:
