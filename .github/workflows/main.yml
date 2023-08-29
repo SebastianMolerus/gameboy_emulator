@@ -19,7 +19,7 @@ jobs:
         uses: friendlyanon/setup-vcpkg@v1
         with: { committish: 2cf957350da28ad032178a974607f59f961217d9 }
       - name: CMake Configure
-        run: cmake -B build -D "CMAKE_TOOLCHAIN_FILE=${{env.VCPKG_ROOT}}/scripts/buildsystems/vcpkg.cmake"
+        run: cmake -B build -G Ninja -D "CMAKE_TOOLCHAIN_FILE=${{env.VCPKG_ROOT}}/scripts/buildsystems/vcpkg.cmake"
       - name: CMake Build
         run: cmake --build ${{github.workspace}}/build --target all
          
