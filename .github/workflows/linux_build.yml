@@ -1,0 +1,31 @@
+name: linux_build
+on:
+ push:
+  branches:
+    - main
+ workflow_dispatch:
+jobs:
+  build:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest]
+        configuration: [Debug, Release]
+        compiler: [gcc]
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v3
+        with:
+         fetch-depth: '2'   
+      - name: Setup Ninja
+        uses: ashutoshvarma/setup-ninja@master
+      - name: Setup Vcpkg
+        uses: friendlyanon/setup-vcpkg@v1
+        with: { committish: 2cf957350da28ad032178a974607f59f961217d9 }
+      - name: CMake Configure
+        run: cmake -S ${{github.workspace}} -B ${{github.workspace}}/build -G Ninja -D "CMAKE_TOOLCHAIN_FILE=${{env.VCPKG_ROOT}}/scripts/buildsystems/vcpkg.cmake" -DCMAKE_BUILD_TYPE:STRING=${{ matrix.configuration }} -DCMAKE_CXX_COMPILER=${{ matrix.compiler }} -DCMAKE_C_COMPILER=${{ matrix.compiler }}
+      - name: CMake Build
+        run: cmake --build ${{github.workspace}}/build
+         
+      
