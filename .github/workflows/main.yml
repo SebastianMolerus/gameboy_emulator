@@ -1,4 +1,4 @@
-name: build_project
+name: windows_build
 on:
  push:
   branches:
@@ -10,7 +10,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [windows-2019, ubuntu-latest]
+        os: [windows-2019]
         configuration: [Debug, Release]
         compiler: [clang]
     #env:
