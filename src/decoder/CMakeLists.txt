@@ -1,11 +1,29 @@
 add_library(decoder src/decoder.cpp)
 
-find_library(js-var json_spirit)
-add_library(json_spirit STATIC IMPORTED)
-set_property(TARGET json_spirit PROPERTY IMPORTED_LOCATION ${js-var})
+# Add Json-Spirit
+add_library(json_spirit SHARED IMPORTED)
 
-find_path(json_spirit_header json_spirit
-          PATHS ${CMAKE_BINARY_DIR}/vcpkg_installed)
+set(packages_path ${VCPKG_INSTALLED_DIR}/${VCPKG_TARGET_TRIPLET})
+
+if(NOT EXISTS ${packages_path})
+  message(FATAL_ERROR "Vcpkg dependecy path doesn't exist.")
+endif()
+
+if(WIN32)
+  set_property(TARGET json_spirit PROPERTY IMPORTED_IMPLIB
+                                           ${packages_path}/lib/json_spirit.lib)
+  set_property(TARGET json_spirit PROPERTY IMPORTED_LOCATION
+                                           ${packages_path}/bin/json_spirit.dll)
+endif(WIN32)
+
+if(UNIX)
+  set_property(TARGET json_spirit PROPERTY IMPORTED_IMPLIB
+                                           ${packages_path}/lib/json_spirit.o)
+  set_property(TARGET json_spirit PROPERTY IMPORTED_LOCATION
+                                           ${packages_path}/bin/json_spirit.so)
+endif(UNIX)
+
+find_path(json_spirit_header json_spirit PATHS ${packages_path})
 
 set_property(TARGET json_spirit PROPERTY INTERFACE_INCLUDE_DIRECTORIES
                                          ${json_spirit_header})
