@@ -48,6 +48,9 @@ struct Cpu
     void reset();
     void clear_flags();
     uint8_t fetch_instruction(uint16_t program_counter);
+
+    // EXAMPLE
+    void adc(uint8_t opcode);
 };
 
 #endif
