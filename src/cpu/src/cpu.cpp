@@ -72,15 +72,16 @@ void Cpu::adc(uint8_t opcode)
         pReg = registers.L;
         break;
     default:
+        break;
         // memory load pointed by HL
         // pReg = read_adress(registers.HL) //read byte
     }
 
     uint16_t result16 = registers.A + *pReg + carry_value;
-    if (result16 & 0x100 == 1)
-    {
-        // SET CARRY FLAG
-        registers.F.c = true;
-    }
+    // if (result16 & 0x100 == 1)
+    // {
+    //     // SET CARRY FLAG
+    //     registers.F.c = true;
+    // }
     registers.A = result16 * 0x00FF;
 }
