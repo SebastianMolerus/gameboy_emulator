@@ -9,11 +9,8 @@ jobs:
   build:
     runs-on: windows-2019
     env:
-      vcpkgDirectory: '${{ github.workspace }}/vcpkg'
+      VCPKG_ROOT: 'C:\vcpkg'
     steps:
-      - name: Setup Vcpkg
-        uses: friendlyanon/setup-vcpkg@v1
-        with: { committish: 2cf957350da28ad032178a974607f59f961217d9 }
       - name: Checkout repo
         uses: actions/checkout@v3
         with:
