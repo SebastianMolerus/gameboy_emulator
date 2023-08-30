@@ -27,7 +27,7 @@ find_path(json_spirit_header json_spirit PATHS ${packages_path})
 set_property(TARGET json_spirit PROPERTY INTERFACE_INCLUDE_DIRECTORIES
                                          ${json_spirit_header})
 
-target_link_libraries(decoder PRIVATE json_spirit)
+target_link_libraries(decoder PRIVATE json_spirit common)
 
 target_include_directories(
   decoder PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_LIST_DIR}/include>)

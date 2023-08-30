@@ -1,67 +1,115 @@
 #include "cpu.hpp"
+#include <common.hpp>
+#include <decoder.hpp>
+
+#include <algorithm>
+#include <cassert>
+#include <functional>
 
 namespace
 {
-uint8_t read_byte(const uint16_t address, uint8_t *memory)
+
+typedef union {
+    uint16_t u16;
+    struct
+    {
+        uint8_t lo;
+        uint8_t hi;
+    };
+} Register_u16;
+
+struct
 {
-    return memory[address];
+    Register_u16 AF{0x0000};
+    Register_u16 BC{0x0000};
+    Register_u16 DE{0x0000};
+    Register_u16 HL{0x0000};
+    Register_u16 SP{0x0000};
+    Register_u16 PC{0x0000};
+
+    uint32_t cycles{0};
+} cpu_data;
+
+bool fetch_instruction(std::span<uint8_t> program, uint8_t &opcode_hex)
+{
+    if (cpu_data.PC.u16 >= program.size())
+        return false;
+
+    opcode_hex = program[cpu_data.PC.u16];
+    return true;
 }
 
-uint16_t read_word(const uint16_t address, uint8_t *memory)
+void ld(Opcode const &op)
 {
-    uint8_t hi = memory[address + 1];
-    uint8_t lo = memory[address];
-    return (hi << 8) | lo;
+    // fake one
+    cpu_data.BC.u16 = 0xCCDD;
 }
 
-void write_byte(const uint16_t address, uint8_t *memory, uint8_t data)
+void adc(Opcode const &op)
 {
-    memory[address] = data;
+    // fake one
+    cpu_data.BC.u16 = 0xAABB;
 }
 
-void write_word(const uint16_t address, uint8_t *memory, uint8_t data)
+using mnemonic_func = std::pair<const char *, std::function<void(Opcode const &)>>;
+std::array<mnemonic_func, 2> instruction_set{std::make_pair(MNEMONICS_STR[0], adc),
+                                             std::make_pair(MNEMONICS_STR[26], ld)};
+
+void exec(Opcode const &op)
 {
-    uint8_t hi = (data >> 8) & 0xFF;
-    uint8_t lo = data & 0xFF;
-    memory[address] = lo;
-    memory[address + 1] = hi;
+    auto result = std::find_if(instruction_set.cbegin(), instruction_set.cend(),
+                               [&op](mnemonic_func const &item) { return item.first == op.mnemonic; });
+    assert(result != instruction_set.cend());
+    std::invoke(result->second, op);
 }
 
 } // namespace
 
-Cpu::Cpu()
+namespace cpu
 {
-    reset();
+
+uint16_t AF()
+{
+    return cpu_data.AF.u16;
+}
+uint16_t BC()
+{
+    return cpu_data.BC.u16;
+}
+uint16_t DE()
+{
+    return cpu_data.DE.u16;
+}
+uint16_t HL()
+{
+    return cpu_data.HL.u16;
+}
+uint16_t SP()
+{
+    return cpu_data.SP.u16;
+}
+uint16_t PC()
+{
+    return cpu_data.PC.u16;
 }
 
-void Cpu::reset()
+void process(std::span<uint8_t> program)
 {
-    clear_flags();
-    A = 0;
-    BC.u16 = 0;
-    DE.u16 = 0;
-    HL.u16 = 0;
-    cycles = 0;
-    PC = 0;
-    SP = 0;
-
-    while (stack.size() != 0)
-        stack.pop();
-
-    memory.fill(0);
+    bool static result{load_opcodes()};
+    assert(result);
+    uint8_t opcode_hex;
+    while (fetch_instruction(program, opcode_hex))
+    {
+        Opcode const &op = get_opcode(opcode_hex);
+        cpu_data.PC.u16 += op.bytes;
+        exec(op);
+    }
 }
 
-void Cpu::clear_flags()
+void reset()
 {
-    Flag.c = Flag.h = Flag.n = Flag.z = false;
+    cpu_data.AF.u16 = cpu_data.BC.u16 = cpu_data.DE.u16 = cpu_data.HL.u16 = cpu_data.SP.u16 = cpu_data.PC.u16 = 0x0000;
+    cpu_data.cycles = 0;
 }
 
-uint8_t Cpu::fetch_instruction(const uint16_t program_counter)
-{
-    return memory[program_counter];
-}
-
-void Cpu::process()
-{
-    uint8_t raw_opcode_byte = fetch_instruction(PC);
-}
+} // namespace cpu

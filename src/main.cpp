@@ -21,6 +21,5 @@ void title()
 
 int main()
 {
-    title();
     return 0;
 }
