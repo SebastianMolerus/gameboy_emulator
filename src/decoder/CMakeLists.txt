@@ -17,8 +17,9 @@ if(WIN32)
 endif(WIN32)
 
 if(UNIX)
-  set_property(TARGET json_spirit PROPERTY IMPORTED_LOCATION
-                                           ${packages_path}/lib/libjson_spirit.so)
+  set_property(
+    TARGET json_spirit PROPERTY IMPORTED_LOCATION
+                                ${packages_path}/lib/libjson_spirit.so)
 endif(UNIX)
 
 find_path(json_spirit_header json_spirit PATHS ${packages_path})
