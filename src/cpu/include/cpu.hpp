@@ -1,56 +1,40 @@
 #ifndef CPU_HPP
 #define CPU_HPP
 
+#include "constants.hpp"
+#include "register.hpp"
 #include <array>
 #include <cstdint>
 #include <stack>
 
 struct Cpu
 {
-    struct Flag
-    {
-        bool z{false}; // Zero flag
-        bool n{false}; // Subtraction flag (BCD)
-        bool h{false}; // Half Carry flag (BCD)
-        bool c{false}; // Carry flag
-    };
-    struct Registers
-    {
-        // ACC & Flags
-        uint8_t A{0}; // Accumulator
-        Flag F{};     // Flag register
+    Cpu();
+    // ACC & Flags
+    Register_u8 A;      // Accumulator
+    Flag_Register Flag; // Flag register
 
-        // BC
-        uint16_t BC{0};
-        uint8_t *C = (uint8_t *)&BC;
-        uint8_t *B = (((uint8_t *)&BC) + 1);
+    // Basic Registers
+    Register_DoubleHalf_u8 BC;
+    Register_DoubleHalf_u8 DE;
+    Register_DoubleHalf_u8 HL;
 
-        // DE
-        uint16_t DE{0};
-        uint8_t *E = (uint8_t *)&DE;
-        uint8_t *D = (((uint8_t *)&DE) + 1);
+    // Stack Pointer
+    Register_u16 SP;
+    // Program Counter
+    Register_u16 PC;
 
-        // HL
-        uint16_t HL{0};
-        uint8_t *L = (uint8_t *)&HL;
-        uint8_t *H = (((uint8_t *)&HL) + 1);
+    uint32_t cycles;
 
-        // Stack Pointer
-        uint16_t SP{0};
-        // Program Counter
-        uint16_t PC{0};
-    };
-
-    Registers registers;
     std::stack<uint8_t> stack;
-    std::array<uint8_t, 1024 * 256> memory;
+    std::array<uint8_t, MEMORY_SIZE> memory;
 
     void reset();
     void clear_flags();
-    uint8_t fetch_instruction(uint16_t program_counter);
 
-    // EXAMPLE
-    void adc(uint8_t opcode);
+    void process();
+
+    uint8_t fetch_instruction(const uint16_t program_counter);
 };
 
 #endif

@@ -7,25 +7,25 @@
 TEST(CpuTest, basic_register_check)
 {
     Cpu cpu;
-    cpu.registers.BC = 0x8081;
-    cpu.registers.DE = 0x8081;
-    cpu.registers.HL = 0x8081;
-    cpu.registers.PC = 0x1234;
-    cpu.registers.SP = 0x5555;
-    cpu.registers.F.c = true;
+    cpu.BC.u16 = 0x8081;
+    cpu.DE.u16 = 0x8081;
+    cpu.HL.u16 = 0x8081;
+    cpu.PC = 0x1234;
+    cpu.SP = 0x5555;
+    cpu.Flag.c = true;
 
-    EXPECT_EQ(*cpu.registers.B, 0x80);
-    EXPECT_EQ(*cpu.registers.C, 0x81);
-    EXPECT_EQ(*cpu.registers.D, 0x80);
-    EXPECT_EQ(*cpu.registers.E, 0x81);
-    EXPECT_EQ(*cpu.registers.H, 0x80);
-    EXPECT_EQ(*cpu.registers.L, 0x81);
-    EXPECT_EQ(cpu.registers.PC, 0x1234);
-    EXPECT_EQ(cpu.registers.SP, 0x5555);
-    EXPECT_TRUE(cpu.registers.F.c);
-    EXPECT_FALSE(cpu.registers.F.h);
-    EXPECT_FALSE(cpu.registers.F.n);
-    EXPECT_FALSE(cpu.registers.F.z);
+    EXPECT_EQ(cpu.BC.hi, 0x80);
+    EXPECT_EQ(cpu.BC.lo, 0x81);
+    EXPECT_EQ(cpu.DE.hi, 0x80);
+    EXPECT_EQ(cpu.DE.lo, 0x81);
+    EXPECT_EQ(cpu.HL.hi, 0x80);
+    EXPECT_EQ(cpu.HL.lo, 0x81);
+    EXPECT_EQ(cpu.PC, 0x1234);
+    EXPECT_EQ(cpu.SP, 0x5555);
+    EXPECT_TRUE(cpu.Flag.c);
+    EXPECT_FALSE(cpu.Flag.h);
+    EXPECT_FALSE(cpu.Flag.n);
+    EXPECT_FALSE(cpu.Flag.z);
 }
 
 TEST(CpuTest, basic_instruction_fetch)
@@ -35,9 +35,9 @@ TEST(CpuTest, basic_instruction_fetch)
     std::copy(cpu.memory.begin(), cpu.memory.end(), EXP_INSTRUCTIONS.begin());
     for (auto instruction : EXP_INSTRUCTIONS)
     {
-        EXPECT_EQ(instruction, cpu.fetch_instruction(cpu.registers.PC));
-        ++cpu.registers.PC;
+        EXPECT_EQ(instruction, cpu.fetch_instruction(cpu.PC));
+        ++cpu.PC;
     }
 
-    EXPECT_EQ(EXP_INSTRUCTIONS.size(), cpu.registers.PC);
+    EXPECT_EQ(EXP_INSTRUCTIONS.size(), cpu.PC);
 }
