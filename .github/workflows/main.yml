@@ -1,4 +1,4 @@
-name: build source
+name: build & test source
 on:
  push:
   branches:
@@ -13,8 +13,6 @@ jobs:
         os: [windows-2019, ubuntu-latest]
         configuration: [Debug, Release]
         compiler: [clang]
-    #env:
-      #VCPKG_ROOT: 'C:\vcpkg'
     steps:
       - name: Install compiler
         id: install_cc
@@ -42,5 +40,8 @@ jobs:
       
       - name: CMake Build
         run: cmake --build ${{github.workspace}}/build
+
+      - name: Unit Tests
+        run: ctest --test-dir ${{github.workspace}}/build
          
       
