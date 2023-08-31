@@ -25,6 +25,8 @@ struct CpuData
     Register_u16 PC{0x0000};
 
     uint32_t cycles{0};
+    uint16_t *get_word(const char *reg_name);
+    uint8_t *get_byte(const char *reg_name);
 };
 
 class Cpu
@@ -38,6 +40,7 @@ class Cpu
 
   private:
     bool fetch_instruction(uint8_t &opcode_hex);
+    void exec(Opcode const &op);
     CpuData m_registers;
     function_callback m_callback;
     std::span<uint8_t> m_program;
