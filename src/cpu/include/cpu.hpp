@@ -27,6 +27,18 @@ struct CpuData
     uint32_t cycles{0};
     uint16_t *get_word(const char *reg_name);
     uint8_t *get_byte(const char *reg_name);
+
+    enum Flags : uint8_t
+    {
+        FLAG_C = (1 << 3),
+        FLAG_H = (1 << 4),
+        FLAG_N = (1 << 5),
+        FLAG_Z = (1 << 6)
+    };
+
+    bool is_flag_set(Flags flag);
+    void set_flag(Flags flag);
+    void unset_flag(Flags flag);
 };
 
 class Cpu

@@ -25,3 +25,30 @@ TEST(CpuDataTest, get_data_by_register_name)
     EXPECT_EQ(0x86, *cpu_data.get_byte("H"));
     EXPECT_EQ(0x87, *cpu_data.get_byte("L"));
 }
+
+TEST(CpuDataTest, flag_register_test)
+{
+    CpuData cpu_data;
+
+    cpu_data.set_flag(CpuData::FLAG_C);
+    EXPECT_TRUE(cpu_data.is_flag_set(CpuData::FLAG_C));
+
+    cpu_data.set_flag(CpuData::FLAG_H);
+    EXPECT_TRUE(cpu_data.is_flag_set(CpuData::FLAG_H));
+
+    cpu_data.set_flag(CpuData::FLAG_N);
+    EXPECT_TRUE(cpu_data.is_flag_set(CpuData::FLAG_N));
+
+    cpu_data.set_flag(CpuData::FLAG_Z);
+    EXPECT_TRUE(cpu_data.is_flag_set(CpuData::FLAG_Z));
+
+    EXPECT_EQ(0x78, cpu_data.AF.lo);
+
+    cpu_data.unset_flag(CpuData::FLAG_Z);
+    EXPECT_EQ(0x38, cpu_data.AF.lo);
+
+    cpu_data.unset_flag(CpuData::FLAG_N);
+    cpu_data.unset_flag(CpuData::FLAG_H);
+    cpu_data.unset_flag(CpuData::FLAG_C);
+    EXPECT_EQ(0x00, cpu_data.AF.lo);
+}
