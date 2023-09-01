@@ -15,7 +15,7 @@ void add_8bit_instruction(Opcode const &op, CpuData &cpu_data)
     cpu_data.AF.hi = res_16bit & 0x00FF;
 
     // Todo Flag Update
-    if (res_16bit & 0x100) // Set Carry Flag
+    if (res_16bit & 0x100)   // Set Carry Flag
         cpu_data.AF.lo |= (1 << 3);
     else if (res_16bit == 0) // Zero Flag
         cpu_data.AF.lo |= (1 << 6);
@@ -26,7 +26,7 @@ void add_16bit_instruction(Opcode const &op, CpuData &cpu_data)
 }
 } // namespace
 
-void arithmetic_logic(Opcode const &op, CpuData &cpu_data)
+void arithmetic_logic(Opcode const &op, CpuData &cpu_data, std::span<uint8_t> program)
 {
     if (strcmp(op.mnemonic, "ADD") != 0)
     {
