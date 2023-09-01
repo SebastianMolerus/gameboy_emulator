@@ -8,6 +8,8 @@
 
 - [Clang format](https://skillupwards.com/blog/formatting-c-cplusplus-code-using-clangformat-and-vscode)
 
+- [8080 Datasheet](http://bitsavers.trailing-edge.com/components/intel/MCS80/98-153B_Intel_8080_Microcomputer_Systems_Users_Manual_197509.pdf)
+
 ## How to build
 
 1. visit : https://vcpkg.io/en/getting-started
@@ -25,10 +27,9 @@ Or configure `settings.json` file
 4. Clang format configuration
 
 ```json
-
     "clang-format.executable": "clang-format",
     "clang-format.style": "file",
-    "clang-format.fallbackStyle": "microsoft",
+    "clang-format.fallbackStyle": "Microsoft",
     "clang-format.formatOnSave": true,
     "clang-format.formatOnType": true,
     "clang-format.arguments": [
