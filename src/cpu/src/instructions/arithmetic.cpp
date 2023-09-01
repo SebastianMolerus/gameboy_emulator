@@ -14,6 +14,7 @@ void perform_add_8bit_operation(uint8_t a, uint8_t b, CpuData &cpu_data)
     uint16_t res_16bit = a + b + carry_val;
     cpu_data.AF.hi = res_16bit & 0x00FF;
 
+    cpu_data.unset_flag(CpuData::FLAG_N);
     cpu_data.unset_flag(CpuData::FLAG_C);
     cpu_data.unset_flag(CpuData::FLAG_Z);
     cpu_data.unset_flag(CpuData::FLAG_H);
@@ -85,7 +86,7 @@ void add_16bit_register_to_HL(Opcode const &op, CpuData &cpu_data)
 void arithmetic(Opcode const &op, CpuData &cpu_data, std::span<uint8_t> program)
 {
     // ADD
-    if (strcmp(op.mnemonic, MNEMONICS_STR[1]) != 0)
+    if (strcmp(op.mnemonic, MNEMONICS_STR[1]) == 0)
     {
         if (((0x80 <= op.hex) && (op.hex <= 0x85)) || op.hex == 0x87)
         {
