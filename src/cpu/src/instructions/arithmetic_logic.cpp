@@ -51,7 +51,7 @@ void add_16bit_instruction(Opcode const &op, CpuData &cpu_data)
 
 } // namespace
 
-void arithmetic_logic(Opcode const &op, CpuData &cpu_data)
+void arithmetic_logic(Opcode const &op, CpuData &cpu_data, std::span<uint8_t> program)
 {
     if (strcmp(op.mnemonic, MNEMONICS_STR[1]) != 0)
     {
