@@ -60,7 +60,7 @@ void add_16bit_reg_to_hl_operation_callback(const CpuData &cpu_data, const Opcod
     ++n_calls;
 }
 
-TEST(ArithmeticTest, add_8bit_register_to_acc)
+TEST(ADDTest, add_8bit_register_to_acc)
 {
     // Ignore first opcode to prepare registers
     // Waiting for nop implementation
@@ -70,7 +70,7 @@ TEST(ArithmeticTest, add_8bit_register_to_acc)
     cpu.process();
 }
 
-TEST(ArithmeticTest, add_16bit_register_to_hl)
+TEST(ADDTest, add_16bit_register_to_hl)
 {
     // Ignore first opcode to prepare registers
     // Waiting for nop implementation
