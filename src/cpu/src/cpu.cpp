@@ -6,32 +6,28 @@
 #include <functional>
 #include <unordered_map>
 
-extern void arithmetic_logic(Opcode const &op, CpuData &cpu_data, std::span<uint8_t> program);
+extern void arithmetic(Opcode const &op, CpuData &cpu_data, std::span<uint8_t> program);
 extern void load(Opcode const &op, CpuData &cpu_data, std::span<uint8_t> program);
 
 // There is opcode ld in arithmetic_logic section :/ [26]-LD (PLEASE add me to load)
 
 using mnemonic_func = std::pair<const char *, std::function<void(Opcode const &, CpuData &, std::span<uint8_t>)>>;
-std::array<mnemonic_func, 13> instruction_set{std::make_pair(MNEMONICS_STR[0], arithmetic_logic),
-                                              std::make_pair(MNEMONICS_STR[1], arithmetic_logic),
-                                              std::make_pair(MNEMONICS_STR[2], arithmetic_logic),
-                                              std::make_pair(MNEMONICS_STR[5], arithmetic_logic),
-                                              std::make_pair(MNEMONICS_STR[6], arithmetic_logic),
-                                              std::make_pair(MNEMONICS_STR[7], arithmetic_logic),
-                                              std::make_pair(MNEMONICS_STR[8], arithmetic_logic),
-                                              std::make_pair(MNEMONICS_STR[23], arithmetic_logic),
-                                              std::make_pair(MNEMONICS_STR[29], arithmetic_logic),
-                                              std::make_pair(MNEMONICS_STR[40], arithmetic_logic),
-                                              std::make_pair(MNEMONICS_STR[43], arithmetic_logic),
-                                              std::make_pair(MNEMONICS_STR[44], arithmetic_logic),
-                                              std::make_pair(MNEMONICS_STR[26], load)};
+std::array<mnemonic_func, 13> instruction_set{
+    std::make_pair(MNEMONICS_STR[0], arithmetic),  std::make_pair(MNEMONICS_STR[1], arithmetic),
+    std::make_pair(MNEMONICS_STR[2], arithmetic),  std::make_pair(MNEMONICS_STR[5], arithmetic),
+    std::make_pair(MNEMONICS_STR[6], arithmetic),  std::make_pair(MNEMONICS_STR[7], arithmetic),
+    std::make_pair(MNEMONICS_STR[8], arithmetic),  std::make_pair(MNEMONICS_STR[23], arithmetic),
+    std::make_pair(MNEMONICS_STR[29], arithmetic), std::make_pair(MNEMONICS_STR[40], arithmetic),
+    std::make_pair(MNEMONICS_STR[43], arithmetic), std::make_pair(MNEMONICS_STR[44], arithmetic),
+    std::make_pair(MNEMONICS_STR[26], load)};
 
 uint16_t *CpuData::get_word(const char *reg_name)
 {
     static std::unordered_map<const char *, uint16_t *> register_map{{OPERANDS_STR[9], &AF.u16},
                                                                      {OPERANDS_STR[11], &BC.u16},
                                                                      {OPERANDS_STR[14], &DE.u16},
-                                                                     {OPERANDS_STR[17], &HL.u16}};
+                                                                     {OPERANDS_STR[17], &HL.u16},
+                                                                     {OPERANDS_STR[21], &SP.u16}};
     assert(register_map.contains(reg_name));
     return register_map[reg_name];
 }
