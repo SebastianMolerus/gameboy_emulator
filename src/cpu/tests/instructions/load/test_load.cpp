@@ -2,6 +2,7 @@
 #include <cstdint>
 #include <gtest/gtest.h>
 #include <span>
+#include <vector>
 
 TEST(LoadTest, ld_BC_n16)
 {
@@ -49,22 +50,47 @@ TEST(LoadTest, ld_SP_n16)
 
 TEST(LoadTest, ld_HL_SP_n8)
 {
+    // 1.
     // load 62 ( 0x3E ) to SP using ld_SP_n16
-
     // add 35 ( 0x23 ) to SP
-    // write result to HL
+    // HC expected
 
-    uint8_t a[] = {0x31, 0x3E, 0x00, 0xF8, 0x23};
+    // 2.
+    // load 0xFFFF to SP
+    // add 1 to SP
+    // CF expected
+
+    // 3.
+    // load 0x05 to SP
+    // substract 1 from SP ( 0x81 )
+
+    uint8_t a[] = {0x31, 0x3E, 0x00, 0xF8, 0x23, 0x31, 0xFF, 0xFF, 0xF8, 0x01, 0x31, 0x05, 0x00, 0xF8, 0x81};
     Cpu cpu{a};
 
-    CpuData expected_data;
-    cpu.register_function_callback([&expected_data](const CpuData &d, const Opcode &) { expected_data = d; });
+    std::vector<CpuData> expected_data;
+    auto f = [&expected_data](const CpuData &d, const Opcode &op) {
+        if (op.hex == 0xF8)
+            expected_data.push_back(d);
+    };
+    cpu.register_function_callback(f);
     cpu.process();
-    ASSERT_EQ(expected_data.HL.u16, 97);
 
-    ASSERT_TRUE(expected_data.is_flag_set(CpuData::FLAG_H));
+    ASSERT_EQ(expected_data.size(), 3);
+    ASSERT_EQ(expected_data[2].PC.u16, sizeof(a) / sizeof(uint8_t));
 
-    ASSERT_FALSE(expected_data.is_flag_set(CpuData::FLAG_C));
-    ASSERT_FALSE(expected_data.is_flag_set(CpuData::FLAG_Z));
-    ASSERT_FALSE(expected_data.is_flag_set(CpuData::FLAG_N));
+    for (auto &data : expected_data)
+    {
+        ASSERT_FALSE(data.is_flag_set(CpuData::FLAG_Z));
+        ASSERT_FALSE(data.is_flag_set(CpuData::FLAG_N));
+    }
+
+    ASSERT_EQ(expected_data[0].HL.u16, 97);
+    ASSERT_TRUE(expected_data[0].is_flag_set(CpuData::FLAG_H));
+    ASSERT_FALSE(expected_data[0].is_flag_set(CpuData::FLAG_C));
+
+    ASSERT_EQ(expected_data[1].HL.u16, 0);
+    ASSERT_TRUE(expected_data[1].is_flag_set(CpuData::FLAG_H));
+    ASSERT_TRUE(expected_data[1].is_flag_set(CpuData::FLAG_C));
+
+    ASSERT_EQ(expected_data[2].HL.u16, 4);
 }
