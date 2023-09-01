@@ -45,6 +45,21 @@ uint8_t *CpuData::get_byte(const char *reg_name)
     return register_map[reg_name];
 }
 
+bool CpuData::is_flag_set(Flags flag)
+{
+    return (0 != (AF.lo & flag));
+}
+
+void CpuData::set_flag(Flags flag)
+{
+    AF.lo |= flag;
+}
+
+void CpuData::unset_flag(Flags flag)
+{
+    AF.lo &= ~flag;
+}
+
 Cpu::Cpu(std::span<uint8_t> program) : m_program(program)
 {
     bool static result{load_opcodes()};
