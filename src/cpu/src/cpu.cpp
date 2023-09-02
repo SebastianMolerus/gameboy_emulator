@@ -21,24 +21,28 @@ std::array<mnemonic_func, 13> instruction_set{
     std::make_pair(MNEMONICS_STR[43], arithmetic), std::make_pair(MNEMONICS_STR[44], arithmetic),
     std::make_pair(MNEMONICS_STR[26], load)};
 
+CpuData::CpuData()
+    : m_register_map_word{{OPERANDS_STR[9], &AF.u16},
+                          {OPERANDS_STR[11], &BC.u16},
+                          {OPERANDS_STR[14], &DE.u16},
+                          {OPERANDS_STR[17], &HL.u16},
+                          {OPERANDS_STR[21], &SP.u16}},
+      m_register_map_byte{{OPERANDS_STR[8], &AF.hi},  {OPERANDS_STR[10], &BC.hi}, {OPERANDS_STR[12], &BC.lo},
+                          {OPERANDS_STR[13], &DE.hi}, {OPERANDS_STR[15], &DE.lo}, {OPERANDS_STR[16], &HL.hi},
+                          {OPERANDS_STR[18], &HL.lo}}
+{
+}
+
 uint16_t *CpuData::get_word(const char *reg_name)
 {
-    std::unordered_map<const char *, uint16_t *> register_map{{OPERANDS_STR[9], &AF.u16},
-                                                              {OPERANDS_STR[11], &BC.u16},
-                                                              {OPERANDS_STR[14], &DE.u16},
-                                                              {OPERANDS_STR[17], &HL.u16},
-                                                              {OPERANDS_STR[21], &SP.u16}};
-    assert(register_map.contains(reg_name));
-    return register_map[reg_name];
+    assert(m_register_map_word.contains(reg_name));
+    return m_register_map_word[reg_name];
 }
 
 uint8_t *CpuData::get_byte(const char *reg_name)
 {
-    std::unordered_map<const char *, uint8_t *> register_map{
-        {OPERANDS_STR[8], &AF.hi},  {OPERANDS_STR[10], &BC.hi}, {OPERANDS_STR[12], &BC.lo}, {OPERANDS_STR[13], &DE.hi},
-        {OPERANDS_STR[15], &DE.lo}, {OPERANDS_STR[16], &HL.hi}, {OPERANDS_STR[18], &HL.lo}};
-    assert(register_map.contains(reg_name));
-    return register_map[reg_name];
+    assert(m_register_map_byte.contains(reg_name));
+    return m_register_map_byte[reg_name];
 }
 
 bool CpuData::is_flag_set(Flags flag)

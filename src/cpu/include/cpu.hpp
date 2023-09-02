@@ -17,6 +17,8 @@ typedef union {
 
 struct CpuData
 {
+    CpuData();
+
     Register_u16 AF{0x0000};
     Register_u16 BC{0x0000};
     Register_u16 DE{0x0000};
@@ -39,6 +41,9 @@ struct CpuData
     bool is_flag_set(Flags flag);
     void set_flag(Flags flag);
     void unset_flag(Flags flag);
+
+    std::unordered_map<const char *, uint16_t *> m_register_map_word;
+    std::unordered_map<const char *, uint8_t *> m_register_map_byte;
 };
 
 class Cpu
