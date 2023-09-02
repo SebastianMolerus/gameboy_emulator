@@ -173,10 +173,10 @@ TEST(LoadTest, ld_SP_a16)
 TEST(LoadTest, ld_sp_hl)
 {
     // fill HL
-    // 62735 == 0xF50F -> 0F, F5 in LE
+    // 0xABCD
 
     // copy HL to SP ( 0xF9 )
-    uint8_t a[] = {0x21, 0x0F, 0xF5, 0xF9};
+    uint8_t a[] = {0x21, 0xCD, 0xAB, 0xF9};
     Cpu cpu{a};
 
     CpuData expected_data;
@@ -187,5 +187,6 @@ TEST(LoadTest, ld_sp_hl)
     cpu.register_function_callback(f);
     cpu.process();
 
+    ASSERT_EQ(expected_data.HL.u16, 0xABCD);
     ASSERT_EQ(expected_data.SP.u16, expected_data.HL.u16);
 }
