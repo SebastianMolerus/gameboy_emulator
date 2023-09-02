@@ -19,7 +19,7 @@ uint16_t get_16nn_le(std::span<uint8_t> program)
     return nn;
 }
 
-// Put Stack Pointer (SP) at address n
+// 0x08 : Put Stack Pointer (SP) at address n
 void ld_SP_a16(Opcode const &op, CpuData &cpu_data, std::span<uint8_t> program)
 {
     assert(op.operands[1].name != nullptr);
@@ -33,7 +33,7 @@ void ld_reg_n16(Opcode const &op, CpuData &cpu_data, std::span<uint8_t> program)
     *cpu_data.get_word(op.operands[0].name) = get_16nn_le(program);
 }
 
-// Put SP + n effective address into HL
+// 0xF8 : Put SP + n effective address into HL
 void ld_hl_sp_n8(Opcode const &op, CpuData &cpu_data, std::span<uint8_t> program)
 {
     cpu_data.unset_flag(CpuData::FLAG_Z);
@@ -68,6 +68,14 @@ void ld_hl_sp_n8(Opcode const &op, CpuData &cpu_data, std::span<uint8_t> program
     *HL = SP;
 }
 
+// 0xF9 : load HL to SP
+void ld_sp_hl(Opcode const &op, CpuData &cpu_data, std::span<uint8_t> program)
+{
+    assert(op.operands[0].name != nullptr); // SP
+    assert(op.operands[1].name != nullptr); // HL
+    *cpu_data.get_word(op.operands[0].name) = *cpu_data.get_word(op.operands[1].name);
+}
+
 } // namespace
 
 // Main "LD" entry
@@ -86,6 +94,9 @@ void load(Opcode const &op, CpuData &cpu_data, std::span<uint8_t> program)
         break;
     case 0xF8:
         ld_hl_sp_n8(op, cpu_data, program);
+        break;
+    case 0xF9:
+        ld_sp_hl(op, cpu_data, program);
         break;
     default:
         break;

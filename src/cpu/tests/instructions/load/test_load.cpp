@@ -169,3 +169,23 @@ TEST(LoadTest, ld_SP_a16)
 
     ASSERT_EQ(expected_data.SP.u16, 0xCDAB);
 }
+
+TEST(LoadTest, ld_sp_hl)
+{
+    // fill HL
+    // 62735 == 0xF50F -> 0F, F5 in LE
+
+    // copy HL to SP ( 0xF9 )
+    uint8_t a[] = {0x21, 0x0F, 0xF5, 0xF9};
+    Cpu cpu{a};
+
+    CpuData expected_data;
+    auto f = [&expected_data](const CpuData &d, const Opcode &op) {
+        if (op.hex == 0xF9)
+            expected_data = d;
+    };
+    cpu.register_function_callback(f);
+    cpu.process();
+
+    ASSERT_EQ(expected_data.SP.u16, expected_data.HL.u16);
+}
