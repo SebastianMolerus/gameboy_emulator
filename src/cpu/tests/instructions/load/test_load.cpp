@@ -94,3 +94,63 @@ TEST(LoadTest, ld_HL_SP_n8)
 
     ASSERT_EQ(expected_data[2].HL.u16, 4);
 }
+
+TEST(LoadTest, ld_HL_SP_n8_half_carry)
+{
+    // 1.
+    // load 0x09 to SP
+    // add 0x10 ( 16 ) to SP
+
+    // 0000 1001
+    //+0001 0000
+    // No HC expected
+
+    // 2.
+    // load 0xA to SP
+    // add 0xC to SP
+
+    // 0000 1010
+    //+0000 1100
+    // HC expected
+
+    uint8_t a[] = {0x31, 0x09, 0x00, 0xF8, 0x10, 0x31, 0x0A, 0x00, 0xF8, 0x0C};
+    Cpu cpu{a};
+
+    std::vector<CpuData> expected_data;
+    auto f = [&expected_data](const CpuData &d, const Opcode &op) {
+        if (op.hex == 0xF8)
+            expected_data.push_back(d);
+    };
+    cpu.register_function_callback(f);
+    cpu.process();
+
+    ASSERT_FALSE(expected_data[0].is_flag_set(CpuData::FLAG_H));
+    ASSERT_TRUE(expected_data[1].is_flag_set(CpuData::FLAG_H));
+}
+
+TEST(LoadTest, ld_HL_SP_n8_carry)
+{
+    // 1.
+    // load 0xFFFE to SP
+    // add 0x01 to SP
+    // No C expected
+
+    // 2.
+    // load 0xFFFF to SP
+    // add 0x01 to SP
+    // C expected
+
+    uint8_t a[] = {0x31, 0xFE, 0xFF, 0xF8, 0x01, 0x31, 0xFF, 0xFF, 0xF8, 0x01};
+    Cpu cpu{a};
+
+    std::vector<CpuData> expected_data;
+    auto f = [&expected_data](const CpuData &d, const Opcode &op) {
+        if (op.hex == 0xF8)
+            expected_data.push_back(d);
+    };
+    cpu.register_function_callback(f);
+    cpu.process();
+
+    ASSERT_FALSE(expected_data[0].is_flag_set(CpuData::FLAG_C));
+    ASSERT_TRUE(expected_data[1].is_flag_set(CpuData::FLAG_C));
+}

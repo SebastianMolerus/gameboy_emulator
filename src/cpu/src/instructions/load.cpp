@@ -45,14 +45,14 @@ void ld_hl_sp_n8(Opcode const &op, CpuData &cpu_data, std::span<uint8_t> program
     else
     {
         uint8_t half_carry_check{static_cast<uint8_t>(SP)};
-        half_carry_check &= 0x0F;
-        half_carry_check += val;
-        if (half_carry_check & 0xF0)
+        half_carry_check &= 0xF;
+        half_carry_check += (val & 0xF);
+        if (half_carry_check & 0x10)
             cpu_data.set_flag(CpuData::FLAG_H);
 
         uint32_t carry_check{SP};
         carry_check += val;
-        if (carry_check & 0xFFFF0000)
+        if (carry_check & 0x10000)
             cpu_data.set_flag(CpuData::FLAG_C);
 
         SP += val;
