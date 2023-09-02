@@ -19,6 +19,14 @@ uint16_t get_16nn_le(std::span<uint8_t> program)
     return nn;
 }
 
+// Put Stack Pointer (SP) at address n
+void ld_SP_a16(Opcode const &op, CpuData &cpu_data, std::span<uint8_t> program)
+{
+    assert(op.operands[1].name != nullptr);
+    *cpu_data.get_word(op.operands[1].name) = get_16nn_le(program);
+}
+
+// put n16 into REG
 void ld_reg_n16(Opcode const &op, CpuData &cpu_data, std::span<uint8_t> program)
 {
     assert(op.operands[0].name != nullptr);
@@ -67,6 +75,9 @@ void load(Opcode const &op, CpuData &cpu_data, std::span<uint8_t> program)
 {
     switch (op.hex)
     {
+    case 0x08:
+        ld_SP_a16(op, cpu_data, program);
+        break;
     case 0x01:
     case 0x11:
     case 0x21:

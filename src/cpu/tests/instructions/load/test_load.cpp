@@ -154,3 +154,18 @@ TEST(LoadTest, ld_HL_SP_n8_carry)
     ASSERT_FALSE(expected_data[0].is_flag_set(CpuData::FLAG_C));
     ASSERT_TRUE(expected_data[1].is_flag_set(CpuData::FLAG_C));
 }
+
+TEST(LoadTest, ld_SP_a16)
+{
+    // load 0xCDAB to SP
+
+    uint8_t a[] = {0x08, 0xAB, 0xCD};
+    Cpu cpu{a};
+
+    CpuData expected_data;
+    auto f = [&expected_data](const CpuData &d, const Opcode &op) { expected_data = d; };
+    cpu.register_function_callback(f);
+    cpu.process();
+
+    ASSERT_EQ(expected_data.SP.u16, 0xCDAB);
+}
