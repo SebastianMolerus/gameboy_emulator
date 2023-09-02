@@ -190,3 +190,27 @@ TEST(LoadTest, ld_sp_hl)
     ASSERT_EQ(expected_data.HL.u16, 0xABCD);
     ASSERT_EQ(expected_data.SP.u16, expected_data.HL.u16);
 }
+
+TEST(LoadTest, push_BC)
+{
+    // 1. set stack at 10
+    // 2. load 0xFFAA into BC
+    // 3. push BC
+
+    uint8_t a[] = {0x08, 0x0A, 0x00, 0x01, 0xAA, 0xFF, 0xC5};
+    Cpu cpu{a};
+
+    CpuData expected_data;
+    auto f = [&expected_data](const CpuData &d, const Opcode &op) {
+        if (op.hex == 0xC5)
+            expected_data = d;
+    };
+    cpu.register_function_callback(f);
+    cpu.process();
+
+    // Is stack decremented by 2 bytes
+    ASSERT_EQ(expected_data.SP.u16, 8);
+
+    ASSERT_EQ(expected_data.m_memory[expected_data.SP.u16], 0xAA);
+    ASSERT_EQ(expected_data.m_memory[expected_data.SP.u16 + 1], 0xFF);
+}

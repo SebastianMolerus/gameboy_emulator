@@ -42,6 +42,8 @@ struct CpuData
     void set_flag(Flags flag);
     void unset_flag(Flags flag);
 
+    std::array<uint8_t, 0xFFFF> m_memory{};
+
     std::unordered_map<const char *, uint16_t *> m_register_map_word;
     std::unordered_map<const char *, uint8_t *> m_register_map_byte;
 };

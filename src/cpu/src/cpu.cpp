@@ -12,14 +12,14 @@ extern void load(Opcode const &op, CpuData &cpu_data, std::span<uint8_t> program
 // There is opcode ld in arithmetic_logic section :/ [26]-LD (PLEASE add me to load)
 
 using mnemonic_func = std::pair<const char *, std::function<void(Opcode const &, CpuData &, std::span<uint8_t>)>>;
-std::array<mnemonic_func, 13> instruction_set{
+std::array<mnemonic_func, 14> instruction_set{
     std::make_pair(MNEMONICS_STR[0], arithmetic),  std::make_pair(MNEMONICS_STR[1], arithmetic),
     std::make_pair(MNEMONICS_STR[2], arithmetic),  std::make_pair(MNEMONICS_STR[5], arithmetic),
     std::make_pair(MNEMONICS_STR[6], arithmetic),  std::make_pair(MNEMONICS_STR[7], arithmetic),
     std::make_pair(MNEMONICS_STR[8], arithmetic),  std::make_pair(MNEMONICS_STR[23], arithmetic),
     std::make_pair(MNEMONICS_STR[29], arithmetic), std::make_pair(MNEMONICS_STR[40], arithmetic),
     std::make_pair(MNEMONICS_STR[43], arithmetic), std::make_pair(MNEMONICS_STR[44], arithmetic),
-    std::make_pair(MNEMONICS_STR[26], load)};
+    std::make_pair(MNEMONICS_STR[26], load),       std::make_pair(MNEMONICS_STR[32], load)};
 
 CpuData::CpuData()
     : m_register_map_word{{OPERANDS_STR[9], &AF.u16},
