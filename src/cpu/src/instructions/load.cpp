@@ -2,6 +2,7 @@
 #include "decoder.hpp"
 #include <bitset>
 #include <cassert>
+#include <cstring>
 
 namespace
 {
