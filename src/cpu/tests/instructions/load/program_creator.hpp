@@ -42,6 +42,7 @@ struct program_creator
 
     program_creator &load_B_to_A();
     program_creator &load_C_to_A();
+    program_creator &load_C_addr_to_A();
     program_creator &load_D_to_A();
     program_creator &load_E_to_A();
     program_creator &load_H_to_A();

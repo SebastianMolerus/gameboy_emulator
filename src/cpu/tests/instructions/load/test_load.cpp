@@ -421,3 +421,20 @@ TEST(LoadTest, load_HL_minus_to_A)
     ASSERT_EQ(expected_data.AF.hi, 0x79);
     ASSERT_EQ(expected_data.HL.u16, 0x1);
 }
+
+TEST(LoadTest, load_C_addr_to_A)
+{
+    program_creator pc;
+    pc.load_to_SP(0x1234).save_SP(0xFF0A).load_to_BC(0xA).load_C_addr_to_A();
+    Cpu cpu{pc.get()};
+
+    CpuData expected_data;
+    auto f = [&expected_data](const CpuData &d, const Opcode &op) {
+        if (op.hex == 0xF2)
+            expected_data = d;
+    };
+    cpu.register_function_callback(f);
+    cpu.process();
+
+    ASSERT_EQ(expected_data.AF.hi, 0x34);
+}

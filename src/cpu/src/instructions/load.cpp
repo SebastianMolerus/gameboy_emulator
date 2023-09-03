@@ -177,6 +177,7 @@ void load(Opcode const &op, CpuData &cpu_data, std::span<uint8_t> program)
     case 0x7F: // load A to A ( wtf ? )
     case 0x2A: // load ( HL + ) to A
     case 0x3A: // load ( HL - ) to A
+    case 0xF2: // Put value at address $FF00 + register C into A.
         ld_A_reg(op, cpu_data, program);
         break;
     case 0xF1: // pop AF

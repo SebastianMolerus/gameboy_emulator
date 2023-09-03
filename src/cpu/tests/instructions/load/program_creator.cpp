@@ -133,6 +133,11 @@ program_creator &program_creator::load_C_to_A()
     m_program.push_back(0x79);
     return *this;
 }
+program_creator &program_creator::load_C_addr_to_A()
+{
+    m_program.push_back(0xF2);
+    return *this;
+}
 program_creator &program_creator::load_D_to_A()
 {
     m_program.push_back(0x7A);
