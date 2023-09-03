@@ -33,8 +33,7 @@ void ld_reg_n16(Opcode const &op, CpuData &cpu_data, std::span<uint8_t> program)
     *cpu_data.get_word(op.operands[0].name) = get_16nn_le(program);
 }
 
-// 0xC5 PUSH BC
-void push_BC(Opcode const &op, CpuData &cpu_data, std::span<uint8_t> program)
+void push(Opcode const &op, CpuData &cpu_data, std::span<uint8_t> program)
 {
     assert(op.operands[0].name != nullptr);
 
@@ -44,9 +43,9 @@ void push_BC(Opcode const &op, CpuData &cpu_data, std::span<uint8_t> program)
     // decrease stack first
     cpu_data.SP.u16 -= 2;
 
-    uint16_t const BC = *cpu_data.get_word(op.operands[0].name);
-    cpu_data.m_memory[cpu_data.SP.u16] = static_cast<uint8_t>(BC);
-    cpu_data.m_memory[cpu_data.SP.u16 + 1] = BC >> 8;
+    uint16_t const source_REG = *cpu_data.get_word(op.operands[0].name);
+    cpu_data.m_memory[cpu_data.SP.u16] = static_cast<uint8_t>(source_REG);
+    cpu_data.m_memory[cpu_data.SP.u16 + 1] = source_REG >> 8;
 }
 
 // 0xF8 : Put SP + n effective address into HL
@@ -99,7 +98,7 @@ void load(Opcode const &op, CpuData &cpu_data, std::span<uint8_t> program)
 {
     switch (op.hex)
     {
-    case 0x08:
+    case 0x08: // copy a16 to SP
         ld_SP_a16(op, cpu_data, program);
         break;
     case 0x01:
@@ -108,13 +107,16 @@ void load(Opcode const &op, CpuData &cpu_data, std::span<uint8_t> program)
     case 0x31:
         ld_reg_n16(op, cpu_data, program);
         break;
-    case 0xC5:
-        push_BC(op, cpu_data, program);
+    case 0xC5: // push BC
+    case 0xF5: // push AF
+    case 0xD5: // push DE
+    case 0xE5: // push HL
+        push(op, cpu_data, program);
         break;
-    case 0xF8:
+    case 0xF8: // add n8 to SP and copy it to HL
         ld_hl_sp_n8(op, cpu_data, program);
         break;
-    case 0xF9:
+    case 0xF9: // copy SP to HL
         ld_sp_hl(op, cpu_data, program);
         break;
     default:
