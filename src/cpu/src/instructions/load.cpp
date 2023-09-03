@@ -99,6 +99,22 @@ void ld_A_reg(Opcode const &op, CpuData &cpu_data, std::span<uint8_t> program)
     *cpu_data.get_byte(op.operands[0].name) = *cpu_data.get_byte(op.operands[1].name);
 }
 
+void pop(Opcode const &op, CpuData &cpu_data, std::span<uint8_t> program)
+{
+    assert(cpu_data.SP.u16 <= 0xFFFD);
+    assert(op.operands[0].name != nullptr);
+
+    auto target = cpu_data.get_word(op.operands[0].name);
+    uint16_t val = cpu_data.m_memory[cpu_data.SP.u16 + 1]; // MSB
+    val <<= 8;
+    val |= cpu_data.m_memory[cpu_data.SP.u16]; // LSB
+
+    *target = val;
+
+    // increase SP after pop
+    cpu_data.SP.u16 += 2;
+}
+
 } // namespace
 
 // Main "LD" entry
@@ -117,6 +133,12 @@ void load(Opcode const &op, CpuData &cpu_data, std::span<uint8_t> program)
         break;
     case 0x7A:
         ld_A_reg(op, cpu_data, program);
+        break;
+    case 0xF1: // pop AF
+    case 0xC1: // pop BC
+    case 0xD1: // pop DE
+    case 0xE1: // pop HL
+        pop(op, cpu_data, program);
         break;
     case 0xC5: // push BC
     case 0xF5: // push AF

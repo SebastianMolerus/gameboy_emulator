@@ -288,6 +288,102 @@ TEST(LoadTest, push_AF)
     ASSERT_EQ(expected_data.m_memory[expected_data.SP.u16 + 1], 0xBD);
 }
 
+TEST(LoadTest, pop_AF)
+{
+    // 1. set stack at 0xAB
+    // 2. load 0x1234 into HL
+    // 3. push HL ( 0xE5 )
+    // 4. pop into AF ( 0xF1 )
+
+    uint8_t a[] = {0x08, 0xAB, 0x00, 0x21, 0x34, 0x12, 0xE5, 0xF1};
+    Cpu cpu{a};
+
+    CpuData expected_data;
+    auto f = [&expected_data](const CpuData &d, const Opcode &op) {
+        if (op.hex == 0xF1)
+            expected_data = d;
+    };
+    cpu.register_function_callback(f);
+    cpu.process();
+
+    // Stack should be restored to original 0xAB
+    ASSERT_EQ(expected_data.SP.u16, 0xAB);
+    // AF should have same value as pushed HL
+    ASSERT_EQ(expected_data.AF.u16, 0x1234);
+}
+
+TEST(LoadTest, pop_BC)
+{
+    // 1. set stack at 0xAB
+    // 2. load 0x1234 into HL
+    // 3. push HL ( 0xE5 )
+    // 4. pop into BC ( 0xC1 )
+
+    uint8_t a[] = {0x08, 0xAB, 0x00, 0x21, 0x34, 0x12, 0xE5, 0xC1};
+    Cpu cpu{a};
+
+    CpuData expected_data;
+    auto f = [&expected_data](const CpuData &d, const Opcode &op) {
+        if (op.hex == 0xC1)
+            expected_data = d;
+    };
+    cpu.register_function_callback(f);
+    cpu.process();
+
+    // Stack should be restored to original 0xAB
+    ASSERT_EQ(expected_data.SP.u16, 0xAB);
+    // BC should have same value as pushed HL
+    ASSERT_EQ(expected_data.BC.u16, 0x1234);
+}
+
+TEST(LoadTest, pop_DE)
+{
+    // 1. set stack at 0xAB
+    // 2. load 0x1234 into HL
+    // 3. push HL ( 0xE5 )
+    // 4. pop into DE ( 0xD1 )
+
+    uint8_t a[] = {0x08, 0xAB, 0x00, 0x21, 0x34, 0x12, 0xE5, 0xD1};
+    Cpu cpu{a};
+
+    CpuData expected_data;
+    auto f = [&expected_data](const CpuData &d, const Opcode &op) {
+        if (op.hex == 0xD1)
+            expected_data = d;
+    };
+    cpu.register_function_callback(f);
+    cpu.process();
+
+    // Stack should be restored to original 0xAB
+    ASSERT_EQ(expected_data.SP.u16, 0xAB);
+    // DE should have same value as pushed HL
+    ASSERT_EQ(expected_data.DE.u16, 0x1234);
+}
+
+TEST(LoadTest, pop_HL)
+{
+    // 1. set stack at 0xAB
+    // 2. load 0x1234 into HL
+    // 3. push HL ( 0xE5 )
+    // 4. pop into HL ( 0xE1 )
+
+    uint8_t a[] = {0x08, 0xAB, 0x00, 0x21, 0x34, 0x12, 0xE5, 0xE1};
+    Cpu cpu{a};
+
+    CpuData expected_data;
+    auto f = [&expected_data](const CpuData &d, const Opcode &op) {
+        if (op.hex == 0xE1)
+            expected_data = d;
+    };
+    cpu.register_function_callback(f);
+    cpu.process();
+
+    // Stack should be restored to original 0xAB
+    ASSERT_EQ(expected_data.SP.u16, 0xAB);
+    // HL should have same value as pushed HL
+    ASSERT_EQ(expected_data.HL.u16, 0x1234);
+}
+
 TEST(LoadTest, load_D_to_A)
 {
     // 1. set D as 0xCE
