@@ -20,10 +20,9 @@ uint16_t get_16nn_le(std::span<uint8_t> program)
 }
 
 // 0x08 : Put Stack Pointer (SP) at address n
-void ld_SP_a16(Opcode const &op, CpuData &cpu_data, std::span<uint8_t> program)
+void ld_a16_SP(Opcode const &op, CpuData &cpu_data, std::span<uint8_t> program)
 {
-    assert(op.operands[1].name != nullptr);
-    *cpu_data.get_word(op.operands[1].name) = get_16nn_le(program);
+    cpu_data.m_memory[get_16nn_le(program)] = cpu_data.SP.u16;
 }
 
 // put n16 into REG
@@ -107,7 +106,7 @@ void pop(Opcode const &op, CpuData &cpu_data, std::span<uint8_t> program)
     auto target = cpu_data.get_word(op.operands[0].name);
     uint16_t val = cpu_data.m_memory[cpu_data.SP.u16 + 1]; // MSB
     val <<= 8;
-    val |= cpu_data.m_memory[cpu_data.SP.u16]; // LSB
+    val |= cpu_data.m_memory[cpu_data.SP.u16];             // LSB
 
     *target = val;
 
@@ -122,8 +121,8 @@ void load(Opcode const &op, CpuData &cpu_data, std::span<uint8_t> program)
 {
     switch (op.hex)
     {
-    case 0x08: // copy a16 to SP
-        ld_SP_a16(op, cpu_data, program);
+    case 0x08: // copy SP to a16
+        ld_a16_SP(op, cpu_data, program);
         break;
     case 0x01:
     case 0x11:

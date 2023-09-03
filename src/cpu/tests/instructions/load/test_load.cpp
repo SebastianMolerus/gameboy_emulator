@@ -1,113 +1,17 @@
 #include "cpu.hpp"
+#include "program_creator.hpp"
 #include <cstdint>
 #include <gtest/gtest.h>
 #include <span>
 #include <vector>
 
-struct program_creator
+uint16_t read_top_stack(CpuData const &data)
 {
-    std::vector<uint8_t> m_program;
-
-    program_creator &load_to_B(uint8_t val)
-    {
-        m_program.push_back(0x01);
-        m_program.push_back(0x00);
-        m_program.push_back(val);
-        return *this;
-    }
-
-    program_creator &load_to_C(uint8_t val)
-    {
-        m_program.push_back(0x01);
-        m_program.push_back(val);
-        m_program.push_back(0x00);
-        return *this;
-    }
-
-    program_creator &load_to_BC(uint16_t val)
-    {
-        m_program.push_back(0x01);
-        m_program.push_back(val);
-        m_program.push_back(val >> 8);
-        return *this;
-    }
-
-    program_creator &load_to_D(uint8_t val)
-    {
-        m_program.push_back(0x11);
-        m_program.push_back(0x00);
-        m_program.push_back(val);
-        return *this;
-    }
-
-    program_creator &load_to_E(uint8_t val)
-    {
-        m_program.push_back(0x11);
-        m_program.push_back(val);
-        m_program.push_back(0x00);
-        return *this;
-    }
-
-    program_creator &load_to_DE(uint16_t val)
-    {
-        m_program.push_back(0x11);
-        m_program.push_back(val);
-        m_program.push_back(val >> 8);
-        return *this;
-    }
-
-    program_creator &load_to_H(uint8_t val)
-    {
-        m_program.push_back(0x21);
-        m_program.push_back(0x00);
-        m_program.push_back(val);
-        return *this;
-    }
-
-    program_creator &load_to_L(uint8_t val)
-    {
-        m_program.push_back(0x21);
-        m_program.push_back(val);
-        m_program.push_back(0x00);
-        return *this;
-    }
-
-    program_creator &load_to_HL(uint16_t val)
-    {
-        m_program.push_back(0x21);
-        m_program.push_back(val);
-        m_program.push_back(val >> 8);
-        return *this;
-    }
-
-    program_creator &load_to_SP(uint16_t val)
-    {
-        m_program.push_back(0x31);
-        m_program.push_back(val);
-        m_program.push_back(val >> 8);
-        return *this;
-    }
-
-    // if val & 0x80
-    // this is substraction from SP
-    program_creator &add_to_SP(uint8_t val)
-    {
-        m_program.push_back(0xF8);
-        m_program.push_back(val);
-        return *this;
-    }
-
-    program_creator &add_custom_command(uint8_t cmd)
-    {
-        m_program.push_back(cmd);
-        return *this;
-    }
-
-    std::vector<uint8_t> &get()
-    {
-        return m_program;
-    }
-};
+    uint16_t result = data.m_memory[data.SP.u16 + 1];
+    result <<= 8;
+    result |= data.m_memory[data.SP.u16];
+    return result;
+}
 
 TEST(LoadTest, ld_BC_n16)
 {
@@ -230,29 +134,28 @@ TEST(LoadTest, ld_HL_SP_n8_carry)
     ASSERT_TRUE(expected_data[1].is_flag_set(CpuData::FLAG_C));
 }
 
-TEST(LoadTest, ld_SP_a16)
+TEST(LoadTest, ld_a16_SP)
 {
-    // load 0xCDAB to SP
-
-    uint8_t a[] = {0x08, 0xAB, 0xCD};
-    Cpu cpu{a};
+    program_creator pc;
+    pc.load_to_SP(0x00AA).save_SP(0x1);
+    Cpu cpu{pc.get()};
 
     CpuData expected_data;
-    auto f = [&expected_data](const CpuData &d, const Opcode &op) { expected_data = d; };
+    auto f = [&expected_data](const CpuData &d, const Opcode &op) {
+        if (op.hex == 0x08)
+            expected_data = d;
+    };
     cpu.register_function_callback(f);
     cpu.process();
 
-    ASSERT_EQ(expected_data.SP.u16, 0xCDAB);
+    ASSERT_EQ(expected_data.m_memory[0x1], 0xAA);
 }
 
 TEST(LoadTest, ld_sp_hl)
 {
-    // fill HL
-    // 0xABCD
-
-    // copy HL to SP ( 0xF9 )
-    uint8_t a[] = {0x21, 0xCD, 0xAB, 0xF9};
-    Cpu cpu{a};
+    program_creator pc;
+    pc.load_to_HL(0xABCD).load_HL_to_SP();
+    Cpu cpu{pc.get()};
 
     CpuData expected_data;
     auto f = [&expected_data](const CpuData &d, const Opcode &op) {
@@ -268,12 +171,9 @@ TEST(LoadTest, ld_sp_hl)
 
 TEST(LoadTest, push_BC)
 {
-    // 1. set stack at 10
-    // 2. load 0xFFAA into BC
-    // 3. push BC ( 0xC5 )
-
-    uint8_t a[] = {0x08, 0x0A, 0x00, 0x01, 0xAA, 0xFF, 0xC5};
-    Cpu cpu{a};
+    program_creator pc;
+    pc.load_to_SP(0xA).load_to_BC(0xFFAA).push_BC();
+    Cpu cpu{pc.get()};
 
     CpuData expected_data;
     auto f = [&expected_data](const CpuData &d, const Opcode &op) {
@@ -292,12 +192,9 @@ TEST(LoadTest, push_BC)
 
 TEST(LoadTest, push_DE)
 {
-    // 1. set stack at 0xBB
-    // 2. load 0xAAFF into DE
-    // 3. push DE ( 0xF5 )
-
-    uint8_t a[] = {0x08, 0xBB, 0x00, 0x11, 0xFF, 0xAA, 0xD5};
-    Cpu cpu{a};
+    program_creator pc;
+    pc.load_to_SP(0xBB).load_to_DE(0xAAFF).push_DE();
+    Cpu cpu{pc.get()};
 
     CpuData expected_data;
     auto f = [&expected_data](const CpuData &d, const Opcode &op) {
@@ -316,12 +213,9 @@ TEST(LoadTest, push_DE)
 
 TEST(LoadTest, push_HL)
 {
-    // 1. set stack at 0xAB
-    // 2. load 0x1234 into HL
-    // 3. push HL ( 0xE5 )
-
-    uint8_t a[] = {0x08, 0xAB, 0x00, 0x21, 0x34, 0x12, 0xE5};
-    Cpu cpu{a};
+    program_creator pc;
+    pc.load_to_SP(0xAB).load_to_HL(0x1234).push_HL();
+    Cpu cpu{pc.get()};
 
     CpuData expected_data;
     auto f = [&expected_data](const CpuData &d, const Opcode &op) {
@@ -333,20 +227,14 @@ TEST(LoadTest, push_HL)
 
     // Is stack decremented by 2 bytes
     ASSERT_EQ(expected_data.SP.u16, 0xAB - 2);
-
-    ASSERT_EQ(expected_data.m_memory[expected_data.SP.u16], 0x34);
-    ASSERT_EQ(expected_data.m_memory[expected_data.SP.u16 + 1], 0x12);
+    ASSERT_EQ(read_top_stack(expected_data), 0x1234);
 }
 
 TEST(LoadTest, push_AF)
 {
-    // 1. set stack at 0x0100
-    // 2. set D as 0xBD
-    // 3. load D to A
-    // 4. push AF ( 0xF5 )
-
-    uint8_t a[] = {0x08, 0x00, 0x01, 0x11, 0x00, 0xBD, 0x7A, 0xF5};
-    Cpu cpu{a};
+    program_creator pc;
+    pc.load_to_SP(0x100).load_to_D(0xBD).load_D_to_A().push_AF();
+    Cpu cpu{pc.get()};
 
     CpuData expected_data;
     auto f = [&expected_data](const CpuData &d, const Opcode &op) {
@@ -358,20 +246,14 @@ TEST(LoadTest, push_AF)
 
     // Is stack decremented by 2 bytes
     ASSERT_EQ(expected_data.SP.u16, 0x0100 - 2);
-
-    ASSERT_EQ(expected_data.m_memory[expected_data.SP.u16], 0x0);
-    ASSERT_EQ(expected_data.m_memory[expected_data.SP.u16 + 1], 0xBD);
+    ASSERT_EQ(read_top_stack(expected_data), 0xBD00);
 }
 
 TEST(LoadTest, pop_AF)
 {
-    // 1. set stack at 0xAB
-    // 2. load 0x1234 into HL
-    // 3. push HL ( 0xE5 )
-    // 4. pop into AF ( 0xF1 )
-
-    uint8_t a[] = {0x08, 0xAB, 0x00, 0x21, 0x34, 0x12, 0xE5, 0xF1};
-    Cpu cpu{a};
+    program_creator pc;
+    pc.load_to_SP(0xAB).load_to_HL(0x1234).push_HL().pop_AF();
+    Cpu cpu{pc.get()};
 
     CpuData expected_data;
     auto f = [&expected_data](const CpuData &d, const Opcode &op) {
@@ -389,13 +271,9 @@ TEST(LoadTest, pop_AF)
 
 TEST(LoadTest, pop_BC)
 {
-    // 1. set stack at 0xAB
-    // 2. load 0x1234 into HL
-    // 3. push HL ( 0xE5 )
-    // 4. pop into BC ( 0xC1 )
-
-    uint8_t a[] = {0x08, 0xAB, 0x00, 0x21, 0x34, 0x12, 0xE5, 0xC1};
-    Cpu cpu{a};
+    program_creator pc;
+    pc.load_to_SP(0xAB).load_to_HL(0x1234).push_HL().pop_BC();
+    Cpu cpu{pc.get()};
 
     CpuData expected_data;
     auto f = [&expected_data](const CpuData &d, const Opcode &op) {
@@ -413,13 +291,9 @@ TEST(LoadTest, pop_BC)
 
 TEST(LoadTest, pop_DE)
 {
-    // 1. set stack at 0xAB
-    // 2. load 0x1234 into HL
-    // 3. push HL ( 0xE5 )
-    // 4. pop into DE ( 0xD1 )
-
-    uint8_t a[] = {0x08, 0xAB, 0x00, 0x21, 0x34, 0x12, 0xE5, 0xD1};
-    Cpu cpu{a};
+    program_creator pc;
+    pc.load_to_SP(0xAB).load_to_HL(0x1234).push_HL().pop_DE();
+    Cpu cpu{pc.get()};
 
     CpuData expected_data;
     auto f = [&expected_data](const CpuData &d, const Opcode &op) {
@@ -437,13 +311,9 @@ TEST(LoadTest, pop_DE)
 
 TEST(LoadTest, pop_HL)
 {
-    // 1. set stack at 0xAB
-    // 2. load 0x1234 into HL
-    // 3. push HL ( 0xE5 )
-    // 4. pop into HL ( 0xE1 )
-
-    uint8_t a[] = {0x08, 0xAB, 0x00, 0x21, 0x34, 0x12, 0xE5, 0xE1};
-    Cpu cpu{a};
+    program_creator pc;
+    pc.load_to_SP(0xAB).load_to_DE(0x1234).push_DE().pop_HL();
+    Cpu cpu{pc.get()};
 
     CpuData expected_data;
     auto f = [&expected_data](const CpuData &d, const Opcode &op) {
@@ -461,11 +331,9 @@ TEST(LoadTest, pop_HL)
 
 TEST(LoadTest, load_to_A)
 {
-    // 1. set D as 0xCE
-    // 2. load D to A ( 0x7A )
-
-    uint8_t a[] = {0x11, 0x00, 0xCE, 0x7A};
-    Cpu cpu{a};
+    program_creator pc;
+    pc.load_to_D(0xCE).load_D_to_A();
+    Cpu cpu{pc.get()};
 
     CpuData expected_data;
     auto f = [&expected_data](const CpuData &d, const Opcode &op) {
