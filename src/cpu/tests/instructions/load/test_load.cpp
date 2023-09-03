@@ -5,7 +5,7 @@
 #include <span>
 #include <vector>
 
-uint16_t read_top_stack(CpuData const &data)
+uint16_t read_word_from_stack(CpuData const &data)
 {
     uint16_t result = data.m_memory[data.SP.u16 + 1];
     result <<= 8;
@@ -227,13 +227,13 @@ TEST(LoadTest, push_HL)
 
     // Is stack decremented by 2 bytes
     ASSERT_EQ(expected_data.SP.u16, 0xAB - 2);
-    ASSERT_EQ(read_top_stack(expected_data), 0x1234);
+    ASSERT_EQ(read_word_from_stack(expected_data), 0x1234);
 }
 
 TEST(LoadTest, push_AF)
 {
     program_creator pc;
-    pc.load_to_SP(0x100).load_to_D(0xBD).load_D_to_A().push_AF();
+    pc.load_to_SP(0x100).load_to_DE(0xBD00).load_D_to_A().push_AF();
     Cpu cpu{pc.get()};
 
     CpuData expected_data;
@@ -246,7 +246,7 @@ TEST(LoadTest, push_AF)
 
     // Is stack decremented by 2 bytes
     ASSERT_EQ(expected_data.SP.u16, 0x0100 - 2);
-    ASSERT_EQ(read_top_stack(expected_data), 0xBD00);
+    ASSERT_EQ(read_word_from_stack(expected_data), 0xBD00);
 }
 
 TEST(LoadTest, pop_AF)
@@ -321,19 +321,47 @@ TEST(LoadTest, pop_HL)
     ASSERT_EQ(expected_data.HL.u16, 0xBABE);
 }
 
-TEST(LoadTest, load_B_to_A)
+TEST(LoadTest, load_B_C_D_E_H_L_to_A)
 {
     program_creator pc;
-    pc.load_to_B(0xCE).load_B_to_A();
+    pc.load_to_BC(0xCE47)
+        .load_to_DE(0x3099)
+        .load_to_HL(0xF1F2)
+        .load_B_to_A()
+        .load_C_to_A()
+        .load_D_to_A()
+        .load_E_to_A()
+        .load_H_to_A()
+        .load_L_to_A();
     Cpu cpu{pc.get()};
 
-    CpuData expected_data;
-    auto f = [&expected_data](const CpuData &d, const Opcode &op) {
+    CpuData B_to_A;
+    CpuData C_to_A;
+    CpuData D_to_A;
+    CpuData E_to_A;
+    CpuData H_to_A;
+    CpuData L_to_A;
+    auto f = [&](const CpuData &d, const Opcode &op) {
         if (op.hex == 0x78)
-            expected_data = d;
+            B_to_A = d;
+        if (op.hex == 0x79)
+            C_to_A = d;
+        if (op.hex == 0x7A)
+            D_to_A = d;
+        if (op.hex == 0x7B)
+            E_to_A = d;
+        if (op.hex == 0x7C)
+            H_to_A = d;
+        if (op.hex == 0x7D)
+            L_to_A = d;
     };
     cpu.register_function_callback(f);
     cpu.process();
 
-    ASSERT_EQ(expected_data.AF.hi, 0xCE);
+    ASSERT_EQ(B_to_A.AF.hi, 0xCE);
+    ASSERT_EQ(C_to_A.AF.hi, 0x47);
+    ASSERT_EQ(D_to_A.AF.hi, 0x30);
+    ASSERT_EQ(E_to_A.AF.hi, 0x99);
+    ASSERT_EQ(H_to_A.AF.hi, 0xF1);
+    ASSERT_EQ(L_to_A.AF.hi, 0xF2);
 }

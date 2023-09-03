@@ -2,22 +2,6 @@
 #include <cstdint>
 #include <vector>
 
-program_creator &program_creator::load_to_B(uint8_t val)
-{
-    m_program.push_back(0x01);
-    m_program.push_back(0x00);
-    m_program.push_back(val);
-    return *this;
-}
-
-program_creator &program_creator::load_to_C(uint8_t val)
-{
-    m_program.push_back(0x01);
-    m_program.push_back(val);
-    m_program.push_back(0x00);
-    return *this;
-}
-
 program_creator &program_creator::load_to_BC(uint16_t val)
 {
     m_program.push_back(0x01);
@@ -26,43 +10,11 @@ program_creator &program_creator::load_to_BC(uint16_t val)
     return *this;
 }
 
-program_creator &program_creator::load_to_D(uint8_t val)
-{
-    m_program.push_back(0x11);
-    m_program.push_back(0x00);
-    m_program.push_back(val);
-    return *this;
-}
-
-program_creator &program_creator::load_to_E(uint8_t val)
-{
-    m_program.push_back(0x11);
-    m_program.push_back(val);
-    m_program.push_back(0x00);
-    return *this;
-}
-
 program_creator &program_creator::load_to_DE(uint16_t val)
 {
     m_program.push_back(0x11);
     m_program.push_back(val);
     m_program.push_back(val >> 8);
-    return *this;
-}
-
-program_creator &program_creator::load_to_H(uint8_t val)
-{
-    m_program.push_back(0x21);
-    m_program.push_back(0x00);
-    m_program.push_back(val);
-    return *this;
-}
-
-program_creator &program_creator::load_to_L(uint8_t val)
-{
-    m_program.push_back(0x21);
-    m_program.push_back(val);
-    m_program.push_back(0x00);
     return *this;
 }
 
