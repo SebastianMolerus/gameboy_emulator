@@ -262,3 +262,47 @@ TEST(LoadTest, push_HL)
     ASSERT_EQ(expected_data.m_memory[expected_data.SP.u16], 0x34);
     ASSERT_EQ(expected_data.m_memory[expected_data.SP.u16 + 1], 0x12);
 }
+
+TEST(LoadTest, push_AF)
+{
+    // 1. set stack at 0x0100
+    // 2. set D as 0xBD
+    // 3. load D to A
+    // 4. push AF ( 0xF5 )
+
+    uint8_t a[] = {0x08, 0x00, 0x01, 0x11, 0x00, 0xBD, 0x7A, 0xF5};
+    Cpu cpu{a};
+
+    CpuData expected_data;
+    auto f = [&expected_data](const CpuData &d, const Opcode &op) {
+        if (op.hex == 0xF5)
+            expected_data = d;
+    };
+    cpu.register_function_callback(f);
+    cpu.process();
+
+    // Is stack decremented by 2 bytes
+    ASSERT_EQ(expected_data.SP.u16, 0x0100 - 2);
+
+    ASSERT_EQ(expected_data.m_memory[expected_data.SP.u16], 0x0);
+    ASSERT_EQ(expected_data.m_memory[expected_data.SP.u16 + 1], 0xBD);
+}
+
+TEST(LoadTest, load_D_to_A)
+{
+    // 1. set D as 0xCE
+    // 2. load D to A ( 0x7A )
+
+    uint8_t a[] = {0x11, 0x00, 0xCE, 0x7A};
+    Cpu cpu{a};
+
+    CpuData expected_data;
+    auto f = [&expected_data](const CpuData &d, const Opcode &op) {
+        if (op.hex == 0x7A)
+            expected_data = d;
+    };
+    cpu.register_function_callback(f);
+    cpu.process();
+
+    ASSERT_EQ(*expected_data.get_byte("A"), 0xCE);
+}

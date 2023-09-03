@@ -91,6 +91,14 @@ void ld_sp_hl(Opcode const &op, CpuData &cpu_data, std::span<uint8_t> program)
     *cpu_data.get_word(op.operands[0].name) = *cpu_data.get_word(op.operands[1].name);
 }
 
+void ld_A_reg(Opcode const &op, CpuData &cpu_data, std::span<uint8_t> program)
+{
+    assert(op.operands[0].name != nullptr); // target ( A )
+    assert(op.operands[1].name != nullptr); // source
+
+    *cpu_data.get_byte(op.operands[0].name) = *cpu_data.get_byte(op.operands[1].name);
+}
+
 } // namespace
 
 // Main "LD" entry
@@ -106,6 +114,9 @@ void load(Opcode const &op, CpuData &cpu_data, std::span<uint8_t> program)
     case 0x21:
     case 0x31:
         ld_reg_n16(op, cpu_data, program);
+        break;
+    case 0x7A:
+        ld_A_reg(op, cpu_data, program);
         break;
     case 0xC5: // push BC
     case 0xF5: // push AF
