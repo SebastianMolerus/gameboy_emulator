@@ -123,6 +123,13 @@ program_creator &program_creator::pop_AF()
     return *this;
 }
 
+program_creator &program_creator::load_n8_to_A(uint8_t value)
+{
+    m_program.push_back(0x3E);
+    m_program.push_back(value);
+    return *this;
+}
+
 program_creator &program_creator::load_B_to_A()
 {
     m_program.push_back(0x78);

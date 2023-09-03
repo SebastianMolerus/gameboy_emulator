@@ -438,3 +438,20 @@ TEST(LoadTest, load_C_addr_to_A)
 
     ASSERT_EQ(expected_data.AF.hi, 0x34);
 }
+
+TEST(LoadTest, load_n8_to_A)
+{
+    program_creator pc;
+    pc.load_n8_to_A(0xE3);
+    Cpu cpu{pc.get()};
+
+    CpuData expected_data;
+    auto f = [&expected_data](const CpuData &d, const Opcode &op) {
+        if (op.hex == 0x3E)
+            expected_data = d;
+    };
+    cpu.register_function_callback(f);
+    cpu.process();
+
+    ASSERT_EQ(expected_data.AF.hi, 0xE3);
+}

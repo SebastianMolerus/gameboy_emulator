@@ -114,9 +114,10 @@ void ld_A_reg(Opcode const &op, CpuData &cpu_data, std::span<uint8_t> program)
         {
             auto OP2 = cpu_data.get_word(op.operands[1].name);
             val = cpu_data.m_memory[*OP2];
-            if (op.hex == 0x2A) // LD A, [HL+]
+
+            if (op.operands[1].increment == 1)
                 *OP2 += 1;
-            if (op.hex == 0x3A) // LD A, [HL-]
+            if (op.operands[1].decrement == 1)
                 *OP2 -= 1;
         }
 
@@ -129,7 +130,12 @@ void ld_A_reg(Opcode const &op, CpuData &cpu_data, std::span<uint8_t> program)
     }
     else
     {
-        val = *cpu_data.get_byte(op.operands[1].name);
+        if (op.bytes == 2)
+        {
+            val = program[1];
+        }
+        else
+            val = *cpu_data.get_byte(op.operands[1].name);
     }
 
     *cpu_data.get_byte(op.operands[0].name) = val;
@@ -178,6 +184,7 @@ void load(Opcode const &op, CpuData &cpu_data, std::span<uint8_t> program)
     case 0x2A: // load ( HL + ) to A
     case 0x3A: // load ( HL - ) to A
     case 0xF2: // Put value at address $FF00 + register C into A.
+    case 0x3E: // load n to A
         ld_A_reg(op, cpu_data, program);
         break;
     case 0xF1: // pop AF

@@ -40,6 +40,8 @@ struct program_creator
 
     program_creator &pop_AF();
 
+    program_creator &load_n8_to_A(uint8_t value);
+
     program_creator &load_B_to_A();
     program_creator &load_C_to_A();
     program_creator &load_C_addr_to_A();
