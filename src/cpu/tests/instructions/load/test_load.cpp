@@ -137,7 +137,7 @@ TEST(LoadTest, ld_HL_SP_n8_carry)
 TEST(LoadTest, ld_a16_SP)
 {
     program_creator pc;
-    pc.load_to_SP(0x00AA).save_SP(0x1);
+    pc.load_to_SP(0xBBAA).save_SP(0x1);
     Cpu cpu{pc.get()};
 
     CpuData expected_data;
@@ -149,6 +149,7 @@ TEST(LoadTest, ld_a16_SP)
     cpu.process();
 
     ASSERT_EQ(expected_data.m_memory[0x1], 0xAA);
+    ASSERT_EQ(expected_data.m_memory[0x2], 0xBB);
 }
 
 TEST(LoadTest, ld_sp_hl)

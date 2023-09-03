@@ -23,7 +23,9 @@ uint16_t get_16nn_le(std::span<uint8_t> program)
 // 0x08 : Put Stack Pointer (SP) at address n
 void ld_a16_SP(Opcode const &op, CpuData &cpu_data, std::span<uint8_t> program)
 {
-    cpu_data.m_memory[get_16nn_le(program)] = cpu_data.SP.u16;
+    uint16_t addr = get_16nn_le(program);
+    cpu_data.m_memory[addr] = cpu_data.SP.u16;
+    cpu_data.m_memory[addr + 1] = cpu_data.SP.u16 >> 8;
 }
 
 // put n16 into REG
