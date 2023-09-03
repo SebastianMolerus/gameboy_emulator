@@ -130,6 +130,14 @@ program_creator &program_creator::load_n8_to_A(uint8_t value)
     return *this;
 }
 
+program_creator &program_creator::load_addr_to_A(uint16_t addr)
+{
+    m_program.push_back(0xFA);
+    m_program.push_back(addr);
+    m_program.push_back(addr >> 8);
+    return *this;
+}
+
 program_creator &program_creator::load_B_to_A()
 {
     m_program.push_back(0x78);
@@ -138,6 +146,11 @@ program_creator &program_creator::load_B_to_A()
 program_creator &program_creator::load_C_to_A()
 {
     m_program.push_back(0x79);
+    return *this;
+}
+program_creator &program_creator::load_BC_addr_to_A()
+{
+    m_program.push_back(0xA);
     return *this;
 }
 program_creator &program_creator::load_C_addr_to_A()
@@ -153,6 +166,11 @@ program_creator &program_creator::load_D_to_A()
 program_creator &program_creator::load_E_to_A()
 {
     m_program.push_back(0x7B);
+    return *this;
+}
+program_creator &program_creator::load_DE_addr_to_A()
+{
+    m_program.push_back(0x1A);
     return *this;
 }
 program_creator &program_creator::load_H_to_A()

@@ -173,7 +173,7 @@ TEST(LoadTest, ld_sp_hl)
 TEST(LoadTest, push_BC)
 {
     program_creator pc;
-    pc.load_to_SP(0xA).load_to_BC(0xFFAA).push_BC();
+    pc.load_to_SP(0xA).load_to_BC(0x548A).push_BC();
     Cpu cpu{pc.get()};
 
     CpuData expected_data;
@@ -186,9 +186,7 @@ TEST(LoadTest, push_BC)
 
     // Is stack decremented by 2 bytes
     ASSERT_EQ(expected_data.SP.u16, 8);
-
-    ASSERT_EQ(expected_data.m_memory[expected_data.SP.u16], 0xAA);
-    ASSERT_EQ(expected_data.m_memory[expected_data.SP.u16 + 1], 0xFF);
+    ASSERT_EQ(read_word_from_stack(expected_data), 0x548A);
 }
 
 TEST(LoadTest, push_DE)
@@ -207,9 +205,7 @@ TEST(LoadTest, push_DE)
 
     // Is stack decremented by 2 bytes
     ASSERT_EQ(expected_data.SP.u16, 0xBB - 2);
-
-    ASSERT_EQ(expected_data.m_memory[expected_data.SP.u16], 0xFF);
-    ASSERT_EQ(expected_data.m_memory[expected_data.SP.u16 + 1], 0xAA);
+    ASSERT_EQ(read_word_from_stack(expected_data), 0xAAFF);
 }
 
 TEST(LoadTest, push_HL)
@@ -454,4 +450,55 @@ TEST(LoadTest, load_n8_to_A)
     cpu.process();
 
     ASSERT_EQ(expected_data.AF.hi, 0xE3);
+}
+
+TEST(LoadTest, load_addr_to_A)
+{
+    program_creator pc;
+    pc.load_to_SP(0x9876).save_SP(0x3003).load_addr_to_A(0x3003);
+    Cpu cpu{pc.get()};
+
+    CpuData expected_data;
+    auto f = [&expected_data](const CpuData &d, const Opcode &op) {
+        if (op.hex == 0xFA)
+            expected_data = d;
+    };
+    cpu.register_function_callback(f);
+    cpu.process();
+
+    ASSERT_EQ(expected_data.AF.hi, 0x76);
+}
+
+TEST(LoadTest, load_BC_addr_to_A)
+{
+    program_creator pc;
+    pc.load_to_SP(0x3298).save_SP(0x205).load_to_BC(0x205).load_BC_addr_to_A();
+    Cpu cpu{pc.get()};
+
+    CpuData expected_data;
+    auto f = [&expected_data](const CpuData &d, const Opcode &op) {
+        if (op.hex == 0xA)
+            expected_data = d;
+    };
+    cpu.register_function_callback(f);
+    cpu.process();
+
+    ASSERT_EQ(expected_data.AF.hi, 0x98);
+}
+
+TEST(LoadTest, load_DE_addr_to_A)
+{
+    program_creator pc;
+    pc.load_to_SP(0x11A9).save_SP(0x0000).load_to_DE(0x0).load_DE_addr_to_A();
+    Cpu cpu{pc.get()};
+
+    CpuData expected_data;
+    auto f = [&expected_data](const CpuData &d, const Opcode &op) {
+        if (op.hex == 0x1A)
+            expected_data = d;
+    };
+    cpu.register_function_callback(f);
+    cpu.process();
+
+    ASSERT_EQ(expected_data.AF.hi, 0xA9);
 }

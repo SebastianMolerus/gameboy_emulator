@@ -164,13 +164,13 @@ void load(Opcode const &op, CpuData &cpu_data, std::span<uint8_t> program)
 {
     switch (op.hex)
     {
-    case 0x08: // copy SP to a16
+    case 0x08: // copy SP value into a16
         ld_a16_SP(op, cpu_data, program);
         break;
-    case 0x01:
-    case 0x11:
-    case 0x21:
-    case 0x31:
+    case 0x01: // load nn to BC
+    case 0x11: // load nn to DE
+    case 0x21: // load nn to HL
+    case 0x31: // load nn to SP
         ld_reg_n16(op, cpu_data, program);
         break;
     case 0x78: // load B to A
@@ -185,6 +185,9 @@ void load(Opcode const &op, CpuData &cpu_data, std::span<uint8_t> program)
     case 0x3A: // load ( HL - ) to A
     case 0xF2: // Put value at address $FF00 + register C into A.
     case 0x3E: // load n to A
+    case 0xFA: // load (a16) to A
+    case 0x0A: // load (BC) to A
+    case 0x1A: // load (DE) to A
         ld_A_reg(op, cpu_data, program);
         break;
     case 0xF1: // pop AF
@@ -199,7 +202,7 @@ void load(Opcode const &op, CpuData &cpu_data, std::span<uint8_t> program)
     case 0xE5: // push HL
         push(op, cpu_data, program);
         break;
-    case 0xF8: // add n8 to SP and copy it to HL
+    case 0xF8: // add n to SP and copy it to HL
         ld_hl_sp_n8(op, cpu_data, program);
         break;
     case 0xF9: // copy HL to SP

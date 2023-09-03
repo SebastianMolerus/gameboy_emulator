@@ -41,12 +41,15 @@ struct program_creator
     program_creator &pop_AF();
 
     program_creator &load_n8_to_A(uint8_t value);
+    program_creator &load_addr_to_A(uint16_t addr);
 
     program_creator &load_B_to_A();
     program_creator &load_C_to_A();
+    program_creator &load_BC_addr_to_A();
     program_creator &load_C_addr_to_A();
     program_creator &load_D_to_A();
     program_creator &load_E_to_A();
+    program_creator &load_DE_addr_to_A();
     program_creator &load_H_to_A();
     program_creator &load_L_to_A();
 
