@@ -131,7 +131,12 @@ void load(Opcode const &op, CpuData &cpu_data, std::span<uint8_t> program)
     case 0x31:
         ld_reg_n16(op, cpu_data, program);
         break;
-    case 0x7A:
+    case 0x78: // load B to A
+    case 0x79: // load C to A
+    case 0x7A: // load D to A
+    case 0x7B: // load E to A
+    case 0x7C: // load H to A
+    case 0x7D: // load L to A
         ld_A_reg(op, cpu_data, program);
         break;
     case 0xF1: // pop AF

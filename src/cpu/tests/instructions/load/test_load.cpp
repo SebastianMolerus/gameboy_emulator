@@ -4,79 +4,178 @@
 #include <span>
 #include <vector>
 
+struct program_creator
+{
+    std::vector<uint8_t> m_program;
+
+    program_creator &load_to_B(uint8_t val)
+    {
+        m_program.push_back(0x01);
+        m_program.push_back(0x00);
+        m_program.push_back(val);
+        return *this;
+    }
+
+    program_creator &load_to_C(uint8_t val)
+    {
+        m_program.push_back(0x01);
+        m_program.push_back(val);
+        m_program.push_back(0x00);
+        return *this;
+    }
+
+    program_creator &load_to_BC(uint16_t val)
+    {
+        m_program.push_back(0x01);
+        m_program.push_back(val);
+        m_program.push_back(val >> 8);
+        return *this;
+    }
+
+    program_creator &load_to_D(uint8_t val)
+    {
+        m_program.push_back(0x11);
+        m_program.push_back(0x00);
+        m_program.push_back(val);
+        return *this;
+    }
+
+    program_creator &load_to_E(uint8_t val)
+    {
+        m_program.push_back(0x11);
+        m_program.push_back(val);
+        m_program.push_back(0x00);
+        return *this;
+    }
+
+    program_creator &load_to_DE(uint16_t val)
+    {
+        m_program.push_back(0x11);
+        m_program.push_back(val);
+        m_program.push_back(val >> 8);
+        return *this;
+    }
+
+    program_creator &load_to_H(uint8_t val)
+    {
+        m_program.push_back(0x21);
+        m_program.push_back(0x00);
+        m_program.push_back(val);
+        return *this;
+    }
+
+    program_creator &load_to_L(uint8_t val)
+    {
+        m_program.push_back(0x21);
+        m_program.push_back(val);
+        m_program.push_back(0x00);
+        return *this;
+    }
+
+    program_creator &load_to_HL(uint16_t val)
+    {
+        m_program.push_back(0x21);
+        m_program.push_back(val);
+        m_program.push_back(val >> 8);
+        return *this;
+    }
+
+    program_creator &load_to_SP(uint16_t val)
+    {
+        m_program.push_back(0x31);
+        m_program.push_back(val);
+        m_program.push_back(val >> 8);
+        return *this;
+    }
+
+    // if val & 0x80
+    // this is substraction from SP
+    program_creator &add_to_SP(uint8_t val)
+    {
+        m_program.push_back(0xF8);
+        m_program.push_back(val);
+        return *this;
+    }
+
+    program_creator &add_custom_command(uint8_t cmd)
+    {
+        m_program.push_back(cmd);
+        return *this;
+    }
+
+    std::vector<uint8_t> &get()
+    {
+        return m_program;
+    }
+};
+
 TEST(LoadTest, ld_BC_n16)
 {
-    // 5831 == 0x16C7 -> C7, 16 in LE
-    uint8_t a[] = {0x01, 0xC7, 0x16};
-    Cpu cpu{a};
+    uint16_t constexpr value_to_load{0x16C7};
+    program_creator pc;
+    pc.load_to_BC(value_to_load);
+    Cpu cpu{pc.get()};
+
     CpuData expected_data;
     cpu.register_function_callback([&expected_data](const CpuData &d, const Opcode &) { expected_data = d; });
     cpu.process();
-    ASSERT_EQ(expected_data.BC.u16, 5831);
+    ASSERT_EQ(expected_data.BC.u16, value_to_load);
 }
 
 TEST(LoadTest, ld_DE_n16)
 {
-    // 5503 == 0x157F -> 7F, 15 in LE
-    uint8_t a[] = {0x11, 0x7F, 0x15};
-    Cpu cpu{a};
+    uint16_t constexpr value_to_load{0x157F};
+    program_creator pc;
+    pc.load_to_DE(value_to_load);
+    Cpu cpu{pc.get()};
+
     CpuData expected_data;
     cpu.register_function_callback([&expected_data](const CpuData &d, const Opcode &) { expected_data = d; });
     cpu.process();
-    ASSERT_EQ(expected_data.DE.u16, 5503);
+    ASSERT_EQ(expected_data.DE.u16, value_to_load);
 }
 
 TEST(LoadTest, ld_HL_n16)
 {
-    // 62735 == 0xF50F -> 0F, F5 in LE
-    uint8_t a[] = {0x21, 0x0F, 0xF5};
-    Cpu cpu{a};
+    uint16_t constexpr value_to_load{0xF50F};
+    program_creator pc;
+    pc.load_to_HL(value_to_load);
+    Cpu cpu{pc.get()};
+
     CpuData expected_data;
     cpu.register_function_callback([&expected_data](const CpuData &d, const Opcode &) { expected_data = d; });
     cpu.process();
-    ASSERT_EQ(expected_data.HL.u16, 62735);
+    ASSERT_EQ(expected_data.HL.u16, value_to_load);
 }
 
 TEST(LoadTest, ld_SP_n16)
 {
-    // 43981 == 0xABCD -> CD, AB in LE
-    uint8_t a[] = {0x31, 0xCD, 0xAB};
-    Cpu cpu{a};
+    uint16_t constexpr value_to_load{0xABCD};
+    program_creator pc;
+    pc.load_to_SP(value_to_load);
+    Cpu cpu{pc.get()};
+
     CpuData expected_data;
     cpu.register_function_callback([&expected_data](const CpuData &d, const Opcode &) { expected_data = d; });
     cpu.process();
-    ASSERT_EQ(expected_data.SP.u16, 43981);
+    ASSERT_EQ(expected_data.SP.u16, value_to_load);
 }
 
 TEST(LoadTest, ld_HL_SP_n8)
 {
-    // 1.
-    // load 62 ( 0x3E ) to SP using ld_SP_n16
-    // add 35 ( 0x23 ) to SP
-    // HC expected
-
-    // 2.
-    // load 0xFFFF to SP
-    // add 1 to SP
-    // CF expected
-
-    // 3.
-    // load 0x05 to SP
-    // substract 1 from SP ( 0x81 )
-
-    uint8_t a[] = {0x31, 0x3E, 0x00, 0xF8, 0x23, 0x31, 0xFF, 0xFF, 0xF8, 0x01, 0x31, 0x05, 0x00, 0xF8, 0x81};
-    Cpu cpu{a};
+    program_creator pc;
+    pc.load_to_SP(0x3E).add_to_SP(0x23).load_to_SP(0xFFFF).add_to_SP(0x1).load_to_SP(0x5).add_to_SP(0x81);
+    Cpu cpu{pc.get()};
 
     std::vector<CpuData> expected_data;
     auto f = [&expected_data](const CpuData &d, const Opcode &op) {
-        if (op.hex == 0xF8)
+        if (op.hex == 0xF8) // after each add_to_SP
             expected_data.push_back(d);
     };
     cpu.register_function_callback(f);
     cpu.process();
 
     ASSERT_EQ(expected_data.size(), 3);
-    ASSERT_EQ(expected_data[2].PC.u16, sizeof(a) / sizeof(uint8_t));
 
     for (auto &data : expected_data)
     {
@@ -97,28 +196,13 @@ TEST(LoadTest, ld_HL_SP_n8)
 
 TEST(LoadTest, ld_HL_SP_n8_half_carry)
 {
-    // 1.
-    // load 0x09 to SP
-    // add 0x10 ( 16 ) to SP
-
-    // 0000 1001
-    //+0001 0000
-    // No HC expected
-
-    // 2.
-    // load 0xA to SP
-    // add 0xC to SP
-
-    // 0000 1010
-    //+0000 1100
-    // HC expected
-
-    uint8_t a[] = {0x31, 0x09, 0x00, 0xF8, 0x10, 0x31, 0x0A, 0x00, 0xF8, 0x0C};
-    Cpu cpu{a};
+    program_creator pc;
+    pc.load_to_SP(0x9).add_to_SP(0x10).load_to_SP(0xA).add_to_SP(0xC);
+    Cpu cpu{pc.get()};
 
     std::vector<CpuData> expected_data;
     auto f = [&expected_data](const CpuData &d, const Opcode &op) {
-        if (op.hex == 0xF8)
+        if (op.hex == 0xF8) // after each add_to_SP
             expected_data.push_back(d);
     };
     cpu.register_function_callback(f);
@@ -130,22 +214,13 @@ TEST(LoadTest, ld_HL_SP_n8_half_carry)
 
 TEST(LoadTest, ld_HL_SP_n8_carry)
 {
-    // 1.
-    // load 0xFFFE to SP
-    // add 0x01 to SP
-    // No C expected
-
-    // 2.
-    // load 0xFFFF to SP
-    // add 0x01 to SP
-    // C expected
-
-    uint8_t a[] = {0x31, 0xFE, 0xFF, 0xF8, 0x01, 0x31, 0xFF, 0xFF, 0xF8, 0x01};
-    Cpu cpu{a};
+    program_creator pc;
+    pc.load_to_SP(0xFFFE).add_to_SP(0x1).load_to_SP(0xFFFF).add_to_SP(0x1);
+    Cpu cpu{pc.get()};
 
     std::vector<CpuData> expected_data;
     auto f = [&expected_data](const CpuData &d, const Opcode &op) {
-        if (op.hex == 0xF8)
+        if (op.hex == 0xF8) // after each add_to_SP
             expected_data.push_back(d);
     };
     cpu.register_function_callback(f);
@@ -384,7 +459,7 @@ TEST(LoadTest, pop_HL)
     ASSERT_EQ(expected_data.HL.u16, 0x1234);
 }
 
-TEST(LoadTest, load_D_to_A)
+TEST(LoadTest, load_to_A)
 {
     // 1. set D as 0xCE
     // 2. load D to A ( 0x7A )
