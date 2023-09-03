@@ -153,9 +153,34 @@ program_creator &program_creator::pop_AF()
     return *this;
 }
 
+program_creator &program_creator::load_B_to_A()
+{
+    m_program.push_back(0x78);
+    return *this;
+}
+program_creator &program_creator::load_C_to_A()
+{
+    m_program.push_back(0x79);
+    return *this;
+}
 program_creator &program_creator::load_D_to_A()
 {
     m_program.push_back(0x7A);
+    return *this;
+}
+program_creator &program_creator::load_E_to_A()
+{
+    m_program.push_back(0x7B);
+    return *this;
+}
+program_creator &program_creator::load_H_to_A()
+{
+    m_program.push_back(0x7C);
+    return *this;
+}
+program_creator &program_creator::load_L_to_A()
+{
+    m_program.push_back(0x7D);
     return *this;
 }
 

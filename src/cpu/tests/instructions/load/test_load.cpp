@@ -252,7 +252,7 @@ TEST(LoadTest, push_AF)
 TEST(LoadTest, pop_AF)
 {
     program_creator pc;
-    pc.load_to_SP(0xAB).load_to_HL(0x1234).push_HL().pop_AF();
+    pc.load_to_SP(0x303).load_to_DE(0xBAFE).push_DE().pop_AF();
     Cpu cpu{pc.get()};
 
     CpuData expected_data;
@@ -263,16 +263,14 @@ TEST(LoadTest, pop_AF)
     cpu.register_function_callback(f);
     cpu.process();
 
-    // Stack should be restored to original 0xAB
-    ASSERT_EQ(expected_data.SP.u16, 0xAB);
-    // AF should have same value as pushed HL
-    ASSERT_EQ(expected_data.AF.u16, 0x1234);
+    ASSERT_EQ(expected_data.SP.u16, 0x303);
+    ASSERT_EQ(expected_data.AF.u16, 0xBAFE);
 }
 
 TEST(LoadTest, pop_BC)
 {
     program_creator pc;
-    pc.load_to_SP(0xAB).load_to_HL(0x1234).push_HL().pop_BC();
+    pc.load_to_SP(0x12).load_to_HL(0xF0F0).push_HL().pop_BC();
     Cpu cpu{pc.get()};
 
     CpuData expected_data;
@@ -283,16 +281,14 @@ TEST(LoadTest, pop_BC)
     cpu.register_function_callback(f);
     cpu.process();
 
-    // Stack should be restored to original 0xAB
-    ASSERT_EQ(expected_data.SP.u16, 0xAB);
-    // BC should have same value as pushed HL
-    ASSERT_EQ(expected_data.BC.u16, 0x1234);
+    ASSERT_EQ(expected_data.SP.u16, 0x12);
+    ASSERT_EQ(expected_data.BC.u16, 0xF0F0);
 }
 
 TEST(LoadTest, pop_DE)
 {
     program_creator pc;
-    pc.load_to_SP(0xAB).load_to_HL(0x1234).push_HL().pop_DE();
+    pc.load_to_SP(0x89).load_to_HL(0x1561).push_HL().pop_DE();
     Cpu cpu{pc.get()};
 
     CpuData expected_data;
@@ -303,16 +299,14 @@ TEST(LoadTest, pop_DE)
     cpu.register_function_callback(f);
     cpu.process();
 
-    // Stack should be restored to original 0xAB
-    ASSERT_EQ(expected_data.SP.u16, 0xAB);
-    // DE should have same value as pushed HL
-    ASSERT_EQ(expected_data.DE.u16, 0x1234);
+    ASSERT_EQ(expected_data.SP.u16, 0x89);
+    ASSERT_EQ(expected_data.DE.u16, 0x1561);
 }
 
 TEST(LoadTest, pop_HL)
 {
     program_creator pc;
-    pc.load_to_SP(0xAB).load_to_DE(0x1234).push_DE().pop_HL();
+    pc.load_to_SP(0x99).load_to_BC(0xBABE).push_BC().pop_HL();
     Cpu cpu{pc.get()};
 
     CpuData expected_data;
@@ -323,25 +317,23 @@ TEST(LoadTest, pop_HL)
     cpu.register_function_callback(f);
     cpu.process();
 
-    // Stack should be restored to original 0xAB
-    ASSERT_EQ(expected_data.SP.u16, 0xAB);
-    // HL should have same value as pushed HL
-    ASSERT_EQ(expected_data.HL.u16, 0x1234);
+    ASSERT_EQ(expected_data.SP.u16, 0x99);
+    ASSERT_EQ(expected_data.HL.u16, 0xBABE);
 }
 
-TEST(LoadTest, load_to_A)
+TEST(LoadTest, load_B_to_A)
 {
     program_creator pc;
-    pc.load_to_D(0xCE).load_D_to_A();
+    pc.load_to_B(0xCE).load_B_to_A();
     Cpu cpu{pc.get()};
 
     CpuData expected_data;
     auto f = [&expected_data](const CpuData &d, const Opcode &op) {
-        if (op.hex == 0x7A)
+        if (op.hex == 0x78)
             expected_data = d;
     };
     cpu.register_function_callback(f);
     cpu.process();
 
-    ASSERT_EQ(*expected_data.get_byte("A"), 0xCE);
+    ASSERT_EQ(expected_data.AF.hi, 0xCE);
 }
