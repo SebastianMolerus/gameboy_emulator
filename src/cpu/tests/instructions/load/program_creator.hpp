@@ -14,6 +14,9 @@ struct program_creator
     program_creator &load_to_SP(uint16_t val);
 
     program_creator &load_HL_to_SP();
+    program_creator &load_HL_to_A();
+    program_creator &load_HL_plus_to_A();
+    program_creator &load_HL_minus_to_A();
 
     // if val & 0x80
     // this is substraction from SP

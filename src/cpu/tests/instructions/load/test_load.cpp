@@ -365,3 +365,58 @@ TEST(LoadTest, load_B_C_D_E_H_L_to_A)
     ASSERT_EQ(H_to_A.AF.hi, 0xF1);
     ASSERT_EQ(L_to_A.AF.hi, 0xF2);
 }
+
+TEST(LoadTest, load_HL_to_A)
+{
+    program_creator pc;
+    // saving value 0x67 at memory location 0x100 using SP
+    // and then read this memory via HL and save it to A
+    pc.load_to_SP(0x67).save_SP(0x100).load_to_HL(0x100).load_HL_to_A();
+    Cpu cpu{pc.get()};
+
+    CpuData expected_data;
+    auto f = [&expected_data](const CpuData &d, const Opcode &op) {
+        if (op.hex == 0x7E)
+            expected_data = d;
+    };
+    cpu.register_function_callback(f);
+    cpu.process();
+
+    ASSERT_EQ(expected_data.AF.hi, 0x67);
+}
+
+TEST(LoadTest, load_HL_plus_to_A)
+{
+    program_creator pc;
+    pc.load_to_SP(0x12).save_SP(0xACCA).load_to_HL(0xACCA).load_HL_plus_to_A();
+    Cpu cpu{pc.get()};
+
+    CpuData expected_data;
+    auto f = [&expected_data](const CpuData &d, const Opcode &op) {
+        if (op.hex == 0x2A)
+            expected_data = d;
+    };
+    cpu.register_function_callback(f);
+    cpu.process();
+
+    ASSERT_EQ(expected_data.AF.hi, 0x12);
+    ASSERT_EQ(expected_data.HL.u16, 0xACCB);
+}
+
+TEST(LoadTest, load_HL_minus_to_A)
+{
+    program_creator pc;
+    pc.load_to_SP(0x79).save_SP(0x02).load_to_HL(0x02).load_HL_minus_to_A();
+    Cpu cpu{pc.get()};
+
+    CpuData expected_data;
+    auto f = [&expected_data](const CpuData &d, const Opcode &op) {
+        if (op.hex == 0x3A)
+            expected_data = d;
+    };
+    cpu.register_function_callback(f);
+    cpu.process();
+
+    ASSERT_EQ(expected_data.AF.hi, 0x79);
+    ASSERT_EQ(expected_data.HL.u16, 0x1);
+}

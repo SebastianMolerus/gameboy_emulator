@@ -40,6 +40,24 @@ program_creator &program_creator::load_HL_to_SP()
     return *this;
 }
 
+program_creator &program_creator::load_HL_to_A()
+{
+    m_program.push_back(0x7E);
+    return *this;
+}
+
+program_creator &program_creator::load_HL_plus_to_A()
+{
+    m_program.push_back(0x2A);
+    return *this;
+}
+
+program_creator &program_creator::load_HL_minus_to_A()
+{
+    m_program.push_back(0x3A);
+    return *this;
+}
+
 // if val & 0x80
 // this is substraction from SP
 program_creator &program_creator::add_to_SP(uint8_t val)

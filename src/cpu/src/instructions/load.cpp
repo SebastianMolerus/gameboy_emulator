@@ -95,7 +95,41 @@ void ld_A_reg(Opcode const &op, CpuData &cpu_data, std::span<uint8_t> program)
     assert(op.operands[0].name != nullptr); // target ( A )
     assert(op.operands[1].name != nullptr); // source
 
-    *cpu_data.get_byte(op.operands[0].name) = *cpu_data.get_byte(op.operands[1].name);
+    uint8_t val{};
+    if (!op.operands[1].immediate)
+    {
+        if (strlen(op.operands[1].name) == 3)
+        {
+            assert(op.bytes == 3);
+            assert(op.hex == 0xFA);
+
+            uint16_t addr = get_16nn_le(program);
+            val = cpu_data.m_memory[addr];
+        }
+
+        if (strlen(op.operands[1].name) == 2)
+        {
+            auto OP2 = cpu_data.get_word(op.operands[1].name);
+            val = cpu_data.m_memory[*OP2];
+            if (op.hex == 0x2A) // LD A, [HL+]
+                *OP2 += 1;
+            if (op.hex == 0x3A) // LD A, [HL-]
+                *OP2 -= 1;
+        }
+
+        if (strlen(op.operands[1].name) == 1)
+        {
+            assert(op.bytes == 1);
+            assert(op.hex == 0xF2);
+            val = cpu_data.m_memory[cpu_data.BC.lo + 0xFF00];
+        }
+    }
+    else
+    {
+        val = *cpu_data.get_byte(op.operands[1].name);
+    }
+
+    *cpu_data.get_byte(op.operands[0].name) = val;
 }
 
 void pop(Opcode const &op, CpuData &cpu_data, std::span<uint8_t> program)
@@ -106,7 +140,7 @@ void pop(Opcode const &op, CpuData &cpu_data, std::span<uint8_t> program)
     auto target = cpu_data.get_word(op.operands[0].name);
     uint16_t val = cpu_data.m_memory[cpu_data.SP.u16 + 1]; // MSB
     val <<= 8;
-    val |= cpu_data.m_memory[cpu_data.SP.u16];             // LSB
+    val |= cpu_data.m_memory[cpu_data.SP.u16]; // LSB
 
     *target = val;
 
@@ -136,6 +170,10 @@ void load(Opcode const &op, CpuData &cpu_data, std::span<uint8_t> program)
     case 0x7B: // load E to A
     case 0x7C: // load H to A
     case 0x7D: // load L to A
+    case 0x7E: // load ( HL ) to A
+    case 0x7F: // load A to A ( wtf ? )
+    case 0x2A: // load ( HL + ) to A
+    case 0x3A: // load ( HL - ) to A
         ld_A_reg(op, cpu_data, program);
         break;
     case 0xF1: // pop AF
@@ -153,10 +191,10 @@ void load(Opcode const &op, CpuData &cpu_data, std::span<uint8_t> program)
     case 0xF8: // add n8 to SP and copy it to HL
         ld_hl_sp_n8(op, cpu_data, program);
         break;
-    case 0xF9: // copy SP to HL
+    case 0xF9: // copy HL to SP
         ld_sp_hl(op, cpu_data, program);
         break;
     default:
-        break;
+        assert(false);
     }
 }
