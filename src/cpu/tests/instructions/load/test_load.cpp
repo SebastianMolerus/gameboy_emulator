@@ -502,3 +502,21 @@ TEST(LoadTest, load_DE_addr_to_A)
 
     ASSERT_EQ(expected_data.AF.hi, 0xA9);
 }
+
+TEST(LoadTest, load_n_to_B)
+{
+    program_creator pc;
+    pc.load_n_to_B(0x67).load_n_to_B(0x10).load_n_to_B(0xFA);
+    Cpu cpu{pc.get()};
+
+    std::vector<CpuData> expected_data;
+    auto f = [&expected_data](const CpuData &d, const Opcode &op) { expected_data.push_back(d); };
+    cpu.register_function_callback(f);
+    cpu.process();
+
+    ASSERT_EQ(expected_data.size(), 3);
+
+    ASSERT_EQ(expected_data[0].BC.hi, 0x67);
+    ASSERT_EQ(expected_data[1].BC.hi, 0x10);
+    ASSERT_EQ(expected_data[2].BC.hi, 0xFA);
+}

@@ -149,7 +149,7 @@ void pop(Opcode const &op, CpuData &cpu_data, std::span<uint8_t> program)
     auto target = cpu_data.get_word(op.operands[0].name);
     uint16_t val = cpu_data.m_memory[cpu_data.SP.u16 + 1]; // MSB
     val <<= 8;
-    val |= cpu_data.m_memory[cpu_data.SP.u16]; // LSB
+    val |= cpu_data.m_memory[cpu_data.SP.u16];             // LSB
 
     *target = val;
 
@@ -188,6 +188,8 @@ void load(Opcode const &op, CpuData &cpu_data, std::span<uint8_t> program)
     case 0xFA: // load (a16) to A
     case 0x0A: // load (BC) to A
     case 0x1A: // load (DE) to A
+
+    case 0x06: // load n to B
         ld_A_reg(op, cpu_data, program);
         break;
     case 0xF1: // pop AF

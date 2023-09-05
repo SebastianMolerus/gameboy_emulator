@@ -10,6 +10,13 @@ program_creator &program_creator::load_to_BC(uint16_t val)
     return *this;
 }
 
+program_creator &program_creator::load_n_to_B(uint8_t n)
+{
+    m_program.push_back(0x06);
+    m_program.push_back(n);
+    return *this;
+}
+
 program_creator &program_creator::load_to_DE(uint16_t val)
 {
     m_program.push_back(0x11);

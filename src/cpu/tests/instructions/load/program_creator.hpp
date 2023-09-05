@@ -7,6 +7,8 @@ struct program_creator
 
     program_creator &load_to_BC(uint16_t val);
 
+    program_creator &load_n_to_B(uint8_t n);
+
     program_creator &load_to_DE(uint16_t val);
 
     program_creator &load_to_HL(uint16_t val);
