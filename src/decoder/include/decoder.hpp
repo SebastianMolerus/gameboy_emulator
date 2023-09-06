@@ -20,7 +20,7 @@ struct Operand
 
 struct Opcode
 {
-    const char *mnemonic;
+    const char *mnemonic{nullptr};
     uint8_t bytes;
     uint8_t hex;
     std::array<uint8_t, 2> cycles{0xFF, 0xFF};
@@ -36,5 +36,6 @@ bool load_opcodes() noexcept;
 uint8_t get_ld_hex(const char *op1, const char *op2);
 
 Opcode &get_opcode(uint8_t opcode_hex) noexcept;
+Opcode &get_pref_opcode(uint8_t opcode_hex) noexcept;
 
 #endif

@@ -294,7 +294,7 @@ program_creator &program_creator::ld_A_IHLI()
 
 program_creator &program_creator::ld_reg8_reg8(std::string_view target, std::string_view source)
 {
-    static bool res{load_opcodes()};
+    bool res{load_opcodes()};
     assert(res);
     m_program.push_back(get_ld_hex(target.data(), source.data()));
     return *this;
