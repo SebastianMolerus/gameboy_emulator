@@ -63,7 +63,7 @@ void CpuData::unset_flag(Flags flag)
 
 Cpu::Cpu(std::span<uint8_t> program) : m_program(program)
 {
-    bool static result{load_opcodes()};
+    bool result{load_opcodes()};
     assert(result);
 }
 
@@ -91,7 +91,16 @@ void Cpu::process()
     uint8_t opcode_hex;
     while (fetch_instruction(opcode_hex))
     {
-        Opcode const &op = get_opcode(opcode_hex);
+        Opcode op;
+        if (opcode_hex != 0xCB)
+            op = get_opcode(opcode_hex);
+        else
+        {
+            m_registers.PC.u16 += 1;
+            assert(fetch_instruction(opcode_hex));
+            op = get_pref_opcode(opcode_hex);
+        }
+
         exec(op);
         std::invoke(m_callback, m_registers, op);
     }

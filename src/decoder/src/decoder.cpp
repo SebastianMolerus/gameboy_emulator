@@ -15,6 +15,7 @@ namespace
 const std::filesystem::path JSON_PATH{OPCODES_JSON_PATH};
 
 std::array<Opcode, 256> OPCODES_CACHE;
+std::array<Opcode, 256> PREF_OPCODES_CACHE;
 
 char const *OPCODE_MBR_MNEMONIC = "mnemonic";
 char const *OPCODE_MBR_BYTES = "bytes";
@@ -27,6 +28,10 @@ void fill_mnemonic(Pair const &mnemonic, Opcode &new_opcode)
 {
     std::string_view mnemonic_str = mnemonic.value_.get_str().c_str();
     auto result = std::find(MNEMONICS_STR.begin(), MNEMONICS_STR.end(), mnemonic_str);
+    if (result == MNEMONICS_STR.end())
+    {
+        int a = 10;
+    }
     assert(result != MNEMONICS_STR.end());
     new_opcode.mnemonic = *result;
 }
@@ -62,7 +67,10 @@ void fill_operands(Pair const &operands, Opcode &new_opcode)
             {
                 std::string_view operand_name = operand.value_.get_str();
                 auto result = std::find(OPERANDS_STR.begin(), OPERANDS_STR.end(), operand_name);
-                assert(result != OPERANDS_STR.end());
+                if (result == OPERANDS_STR.end())
+                {
+                    int a = 10;
+                }
                 new_operand.name = *result;
             }
             else if (operand.name_ == "immediate")
@@ -118,10 +126,10 @@ void fill_flags(Pair const &flags, Opcode &new_opcode)
 }
 
 // {"0x01", Value}
-void process_opcode(json_spirit::Pair const &opcode)
+void process_opcode(json_spirit::Pair const &opcode, std::array<Opcode, 256> &cache)
 {
-    static uint8_t hex{0x00};
-    Opcode &new_opcode = OPCODES_CACHE[hex];
+    uint8_t const hex = std::stoi(opcode.name_, 0, 16);
+    Opcode &new_opcode = cache[hex];
     new_opcode.hex = hex;
 
     Object const &opcode_members = opcode.value_.get_obj();
@@ -142,7 +150,6 @@ void process_opcode(json_spirit::Pair const &opcode)
         else
             assert(false);
     }
-    ++hex;
 }
 
 bool cache_opcodes()
@@ -156,19 +163,26 @@ bool cache_opcodes()
         return false;
 
     Object const main_obj = value.get_obj();
-    auto const unprefixed_opcodes = main_obj[0].value_;
 
-    Object const op_codes = unprefixed_opcodes.get_obj();
-    for (auto const &oc : op_codes)
-        process_opcode(oc);
+    auto const unprefixed_opcodes = main_obj[0].value_;
+    Object const up_op_codes = unprefixed_opcodes.get_obj();
+    for (auto const &oc : up_op_codes)
+        process_opcode(oc, OPCODES_CACHE);
+
+    auto const prefixed_opcodes = main_obj[1].value_;
+    Object const p_op_codes = prefixed_opcodes.get_obj();
+    for (auto const &oc : p_op_codes)
+        process_opcode(oc, PREF_OPCODES_CACHE);
 
     return true;
 }
-
 } // namespace
 
 bool load_opcodes() noexcept
 {
+    if (OPCODES_CACHE[0].mnemonic != nullptr)
+        return true;
+
     try
     {
         return cache_opcodes();
@@ -197,9 +211,15 @@ uint8_t get_ld_hex(const char *op1, const char *op2)
         }
     }
     assert(false);
+    return 1;
 }
 
 Opcode &get_opcode(uint8_t opcode_hex) noexcept
 {
     return OPCODES_CACHE[opcode_hex];
+}
+
+Opcode &get_pref_opcode(uint8_t opcode_hex) noexcept
+{
+    return PREF_OPCODES_CACHE[opcode_hex];
 }
