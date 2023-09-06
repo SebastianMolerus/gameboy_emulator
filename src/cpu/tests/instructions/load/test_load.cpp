@@ -17,7 +17,7 @@ TEST(LoadTest, ld_BC_n16)
 {
     uint16_t constexpr value_to_load{0x16C7};
     program_creator pc;
-    pc.load_to_BC(value_to_load);
+    pc.ld_BC_nn(value_to_load);
     Cpu cpu{pc.get()};
 
     CpuData expected_data;
@@ -30,7 +30,7 @@ TEST(LoadTest, ld_DE_n16)
 {
     uint16_t constexpr value_to_load{0x157F};
     program_creator pc;
-    pc.load_to_DE(value_to_load);
+    pc.ld_DE_nn(value_to_load);
     Cpu cpu{pc.get()};
 
     CpuData expected_data;
@@ -43,7 +43,7 @@ TEST(LoadTest, ld_HL_n16)
 {
     uint16_t constexpr value_to_load{0xF50F};
     program_creator pc;
-    pc.load_to_HL(value_to_load);
+    pc.ld_HL_nn(value_to_load);
     Cpu cpu{pc.get()};
 
     CpuData expected_data;
@@ -56,7 +56,7 @@ TEST(LoadTest, ld_SP_n16)
 {
     uint16_t constexpr value_to_load{0xABCD};
     program_creator pc;
-    pc.load_to_SP(value_to_load);
+    pc.ld_SP_nn(value_to_load);
     Cpu cpu{pc.get()};
 
     CpuData expected_data;
@@ -68,7 +68,8 @@ TEST(LoadTest, ld_SP_n16)
 TEST(LoadTest, ld_HL_SP_n8)
 {
     program_creator pc;
-    pc.load_to_SP(0x3E).add_to_SP(0x23).load_to_SP(0xFFFF).add_to_SP(0x1).load_to_SP(0x5).add_to_SP(0x81);
+    pc.ld_SP_nn(0x3E).ld_HL_SP_plus_n8(0x23).ld_SP_nn(0xFFFF).ld_HL_SP_plus_n8(0x1).ld_SP_nn(0x5).ld_HL_SP_plus_n8(
+        0x81);
     Cpu cpu{pc.get()};
 
     std::vector<CpuData> expected_data;
@@ -101,7 +102,7 @@ TEST(LoadTest, ld_HL_SP_n8)
 TEST(LoadTest, ld_HL_SP_n8_half_carry)
 {
     program_creator pc;
-    pc.load_to_SP(0x9).add_to_SP(0x10).load_to_SP(0xA).add_to_SP(0xC);
+    pc.ld_SP_nn(0x9).ld_HL_SP_plus_n8(0x10).ld_SP_nn(0xA).ld_HL_SP_plus_n8(0xC);
     Cpu cpu{pc.get()};
 
     std::vector<CpuData> expected_data;
@@ -119,7 +120,7 @@ TEST(LoadTest, ld_HL_SP_n8_half_carry)
 TEST(LoadTest, ld_HL_SP_n8_carry)
 {
     program_creator pc;
-    pc.load_to_SP(0xFFFE).add_to_SP(0x1).load_to_SP(0xFFFF).add_to_SP(0x1);
+    pc.ld_SP_nn(0xFFFE).ld_HL_SP_plus_n8(0x1).ld_SP_nn(0xFFFF).ld_HL_SP_plus_n8(0x1);
     Cpu cpu{pc.get()};
 
     std::vector<CpuData> expected_data;
@@ -137,7 +138,7 @@ TEST(LoadTest, ld_HL_SP_n8_carry)
 TEST(LoadTest, ld_a16_SP)
 {
     program_creator pc;
-    pc.load_to_SP(0xBBAA).save_SP(0x1);
+    pc.ld_SP_nn(0xBBAA).ld_Ia16I_SP(0x1);
     Cpu cpu{pc.get()};
 
     CpuData expected_data;
@@ -155,7 +156,7 @@ TEST(LoadTest, ld_a16_SP)
 TEST(LoadTest, ld_sp_hl)
 {
     program_creator pc;
-    pc.load_to_HL(0xABCD).load_HL_to_SP();
+    pc.ld_HL_nn(0xABCD).ld_SP_HL();
     Cpu cpu{pc.get()};
 
     CpuData expected_data;
@@ -173,7 +174,7 @@ TEST(LoadTest, ld_sp_hl)
 TEST(LoadTest, push_BC)
 {
     program_creator pc;
-    pc.load_to_SP(0xA).load_to_BC(0x548A).push_BC();
+    pc.ld_SP_nn(0xA).ld_BC_nn(0x548A).push_BC();
     Cpu cpu{pc.get()};
 
     CpuData expected_data;
@@ -192,7 +193,7 @@ TEST(LoadTest, push_BC)
 TEST(LoadTest, push_DE)
 {
     program_creator pc;
-    pc.load_to_SP(0xBB).load_to_DE(0xAAFF).push_DE();
+    pc.ld_SP_nn(0xBB).ld_DE_nn(0xAAFF).push_DE();
     Cpu cpu{pc.get()};
 
     CpuData expected_data;
@@ -211,7 +212,7 @@ TEST(LoadTest, push_DE)
 TEST(LoadTest, push_HL)
 {
     program_creator pc;
-    pc.load_to_SP(0xAB).load_to_HL(0x1234).push_HL();
+    pc.ld_SP_nn(0xAB).ld_HL_nn(0x1234).push_HL();
     Cpu cpu{pc.get()};
 
     CpuData expected_data;
@@ -230,7 +231,7 @@ TEST(LoadTest, push_HL)
 TEST(LoadTest, push_AF)
 {
     program_creator pc;
-    pc.load_to_SP(0x100).load_to_DE(0xBD00).load_D_to_A().push_AF();
+    pc.ld_SP_nn(0x100).ld_DE_nn(0xBD00).ld_reg8_reg8("A", "D").push_AF();
     Cpu cpu{pc.get()};
 
     CpuData expected_data;
@@ -249,7 +250,7 @@ TEST(LoadTest, push_AF)
 TEST(LoadTest, pop_AF)
 {
     program_creator pc;
-    pc.load_to_SP(0x303).load_to_DE(0xBAFE).push_DE().pop_AF();
+    pc.ld_SP_nn(0x303).ld_DE_nn(0xBAFE).push_DE().pop_AF();
     Cpu cpu{pc.get()};
 
     CpuData expected_data;
@@ -267,7 +268,7 @@ TEST(LoadTest, pop_AF)
 TEST(LoadTest, pop_BC)
 {
     program_creator pc;
-    pc.load_to_SP(0x12).load_to_HL(0xF0F0).push_HL().pop_BC();
+    pc.ld_SP_nn(0x12).ld_HL_nn(0xF0F0).push_HL().pop_BC();
     Cpu cpu{pc.get()};
 
     CpuData expected_data;
@@ -285,7 +286,7 @@ TEST(LoadTest, pop_BC)
 TEST(LoadTest, pop_DE)
 {
     program_creator pc;
-    pc.load_to_SP(0x89).load_to_HL(0x1561).push_HL().pop_DE();
+    pc.ld_SP_nn(0x89).ld_HL_nn(0x1561).push_HL().pop_DE();
     Cpu cpu{pc.get()};
 
     CpuData expected_data;
@@ -303,7 +304,7 @@ TEST(LoadTest, pop_DE)
 TEST(LoadTest, pop_HL)
 {
     program_creator pc;
-    pc.load_to_SP(0x99).load_to_BC(0xBABE).push_BC().pop_HL();
+    pc.ld_SP_nn(0x99).ld_BC_nn(0xBABE).push_BC().pop_HL();
     Cpu cpu{pc.get()};
 
     CpuData expected_data;
@@ -321,15 +322,15 @@ TEST(LoadTest, pop_HL)
 TEST(LoadTest, load_B_C_D_E_H_L_to_A)
 {
     program_creator pc;
-    pc.load_to_BC(0xCE47)
-        .load_to_DE(0x3099)
-        .load_to_HL(0xF1F2)
-        .load_B_to_A()
-        .load_C_to_A()
-        .load_D_to_A()
-        .load_E_to_A()
-        .load_H_to_A()
-        .load_L_to_A();
+    pc.ld_BC_nn(0xCE47)
+        .ld_DE_nn(0x3099)
+        .ld_HL_nn(0xF1F2)
+        .ld_reg8_reg8("A", "B")
+        .ld_reg8_reg8("A", "C")
+        .ld_reg8_reg8("A", "D")
+        .ld_reg8_reg8("A", "E")
+        .ld_reg8_reg8("A", "H")
+        .ld_reg8_reg8("A", "L");
     Cpu cpu{pc.get()};
 
     CpuData B_to_A;
@@ -368,7 +369,7 @@ TEST(LoadTest, load_HL_to_A)
     program_creator pc;
     // saving value 0x67 at memory location 0x100 using SP
     // and then read this memory via HL and save it to A
-    pc.load_to_SP(0x67).save_SP(0x100).load_to_HL(0x100).load_HL_to_A();
+    pc.ld_SP_nn(0x67).ld_Ia16I_SP(0x100).ld_HL_nn(0x100).ld_A_IHLI();
     Cpu cpu{pc.get()};
 
     CpuData expected_data;
@@ -385,7 +386,7 @@ TEST(LoadTest, load_HL_to_A)
 TEST(LoadTest, load_HL_plus_to_A)
 {
     program_creator pc;
-    pc.load_to_SP(0x12).save_SP(0xACCA).load_to_HL(0xACCA).load_HL_plus_to_A();
+    pc.ld_SP_nn(0x12).ld_Ia16I_SP(0xACCA).ld_HL_nn(0xACCA).ld_A_IHL_plusI();
     Cpu cpu{pc.get()};
 
     CpuData expected_data;
@@ -403,7 +404,7 @@ TEST(LoadTest, load_HL_plus_to_A)
 TEST(LoadTest, load_HL_minus_to_A)
 {
     program_creator pc;
-    pc.load_to_SP(0x79).save_SP(0x02).load_to_HL(0x02).load_HL_minus_to_A();
+    pc.ld_SP_nn(0x79).ld_Ia16I_SP(0x02).ld_HL_nn(0x02).ld_A_IHL_minusI();
     Cpu cpu{pc.get()};
 
     CpuData expected_data;
@@ -421,7 +422,7 @@ TEST(LoadTest, load_HL_minus_to_A)
 TEST(LoadTest, load_C_addr_to_A)
 {
     program_creator pc;
-    pc.load_to_SP(0x1234).save_SP(0xFF0A).load_to_BC(0xA).load_C_addr_to_A();
+    pc.ld_SP_nn(0x1234).ld_Ia16I_SP(0xFF0A).ld_BC_nn(0xA).ld_A_ICI();
     Cpu cpu{pc.get()};
 
     CpuData expected_data;
@@ -438,7 +439,7 @@ TEST(LoadTest, load_C_addr_to_A)
 TEST(LoadTest, load_n8_to_A)
 {
     program_creator pc;
-    pc.load_n8_to_A(0xE3);
+    pc.ld_A_n8(0xE3);
     Cpu cpu{pc.get()};
 
     CpuData expected_data;
@@ -455,7 +456,7 @@ TEST(LoadTest, load_n8_to_A)
 TEST(LoadTest, load_addr_to_A)
 {
     program_creator pc;
-    pc.load_to_SP(0x9876).save_SP(0x3003).load_addr_to_A(0x3003);
+    pc.ld_SP_nn(0x9876).ld_Ia16I_SP(0x3003).ld_A_Ia16I(0x3003);
     Cpu cpu{pc.get()};
 
     CpuData expected_data;
@@ -472,7 +473,7 @@ TEST(LoadTest, load_addr_to_A)
 TEST(LoadTest, load_BC_addr_to_A)
 {
     program_creator pc;
-    pc.load_to_SP(0x3298).save_SP(0x205).load_to_BC(0x205).load_BC_addr_to_A();
+    pc.ld_SP_nn(0x3298).ld_Ia16I_SP(0x205).ld_BC_nn(0x205).ld_A_IBCI();
     Cpu cpu{pc.get()};
 
     CpuData expected_data;
@@ -489,7 +490,7 @@ TEST(LoadTest, load_BC_addr_to_A)
 TEST(LoadTest, load_DE_addr_to_A)
 {
     program_creator pc;
-    pc.load_to_SP(0x11A9).save_SP(0x0000).load_to_DE(0x0).load_DE_addr_to_A();
+    pc.ld_SP_nn(0x11A9).ld_Ia16I_SP(0x0000).ld_DE_nn(0x0).ld_A_IDEI();
     Cpu cpu{pc.get()};
 
     CpuData expected_data;
@@ -506,7 +507,7 @@ TEST(LoadTest, load_DE_addr_to_A)
 TEST(LoadTest, load_n_to_B)
 {
     program_creator pc;
-    pc.load_n_to_B(0x67).load_n_to_B(0x10).load_n_to_B(0xFA);
+    pc.ld_B_n8(0x67).ld_B_n8(0x10).ld_B_n8(0xFA);
     Cpu cpu{pc.get()};
 
     std::vector<CpuData> expected_data;

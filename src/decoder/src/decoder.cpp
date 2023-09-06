@@ -180,6 +180,25 @@ bool load_opcodes() noexcept
     }
 }
 
+uint8_t get_ld_hex(const char *op1, const char *op2)
+{
+    for (auto &e : OPCODES_CACHE)
+    {
+        if (e.bytes != 1)
+            continue;
+
+        if (e.mnemonic != MNEMONICS_STR[26])
+            continue;
+
+        if (strcmp(e.operands[0].name, op1) == 0 && strcmp(e.operands[1].name, op2) == 0)
+        {
+            if (e.bytes == 1 && e.operands[0].immediate == 1 && e.operands[1].immediate == 1)
+                return e.hex;
+        }
+    }
+    assert(false);
+}
+
 Opcode &get_opcode(uint8_t opcode_hex) noexcept
 {
     return OPCODES_CACHE[opcode_hex];

@@ -167,6 +167,12 @@ void load(Opcode const &op, CpuData &cpu_data, std::span<uint8_t> program)
     case 0x08: // copy SP value into a16
         ld_a16_SP(op, cpu_data, program);
         break;
+    case 0xF8: // add n to SP and copy it to HL
+        ld_hl_sp_n8(op, cpu_data, program);
+        break;
+    case 0xF9: // copy HL to SP
+        ld_sp_hl(op, cpu_data, program);
+        break;
     case 0x01: // load nn to BC
     case 0x11: // load nn to DE
     case 0x21: // load nn to HL
@@ -188,7 +194,6 @@ void load(Opcode const &op, CpuData &cpu_data, std::span<uint8_t> program)
     case 0xFA: // load (a16) to A
     case 0x0A: // load (BC) to A
     case 0x1A: // load (DE) to A
-
     case 0x06: // load n to B
         ld_A_reg(op, cpu_data, program);
         break;
@@ -203,12 +208,6 @@ void load(Opcode const &op, CpuData &cpu_data, std::span<uint8_t> program)
     case 0xD5: // push DE
     case 0xE5: // push HL
         push(op, cpu_data, program);
-        break;
-    case 0xF8: // add n to SP and copy it to HL
-        ld_hl_sp_n8(op, cpu_data, program);
-        break;
-    case 0xF9: // copy HL to SP
-        ld_sp_hl(op, cpu_data, program);
         break;
     default:
         assert(false);
