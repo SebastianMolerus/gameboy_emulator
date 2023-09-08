@@ -3,6 +3,7 @@
 #include <cstdint>
 #include <gtest/gtest.h>
 #include <span>
+#include <translator.hpp>
 #include <vector>
 
 uint16_t read_word_from_stack(CpuData const &data)
@@ -28,28 +29,30 @@ TEST(LoadTest, ld_BC_n16)
 
 TEST(LoadTest, ld_DE_n16)
 {
-    uint16_t constexpr value_to_load{0x157F};
-    program_creator pc;
-    pc.ld_DE_nn(value_to_load);
-    Cpu cpu{pc.get()};
+    std::string assembly{R"(
+        LD DE, 0x157F
+    )"};
+    auto opcodes = translate(assembly);
+    Cpu cpu{opcodes};
 
     CpuData expected_data;
     cpu.register_function_callback([&expected_data](const CpuData &d, const Opcode &) { expected_data = d; });
     cpu.process();
-    ASSERT_EQ(expected_data.DE.u16, value_to_load);
+    ASSERT_EQ(expected_data.DE.u16, 0x157F);
 }
 
 TEST(LoadTest, ld_HL_n16)
 {
-    uint16_t constexpr value_to_load{0xF50F};
-    program_creator pc;
-    pc.ld_HL_nn(value_to_load);
-    Cpu cpu{pc.get()};
+    std::string assembly{R"(
+        LD HL, 0xF50F
+    )"};
+    auto opcodes = translate(assembly);
+    Cpu cpu{opcodes};
 
     CpuData expected_data;
     cpu.register_function_callback([&expected_data](const CpuData &d, const Opcode &) { expected_data = d; });
     cpu.process();
-    ASSERT_EQ(expected_data.HL.u16, value_to_load);
+    ASSERT_EQ(expected_data.HL.u16, 0xF50F);
 }
 
 TEST(LoadTest, ld_SP_n16)
@@ -67,10 +70,21 @@ TEST(LoadTest, ld_SP_n16)
 
 TEST(LoadTest, ld_HL_SP_n8)
 {
-    program_creator pc;
-    pc.ld_SP_nn(0x3E).ld_HL_SP_plus_n8(0x23).ld_SP_nn(0xFFFF).ld_HL_SP_plus_n8(0x1).ld_SP_nn(0x5).ld_HL_SP_plus_n8(
-        0x81);
-    Cpu cpu{pc.get()};
+    // program_creator pc;
+    // pc.ld_SP_nn(0x3E).ld_HL_SP_plus_n8(0x23).ld_SP_nn(0xFFFF).ld_HL_SP_plus_n8(0x1).ld_SP_nn(0x5).ld_HL_SP_plus_n8(
+    //     0x81);
+    // Cpu cpu{pc.get()};
+
+    std::string assembly{R"(
+        LD SP, 0x3E
+        LD HL, SP + 0x23
+        LD SP, 0xFFFF
+        LD HL, SP + 0x1
+        LD SP, 0x5
+        LD HL, SP + 0x81
+    )"};
+    auto opcodes = translate(assembly);
+    Cpu cpu{opcodes};
 
     std::vector<CpuData> expected_data;
     auto f = [&expected_data](const CpuData &d, const Opcode &op) {

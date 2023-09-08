@@ -84,8 +84,6 @@ std::vector<uint8_t> translate(std::string_view instructions)
         // 16 bit
         if (value & 0xFF00)
         {
-            // n16, a16
-
             for (auto s : {"n16", "a16"})
             {
                 auto try_command = cmd.replace(zero_pos, 6, s);
@@ -109,6 +107,8 @@ std::vector<uint8_t> translate(std::string_view instructions)
                 {
                     result.push_back(op.hex);
                     result.push_back(value);
+                    if (strcmp(s, "n16") == 0 || strcmp(s, "a16") == 0)
+                        result.push_back(0x0);
                     break;
                 }
             }
