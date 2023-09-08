@@ -1,0 +1,25 @@
+#include <gtest/gtest.h>
+#include <translator.hpp>
+
+TEST(translator_test, translate_instructions_ld_1)
+{
+    std::string st{R"(
+        LD D, 0x74
+        LD BC, 0x66
+        LD HL, SP + 0x99
+        LD DE, 0x41
+        INC BC
+    )"};
+
+    auto machine_code = translate(st);
+
+    ASSERT_EQ(machine_code[0], 0x16);
+    ASSERT_EQ(machine_code[1], 0x74);
+    ASSERT_EQ(machine_code[2], 0x01);
+    ASSERT_EQ(machine_code[3], 0x66);
+    ASSERT_EQ(machine_code[4], 0xF8);
+    ASSERT_EQ(machine_code[5], 0x99);
+    ASSERT_EQ(machine_code[6], 0x11);
+    ASSERT_EQ(machine_code[7], 0x41);
+    ASSERT_EQ(machine_code[8], 0x03);
+}
