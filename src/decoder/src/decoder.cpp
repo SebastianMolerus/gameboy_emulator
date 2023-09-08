@@ -204,7 +204,7 @@ uint8_t get_ld_hex(const char *op1, const char *op2)
         }
     }
     assert(false);
-    return 1;
+    return 0;
 }
 
 Opcode &get_opcode(uint8_t opcode_hex) noexcept
@@ -215,4 +215,10 @@ Opcode &get_opcode(uint8_t opcode_hex) noexcept
 Opcode &get_pref_opcode(uint8_t opcode_hex) noexcept
 {
     return PREF_OPCODES_CACHE[opcode_hex];
+}
+
+Opcode &get_opcode(std::string_view instruction) noexcept
+{
+    static Opcode op;
+    return op;
 }
