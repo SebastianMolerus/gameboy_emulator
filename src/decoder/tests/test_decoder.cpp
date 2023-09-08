@@ -201,3 +201,9 @@ TEST_F(DecoderTests, flags)
     ASSERT_EQ(op.flags[2], "H");
     ASSERT_EQ(op.flags[3], "-");
 }
+
+TEST_F(DecoderTests, loadingCommands)
+{
+    Opcode op = get_opcode("LD BC, 0xAB");
+    ASSERT_EQ(op.hex, 0x01);
+}

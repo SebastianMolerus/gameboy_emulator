@@ -3,6 +3,7 @@
 
 #include <array>
 #include <cstdint>
+#include <string_view>
 
 /* DECODER API */
 
@@ -37,5 +38,7 @@ uint8_t get_ld_hex(const char *op1, const char *op2);
 
 Opcode &get_opcode(uint8_t opcode_hex) noexcept;
 Opcode &get_pref_opcode(uint8_t opcode_hex) noexcept;
+
+Opcode &get_opcode(std::string_view instruction) noexcept;
 
 #endif
