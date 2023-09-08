@@ -201,3 +201,42 @@ TEST_F(DecoderTests, flags)
     ASSERT_EQ(op.flags[2], "H");
     ASSERT_EQ(op.flags[3], "-");
 }
+
+TEST_F(DecoderTests, loadingCommands)
+{
+    Opcode op = get_opcode("NOP");
+    ASSERT_EQ(op.hex, 0x00);
+
+    op = get_opcode("AND A, [HL]");
+    ASSERT_EQ(op.hex, 0xA6);
+
+    op = get_opcode("LD [HL+], A");
+    ASSERT_EQ(op.hex, 0x22);
+
+    op = get_opcode("RLCA");
+    ASSERT_EQ(op.hex, 0x07);
+
+    op = get_opcode("LD A, [HL-]");
+    ASSERT_EQ(op.hex, 0x3A);
+
+    op = get_opcode("LD B, H");
+    ASSERT_EQ(op.hex, 0x44);
+
+    op = get_opcode("PREFIX");
+    ASSERT_EQ(op.hex, 0xCB);
+
+    op = get_opcode("RES 6, [HL]");
+    ASSERT_EQ(op.hex, 0xB6);
+
+    op = get_opcode("LD A, [HL+]");
+    ASSERT_EQ(op.hex, 0x2A);
+
+    op = get_opcode("LD HL, SP + e8");
+    ASSERT_EQ(op.hex, 0xF8);
+
+    op = get_opcode("LD BC, n16");
+    ASSERT_EQ(op.hex, 0x01);
+
+    op = get_opcode("JR e8");
+    ASSERT_EQ(op.hex, 0x18);
+}
