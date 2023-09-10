@@ -59,7 +59,7 @@ void pop(Opcode const &op, CpuData &cpu_data, std::span<uint8_t> program)
     auto target = cpu_data.get_word(op.operands[0].name);
     uint16_t val = cpu_data.m_memory[cpu_data.SP.u16 + 1]; // MSB
     val <<= 8;
-    val |= cpu_data.m_memory[cpu_data.SP.u16]; // LSB
+    val |= cpu_data.m_memory[cpu_data.SP.u16];             // LSB
 
     *target = val;
 
@@ -120,9 +120,9 @@ std::variant<uint8_t, uint16_t> get_operand_value(Operand const &operand, CpuDat
     case 1:
         return program[1];
     case 2:
-        val = program[1];
-        val <<= 8;
         val = program[2];
+        val <<= 8;
+        val |= program[1];
         return val;
     case 0:
         break;
@@ -146,6 +146,7 @@ void ld_A_reg(Opcode const &op, CpuData &cpu_data, std::span<uint8_t> program)
 
     // Source
     std::variant<uint8_t, uint16_t> src_value = get_operand_value(op.operands[1], cpu_data, program);
+
     if (!op.operands[1].immediate)
     {
         if (src_value.index() == 0)
@@ -153,9 +154,8 @@ void ld_A_reg(Opcode const &op, CpuData &cpu_data, std::span<uint8_t> program)
             uint16_t addr = std::get<uint8_t>(src_value);
             if (op.hex == 0xF2)
                 addr += 0xFF00;
-            src_value = cpu_data.m_memory[std::get<uint8_t>(src_value)];
+            src_value = cpu_data.m_memory[addr];
         }
-
         else
             src_value = cpu_data.m_memory[std::get<uint16_t>(src_value)];
     }
