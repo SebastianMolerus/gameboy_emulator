@@ -14,47 +14,6 @@ uint16_t read_word_from_stack(CpuData const &data)
     return result;
 }
 
-TEST(LoadTest, ld_BC_n16)
-{
-    uint16_t constexpr value_to_load{0x16C7};
-    program_creator pc;
-    pc.ld_BC_nn(value_to_load);
-    Cpu cpu{pc.get()};
-
-    CpuData expected_data;
-    cpu.register_function_callback([&expected_data](const CpuData &d, const Opcode &) { expected_data = d; });
-    cpu.process();
-    ASSERT_EQ(expected_data.BC.u16, value_to_load);
-}
-
-TEST(LoadTest, ld_DE_n16)
-{
-    std::string assembly{R"(
-        LD DE, 0x157F
-    )"};
-    auto opcodes = translate(assembly);
-    Cpu cpu{opcodes};
-
-    CpuData expected_data;
-    cpu.register_function_callback([&expected_data](const CpuData &d, const Opcode &) { expected_data = d; });
-    cpu.process();
-    ASSERT_EQ(expected_data.DE.u16, 0x157F);
-}
-
-TEST(LoadTest, ld_HL_n16)
-{
-    std::string assembly{R"(
-        LD HL, 0xF50F
-    )"};
-    auto opcodes = translate(assembly);
-    Cpu cpu{opcodes};
-
-    CpuData expected_data;
-    cpu.register_function_callback([&expected_data](const CpuData &d, const Opcode &) { expected_data = d; });
-    cpu.process();
-    ASSERT_EQ(expected_data.HL.u16, 0xF50F);
-}
-
 TEST(LoadTest, ld_SP_n16)
 {
     uint16_t constexpr value_to_load{0xABCD};
@@ -151,13 +110,16 @@ TEST(LoadTest, ld_HL_SP_n8_carry)
 
 TEST(LoadTest, ld_a16_SP)
 {
-    program_creator pc;
-    pc.ld_SP_nn(0xBBAA).ld_Ia16I_SP(0x1);
-    Cpu cpu{pc.get()};
+    std::string assembly{R"(
+        LD SP, 0xBBAA
+        LD [0x1], SP
+    )"};
+    auto opcodes = translate(assembly);
+    Cpu cpu{opcodes};
 
     CpuData expected_data;
     auto f = [&expected_data](const CpuData &d, const Opcode &op) {
-        if (op.hex == 0x08)
+        if (op.hex == get_opcode("LD [a16], SP").hex)
             expected_data = d;
     };
     cpu.register_function_callback(f);

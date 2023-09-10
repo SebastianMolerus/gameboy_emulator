@@ -70,7 +70,7 @@ std::vector<uint8_t> translate(std::string_view instructions)
         char const *cc = &cmd[x_pos + 1];
 
         int i{};
-        while (std::isalnum(static_cast<int>(*cc)))
+        while (std::isalnum(static_cast<int>(*cc)) && i < 4)
         {
             hex[i] = *cc;
             ++i;
