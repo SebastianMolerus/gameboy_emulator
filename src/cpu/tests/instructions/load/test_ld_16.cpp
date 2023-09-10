@@ -104,3 +104,37 @@ TEST(test_load_16bit, ld_HL_n16)
     ASSERT_EQ(expected_data[3].HL.lo, 0xBA);
     ASSERT_EQ(expected_data[3].HL.hi, 0xC);
 }
+
+TEST(test_load_16bit, ld_SP_n16)
+{
+    std::string assembly{R"(
+        LD SP, 0x7800
+        LD SP, 0xF
+        LD SP, 0x2A
+        LD SP, 0x87B
+    )"};
+    auto opcodes = translate(assembly);
+    Cpu cpu{opcodes};
+
+    std::vector<CpuData> expected_data;
+    cpu.register_function_callback([&expected_data](const CpuData &d, const Opcode &) { expected_data.push_back(d); });
+    cpu.process();
+
+    ASSERT_EQ(expected_data.size(), 4);
+
+    ASSERT_EQ(expected_data[0].SP.u16, 0x7800);
+    ASSERT_EQ(expected_data[0].SP.lo, 0x00);
+    ASSERT_EQ(expected_data[0].SP.hi, 0x78);
+
+    ASSERT_EQ(expected_data[1].SP.u16, 0xF);
+    ASSERT_EQ(expected_data[1].SP.lo, 0xF);
+    ASSERT_EQ(expected_data[1].SP.hi, 0x0);
+
+    ASSERT_EQ(expected_data[2].SP.u16, 0x2A);
+    ASSERT_EQ(expected_data[2].SP.lo, 0x2A);
+    ASSERT_EQ(expected_data[2].SP.hi, 0x0);
+
+    ASSERT_EQ(expected_data[3].SP.u16, 0x87B);
+    ASSERT_EQ(expected_data[3].SP.lo, 0x7B);
+    ASSERT_EQ(expected_data[3].SP.hi, 0x8);
+}

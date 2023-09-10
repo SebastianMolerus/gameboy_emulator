@@ -14,19 +14,6 @@ uint16_t read_word_from_stack(CpuData const &data)
     return result;
 }
 
-TEST(LoadTest, ld_SP_n16)
-{
-    uint16_t constexpr value_to_load{0xABCD};
-    program_creator pc;
-    pc.ld_SP_nn(value_to_load);
-    Cpu cpu{pc.get()};
-
-    CpuData expected_data;
-    cpu.register_function_callback([&expected_data](const CpuData &d, const Opcode &) { expected_data = d; });
-    cpu.process();
-    ASSERT_EQ(expected_data.SP.u16, value_to_load);
-}
-
 TEST(LoadTest, ld_HL_SP_n8)
 {
     // program_creator pc;
