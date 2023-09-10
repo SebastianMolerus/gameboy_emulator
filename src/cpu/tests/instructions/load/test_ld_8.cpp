@@ -3,24 +3,23 @@
 #include <gtest/gtest.h>
 #include <translator.hpp>
 
-
 // 0x02
 TEST(test_load_8bit, LD_IBCI_A)
 {
-    // std::string assembly{R"(
-    //     LD BC, 0x59
-    //     LD A, 0x15
-    //     LD [BC], A
-    // )"};
-    // auto opcodes = translate(assembly);
-    // Cpu cpu{opcodes};
+    std::string assembly{R"(
+        LD BC, 0x59
+        LD A, 0x15
+        LD [BC], A
+    )"};
+    auto opcodes = translate(assembly);
+    Cpu cpu{opcodes};
 
-    // CpuData expected_data;
-    // auto f = [&expected_data](const CpuData &d, const Opcode &op) { expected_data = d; };
-    // cpu.register_function_callback(f);
-    // cpu.process();
+    CpuData expected_data;
+    auto f = [&expected_data](const CpuData &d, const Opcode &op) { expected_data = d; };
+    cpu.register_function_callback(f);
+    cpu.process();
 
-    // ASSERT_EQ(expected_data.m_memory[0x59], 0x15);
+    ASSERT_EQ(expected_data.m_memory[0x59], 0x15);
 }
 
 TEST(LoadTest, load_B_C_D_E_H_L_to_A)

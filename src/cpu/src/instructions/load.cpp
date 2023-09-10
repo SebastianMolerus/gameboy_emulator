@@ -147,60 +147,52 @@ void ld_A_reg(Opcode const &op, CpuData &cpu_data, std::span<uint8_t> program)
     // Source
     std::variant<uint8_t, uint16_t> src_value = get_operand_value(op.operands[1], cpu_data, program);
 
+    if (op.hex == 0xF8)
+        std::get<1>(src_value) += program[1];
+
     if (!op.operands[1].immediate)
     {
         if (src_value.index() == 0)
         {
             uint16_t addr = std::get<uint8_t>(src_value);
-            if (op.hex == 0xF2)
+            if (op.hex == 0xF2) // special case
                 addr += 0xFF00;
             src_value = cpu_data.m_memory[addr];
         }
         else
+        {
             src_value = cpu_data.m_memory[std::get<uint16_t>(src_value)];
-    }
-
-    uint8_t val{};
-    if (!op.operands[1].immediate)
-    {
-        if (strlen(op.operands[1].name) == 3)
-        {
-            assert(op.bytes == 3);
-            assert(op.hex == 0xFA);
-
-            uint16_t addr = get_16nn_le(program);
-            val = cpu_data.m_memory[addr];
-        }
-
-        if (strlen(op.operands[1].name) == 2)
-        {
-            auto OP2 = cpu_data.get_word(op.operands[1].name);
-            val = cpu_data.m_memory[*OP2];
 
             if (op.operands[1].increment == 1)
-                *OP2 += 1;
-            if (op.operands[1].decrement == 1)
-                *OP2 -= 1;
-        }
+                *cpu_data.get_word(op.operands[1].name) += 1;
 
-        if (strlen(op.operands[1].name) == 1)
-        {
-            assert(op.bytes == 1);
-            assert(op.hex == 0xF2);
-            val = cpu_data.m_memory[cpu_data.BC.lo + 0xFF00];
+            if (op.operands[1].decrement == 1)
+                *cpu_data.get_word(op.operands[1].name) -= 1;
         }
     }
-    else
+
+    // Target
+    std::variant<uint8_t, uint16_t> target_value = get_operand_value(op.operands[0], cpu_data, program);
+
+    if (!op.operands[0].immediate)
     {
-        if (op.bytes == 2)
+        if (target_value.index() == 0)
         {
-            val = program[1];
+            cpu_data.m_memory[std::get<uint8_t>(target_value)] = std::get<0>(src_value);
         }
         else
-            val = *cpu_data.get_byte(op.operands[1].name);
+        {
+            uint16_t v0 = std::get<1>(src_value);
+            cpu_data.m_memory[std::get<uint16_t>(target_value)] = v0;
+            cpu_data.m_memory[std::get<uint16_t>(target_value) + 1] = v0 >> 8;
+        }
+        return;
     }
 
-    *cpu_data.get_byte(op.operands[0].name) = std::get<uint8_t>(src_value);
+    if (target_value.index() == 0)
+        *cpu_data.get_byte(op.operands[0].name) = std::get<uint8_t>(src_value);
+    else if (target_value.index() == 1)
+        *cpu_data.get_word(op.operands[0].name) = std::get<uint16_t>(src_value);
 }
 
 } // namespace
@@ -210,21 +202,15 @@ void load(Opcode const &op, CpuData &cpu_data, std::span<uint8_t> program)
 {
     switch (op.hex)
     {
-    case 0x08: // copy SP value into a16
-        ld_a16_SP(op, cpu_data, program);
-        break;
     case 0xF8: // add n to SP and copy it to HL
         ld_hl_sp_n8(op, cpu_data, program);
         break;
     case 0xF9: // copy HL to SP
-        ld_sp_hl(op, cpu_data, program);
-        break;
+    case 0x08: // copy SP value into a16
     case 0x01: // load nn to BC
     case 0x11: // load nn to DE
     case 0x21: // load nn to HL
     case 0x31: // load nn to SP
-        ld_reg_n16(op, cpu_data, program);
-        break;
     case 0x78: // load B to A
     case 0x79: // load C to A
     case 0x7A: // load D to A
