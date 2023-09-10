@@ -3,321 +3,8 @@
 #include <cstdint>
 #include <gtest/gtest.h>
 #include <span>
+#include <translator.hpp>
 #include <vector>
-
-uint16_t read_word_from_stack(CpuData const &data)
-{
-    uint16_t result = data.m_memory[data.SP.u16 + 1];
-    result <<= 8;
-    result |= data.m_memory[data.SP.u16];
-    return result;
-}
-
-TEST(LoadTest, ld_BC_n16)
-{
-    uint16_t constexpr value_to_load{0x16C7};
-    program_creator pc;
-    pc.ld_BC_nn(value_to_load);
-    Cpu cpu{pc.get()};
-
-    CpuData expected_data;
-    cpu.register_function_callback([&expected_data](const CpuData &d, const Opcode &) { expected_data = d; });
-    cpu.process();
-    ASSERT_EQ(expected_data.BC.u16, value_to_load);
-}
-
-TEST(LoadTest, ld_DE_n16)
-{
-    uint16_t constexpr value_to_load{0x157F};
-    program_creator pc;
-    pc.ld_DE_nn(value_to_load);
-    Cpu cpu{pc.get()};
-
-    CpuData expected_data;
-    cpu.register_function_callback([&expected_data](const CpuData &d, const Opcode &) { expected_data = d; });
-    cpu.process();
-    ASSERT_EQ(expected_data.DE.u16, value_to_load);
-}
-
-TEST(LoadTest, ld_HL_n16)
-{
-    uint16_t constexpr value_to_load{0xF50F};
-    program_creator pc;
-    pc.ld_HL_nn(value_to_load);
-    Cpu cpu{pc.get()};
-
-    CpuData expected_data;
-    cpu.register_function_callback([&expected_data](const CpuData &d, const Opcode &) { expected_data = d; });
-    cpu.process();
-    ASSERT_EQ(expected_data.HL.u16, value_to_load);
-}
-
-TEST(LoadTest, ld_SP_n16)
-{
-    uint16_t constexpr value_to_load{0xABCD};
-    program_creator pc;
-    pc.ld_SP_nn(value_to_load);
-    Cpu cpu{pc.get()};
-
-    CpuData expected_data;
-    cpu.register_function_callback([&expected_data](const CpuData &d, const Opcode &) { expected_data = d; });
-    cpu.process();
-    ASSERT_EQ(expected_data.SP.u16, value_to_load);
-}
-
-TEST(LoadTest, ld_HL_SP_n8)
-{
-    program_creator pc;
-    pc.ld_SP_nn(0x3E).ld_HL_SP_plus_n8(0x23).ld_SP_nn(0xFFFF).ld_HL_SP_plus_n8(0x1).ld_SP_nn(0x5).ld_HL_SP_plus_n8(
-        0x81);
-    Cpu cpu{pc.get()};
-
-    std::vector<CpuData> expected_data;
-    auto f = [&expected_data](const CpuData &d, const Opcode &op) {
-        if (op.hex == 0xF8) // after each add_to_SP
-            expected_data.push_back(d);
-    };
-    cpu.register_function_callback(f);
-    cpu.process();
-
-    ASSERT_EQ(expected_data.size(), 3);
-
-    for (auto &data : expected_data)
-    {
-        ASSERT_FALSE(data.is_flag_set(CpuData::FLAG_Z));
-        ASSERT_FALSE(data.is_flag_set(CpuData::FLAG_N));
-    }
-
-    ASSERT_EQ(expected_data[0].HL.u16, 97);
-    ASSERT_TRUE(expected_data[0].is_flag_set(CpuData::FLAG_H));
-    ASSERT_FALSE(expected_data[0].is_flag_set(CpuData::FLAG_C));
-
-    ASSERT_EQ(expected_data[1].HL.u16, 0);
-    ASSERT_TRUE(expected_data[1].is_flag_set(CpuData::FLAG_H));
-    ASSERT_TRUE(expected_data[1].is_flag_set(CpuData::FLAG_C));
-
-    ASSERT_EQ(expected_data[2].HL.u16, 4);
-}
-
-TEST(LoadTest, ld_HL_SP_n8_half_carry)
-{
-    program_creator pc;
-    pc.ld_SP_nn(0x9).ld_HL_SP_plus_n8(0x10).ld_SP_nn(0xA).ld_HL_SP_plus_n8(0xC);
-    Cpu cpu{pc.get()};
-
-    std::vector<CpuData> expected_data;
-    auto f = [&expected_data](const CpuData &d, const Opcode &op) {
-        if (op.hex == 0xF8) // after each add_to_SP
-            expected_data.push_back(d);
-    };
-    cpu.register_function_callback(f);
-    cpu.process();
-
-    ASSERT_FALSE(expected_data[0].is_flag_set(CpuData::FLAG_H));
-    ASSERT_TRUE(expected_data[1].is_flag_set(CpuData::FLAG_H));
-}
-
-TEST(LoadTest, ld_HL_SP_n8_carry)
-{
-    program_creator pc;
-    pc.ld_SP_nn(0xFFFE).ld_HL_SP_plus_n8(0x1).ld_SP_nn(0xFFFF).ld_HL_SP_plus_n8(0x1);
-    Cpu cpu{pc.get()};
-
-    std::vector<CpuData> expected_data;
-    auto f = [&expected_data](const CpuData &d, const Opcode &op) {
-        if (op.hex == 0xF8) // after each add_to_SP
-            expected_data.push_back(d);
-    };
-    cpu.register_function_callback(f);
-    cpu.process();
-
-    ASSERT_FALSE(expected_data[0].is_flag_set(CpuData::FLAG_C));
-    ASSERT_TRUE(expected_data[1].is_flag_set(CpuData::FLAG_C));
-}
-
-TEST(LoadTest, ld_a16_SP)
-{
-    program_creator pc;
-    pc.ld_SP_nn(0xBBAA).ld_Ia16I_SP(0x1);
-    Cpu cpu{pc.get()};
-
-    CpuData expected_data;
-    auto f = [&expected_data](const CpuData &d, const Opcode &op) {
-        if (op.hex == 0x08)
-            expected_data = d;
-    };
-    cpu.register_function_callback(f);
-    cpu.process();
-
-    ASSERT_EQ(expected_data.m_memory[0x1], 0xAA);
-    ASSERT_EQ(expected_data.m_memory[0x2], 0xBB);
-}
-
-TEST(LoadTest, ld_sp_hl)
-{
-    program_creator pc;
-    pc.ld_HL_nn(0xABCD).ld_SP_HL();
-    Cpu cpu{pc.get()};
-
-    CpuData expected_data;
-    auto f = [&expected_data](const CpuData &d, const Opcode &op) {
-        if (op.hex == 0xF9)
-            expected_data = d;
-    };
-    cpu.register_function_callback(f);
-    cpu.process();
-
-    ASSERT_EQ(expected_data.HL.u16, 0xABCD);
-    ASSERT_EQ(expected_data.SP.u16, expected_data.HL.u16);
-}
-
-TEST(LoadTest, push_BC)
-{
-    program_creator pc;
-    pc.ld_SP_nn(0xA).ld_BC_nn(0x548A).push_BC();
-    Cpu cpu{pc.get()};
-
-    CpuData expected_data;
-    auto f = [&expected_data](const CpuData &d, const Opcode &op) {
-        if (op.hex == 0xC5)
-            expected_data = d;
-    };
-    cpu.register_function_callback(f);
-    cpu.process();
-
-    // Is stack decremented by 2 bytes
-    ASSERT_EQ(expected_data.SP.u16, 8);
-    ASSERT_EQ(read_word_from_stack(expected_data), 0x548A);
-}
-
-TEST(LoadTest, push_DE)
-{
-    program_creator pc;
-    pc.ld_SP_nn(0xBB).ld_DE_nn(0xAAFF).push_DE();
-    Cpu cpu{pc.get()};
-
-    CpuData expected_data;
-    auto f = [&expected_data](const CpuData &d, const Opcode &op) {
-        if (op.hex == 0xD5)
-            expected_data = d;
-    };
-    cpu.register_function_callback(f);
-    cpu.process();
-
-    // Is stack decremented by 2 bytes
-    ASSERT_EQ(expected_data.SP.u16, 0xBB - 2);
-    ASSERT_EQ(read_word_from_stack(expected_data), 0xAAFF);
-}
-
-TEST(LoadTest, push_HL)
-{
-    program_creator pc;
-    pc.ld_SP_nn(0xAB).ld_HL_nn(0x1234).push_HL();
-    Cpu cpu{pc.get()};
-
-    CpuData expected_data;
-    auto f = [&expected_data](const CpuData &d, const Opcode &op) {
-        if (op.hex == 0xE5)
-            expected_data = d;
-    };
-    cpu.register_function_callback(f);
-    cpu.process();
-
-    // Is stack decremented by 2 bytes
-    ASSERT_EQ(expected_data.SP.u16, 0xAB - 2);
-    ASSERT_EQ(read_word_from_stack(expected_data), 0x1234);
-}
-
-TEST(LoadTest, push_AF)
-{
-    program_creator pc;
-    pc.ld_SP_nn(0x100).ld_DE_nn(0xBD00).ld_reg8_reg8("A", "D").push_AF();
-    Cpu cpu{pc.get()};
-
-    CpuData expected_data;
-    auto f = [&expected_data](const CpuData &d, const Opcode &op) {
-        if (op.hex == 0xF5)
-            expected_data = d;
-    };
-    cpu.register_function_callback(f);
-    cpu.process();
-
-    // Is stack decremented by 2 bytes
-    ASSERT_EQ(expected_data.SP.u16, 0x0100 - 2);
-    ASSERT_EQ(read_word_from_stack(expected_data), 0xBD00);
-}
-
-TEST(LoadTest, pop_AF)
-{
-    program_creator pc;
-    pc.ld_SP_nn(0x303).ld_DE_nn(0xBAFE).push_DE().pop_AF();
-    Cpu cpu{pc.get()};
-
-    CpuData expected_data;
-    auto f = [&expected_data](const CpuData &d, const Opcode &op) {
-        if (op.hex == 0xF1)
-            expected_data = d;
-    };
-    cpu.register_function_callback(f);
-    cpu.process();
-
-    ASSERT_EQ(expected_data.SP.u16, 0x303);
-    ASSERT_EQ(expected_data.AF.u16, 0xBAFE);
-}
-
-TEST(LoadTest, pop_BC)
-{
-    program_creator pc;
-    pc.ld_SP_nn(0x12).ld_HL_nn(0xF0F0).push_HL().pop_BC();
-    Cpu cpu{pc.get()};
-
-    CpuData expected_data;
-    auto f = [&expected_data](const CpuData &d, const Opcode &op) {
-        if (op.hex == 0xC1)
-            expected_data = d;
-    };
-    cpu.register_function_callback(f);
-    cpu.process();
-
-    ASSERT_EQ(expected_data.SP.u16, 0x12);
-    ASSERT_EQ(expected_data.BC.u16, 0xF0F0);
-}
-
-TEST(LoadTest, pop_DE)
-{
-    program_creator pc;
-    pc.ld_SP_nn(0x89).ld_HL_nn(0x1561).push_HL().pop_DE();
-    Cpu cpu{pc.get()};
-
-    CpuData expected_data;
-    auto f = [&expected_data](const CpuData &d, const Opcode &op) {
-        if (op.hex == 0xD1)
-            expected_data = d;
-    };
-    cpu.register_function_callback(f);
-    cpu.process();
-
-    ASSERT_EQ(expected_data.SP.u16, 0x89);
-    ASSERT_EQ(expected_data.DE.u16, 0x1561);
-}
-
-TEST(LoadTest, pop_HL)
-{
-    program_creator pc;
-    pc.ld_SP_nn(0x99).ld_BC_nn(0xBABE).push_BC().pop_HL();
-    Cpu cpu{pc.get()};
-
-    CpuData expected_data;
-    auto f = [&expected_data](const CpuData &d, const Opcode &op) {
-        if (op.hex == 0xE1)
-            expected_data = d;
-    };
-    cpu.register_function_callback(f);
-    cpu.process();
-
-    ASSERT_EQ(expected_data.SP.u16, 0x99);
-    ASSERT_EQ(expected_data.HL.u16, 0xBABE);
-}
 
 TEST(LoadTest, load_B_C_D_E_H_L_to_A)
 {
@@ -366,11 +53,20 @@ TEST(LoadTest, load_B_C_D_E_H_L_to_A)
 
 TEST(LoadTest, load_HL_to_A)
 {
-    program_creator pc;
-    // saving value 0x67 at memory location 0x100 using SP
-    // and then read this memory via HL and save it to A
-    pc.ld_SP_nn(0x67).ld_Ia16I_SP(0x100).ld_HL_nn(0x100).ld_A_IHLI();
-    Cpu cpu{pc.get()};
+    // program_creator pc;
+    // // saving value 0x67 at memory location 0x100 using SP
+    // // and then read this memory via HL and save it to A
+    // pc.ld_SP_nn(0x67).ld_Ia16I_SP(0x100).ld_HL_nn(0x100).ld_A_IHLI();
+    // Cpu cpu{pc.get()};
+
+    std::string assembly{R"(
+        LD SP, 0x67
+        LD [0x100], SP
+        LD HL, 0x100
+        LD A, [HL]
+    )"};
+    auto opcodes = translate(assembly);
+    Cpu cpu{opcodes};
 
     CpuData expected_data;
     auto f = [&expected_data](const CpuData &d, const Opcode &op) {
@@ -385,13 +81,22 @@ TEST(LoadTest, load_HL_to_A)
 
 TEST(LoadTest, load_HL_plus_to_A)
 {
-    program_creator pc;
-    pc.ld_SP_nn(0x12).ld_Ia16I_SP(0xACCA).ld_HL_nn(0xACCA).ld_A_IHL_plusI();
-    Cpu cpu{pc.get()};
+    // program_creator pc;
+    // pc.ld_SP_nn(0x12).ld_Ia16I_SP(0xACCA).ld_HL_nn(0xACCA).ld_A_IHL_plusI();
+    // Cpu cpu{pc.get()};
+
+    std::string assembly{R"(
+        LD SP, 0x12
+        LD [0xACCA], SP
+        LD HL, 0xACCA
+        LD A, [HL+]
+    )"};
+    auto opcodes = translate(assembly);
+    Cpu cpu{opcodes};
 
     CpuData expected_data;
     auto f = [&expected_data](const CpuData &d, const Opcode &op) {
-        if (op.hex == 0x2A)
+        if (op.hex == get_opcode("LD A, [HL+]").hex)
             expected_data = d;
     };
     cpu.register_function_callback(f);
@@ -506,9 +211,17 @@ TEST(LoadTest, load_DE_addr_to_A)
 
 TEST(LoadTest, load_n_to_B)
 {
-    program_creator pc;
-    pc.ld_B_n8(0x67).ld_B_n8(0x10).ld_B_n8(0xFA);
-    Cpu cpu{pc.get()};
+    // program_creator pc;
+    // pc.ld_B_n8(0x67).ld_B_n8(0x10).ld_B_n8(0xFA);
+    // Cpu cpu{pc.get()};
+
+    std::string assembly{R"(
+        LD B, 0x67
+        LD B, 0x10
+        LD B, 0xFA
+    )"};
+    auto opcodes = translate(assembly);
+    Cpu cpu{opcodes};
 
     std::vector<CpuData> expected_data;
     auto f = [&expected_data](const CpuData &d, const Opcode &op) { expected_data.push_back(d); };

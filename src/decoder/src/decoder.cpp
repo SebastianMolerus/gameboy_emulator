@@ -17,6 +17,8 @@ const std::filesystem::path JSON_PATH{OPCODES_JSON_PATH};
 std::array<Opcode, 256> OPCODES_CACHE;
 std::array<Opcode, 256> PREF_OPCODES_CACHE;
 
+std::vector<std::pair<std::string, Opcode>> INSTRUCTIONS;
+
 char const *OPCODE_MBR_MNEMONIC = "mnemonic";
 char const *OPCODE_MBR_BYTES = "bytes";
 char const *OPCODE_MBR_CYCLES = "cycles";
@@ -125,6 +127,72 @@ void fill_flags(Pair const &flags, Opcode &new_opcode)
     }
 }
 
+std::string get_operand(Operand const &op)
+{
+    std::string operand;
+
+    if (!op.immediate)
+        operand += '[';
+
+    operand += op.name;
+
+    if (op.increment == 1)
+        operand += '+';
+
+    if (op.decrement == 1)
+        operand += '-';
+
+    if (!op.immediate)
+        operand += ']';
+
+    return operand;
+}
+
+void fill_instruction(Opcode const &op)
+{
+    std::string new_instruction;
+    new_instruction += op.mnemonic;
+
+    auto const operands_count =
+        std::count_if(op.operands.cbegin(), op.operands.cend(), [](Operand const &op) { return op.name != nullptr; });
+
+    auto add_two_operands = [&new_instruction, &op]() {
+        new_instruction += ' ';
+        new_instruction += get_operand(op.operands[0]);
+        new_instruction += ", ";
+        new_instruction += get_operand(op.operands[1]);
+    };
+
+    switch (operands_count)
+    {
+    case 0:
+        break;
+    case 1:
+        new_instruction += ' ';
+        new_instruction += get_operand(op.operands[0]);
+        break;
+    case 2:
+        add_two_operands();
+        break;
+    case 3:
+        add_two_operands();
+        // one special case ( unprefixed : 0xF8 )
+        // need to add space before '+'
+        if (new_instruction[new_instruction.size() - 1] == '+')
+        {
+            new_instruction.pop_back();
+            new_instruction += " +";
+        }
+        new_instruction += ' ';
+        new_instruction += get_operand(op.operands[2]);
+        break;
+    default:
+        assert(false);
+    }
+
+    INSTRUCTIONS.push_back(std::make_pair(std::move(new_instruction), op));
+}
+
 // {"0x01", Value}
 void process_opcode(json_spirit::Pair const &opcode, std::array<Opcode, 256> &cache)
 {
@@ -150,6 +218,8 @@ void process_opcode(json_spirit::Pair const &opcode, std::array<Opcode, 256> &ca
         else
             assert(false);
     }
+
+    fill_instruction(new_opcode);
 }
 
 bool cache_opcodes()
@@ -233,4 +303,17 @@ Opcode &get_opcode(std::string_view instruction) noexcept
 Opcode &get_pref_opcode(uint8_t opcode_hex) noexcept
 {
     return PREF_OPCODES_CACHE[opcode_hex];
+}
+
+Opcode &get_opcode(std::string_view instruction) noexcept
+{
+    auto result = std::find_if(
+        INSTRUCTIONS.begin(), INSTRUCTIONS.end(),
+        [&instruction](std::pair<std::string, Opcode> &instr_op) { return instr_op.first == instruction; });
+
+    static Opcode op;
+    if (result == INSTRUCTIONS.cend())
+        return op;
+
+    return result->second;
 }
