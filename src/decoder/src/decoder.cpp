@@ -296,17 +296,6 @@ Opcode &get_pref_opcode(uint8_t opcode_hex) noexcept
 
 Opcode &get_opcode(std::string_view instruction) noexcept
 {
-    static Opcode op;
-    return op;
-}
-
-Opcode &get_pref_opcode(uint8_t opcode_hex) noexcept
-{
-    return PREF_OPCODES_CACHE[opcode_hex];
-}
-
-Opcode &get_opcode(std::string_view instruction) noexcept
-{
     auto result = std::find_if(
         INSTRUCTIONS.begin(), INSTRUCTIONS.end(),
         [&instruction](std::pair<std::string, Opcode> &instr_op) { return instr_op.first == instruction; });

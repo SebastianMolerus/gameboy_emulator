@@ -206,8 +206,8 @@ TEST_F(DecoderTests, loadingCommands)
 {
     Opcode op = get_opcode("LD BC, 0xAB");
     ASSERT_EQ(op.hex, 0x01);
-}
-    Opcode op = get_opcode("NOP");
+
+    op = get_opcode("NOP");
     ASSERT_EQ(op.hex, 0x00);
 
     op = get_opcode("AND A, [HL]");

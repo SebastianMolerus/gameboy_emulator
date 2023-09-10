@@ -22,7 +22,7 @@ struct Operand
 struct Opcode
 {
     const char *mnemonic{nullptr};
-    uint8_t bytes;
+    uint8_t bytes{};
     uint8_t hex{};
     std::array<uint8_t, 2> cycles{0xFF, 0xFF};
     std::array<Operand, 3> operands;

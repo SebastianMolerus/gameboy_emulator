@@ -1,8 +1,10 @@
 #include "translator.hpp"
 #include <cassert>
 #include <cctype>
+#include <cstring>
 #include <decoder.hpp>
 #include <string>
+
 
 namespace
 {
