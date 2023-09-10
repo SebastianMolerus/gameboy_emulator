@@ -59,3 +59,16 @@ TEST(translator_test, translate_instructions_ld_2)
     ASSERT_EQ(machine_code[13], 0xF8);
     ASSERT_EQ(machine_code[14], 0x81);
 }
+
+TEST(translator_test, translate_instructions_ld_3)
+{
+    std::string st{R"(
+        LD [0x100], SP
+    )"};
+
+    auto machine_code = translate(st);
+
+    ASSERT_EQ(machine_code[0], 0x08);
+    ASSERT_EQ(machine_code[1], 0x00);
+    ASSERT_EQ(machine_code[2], 0x01);
+}

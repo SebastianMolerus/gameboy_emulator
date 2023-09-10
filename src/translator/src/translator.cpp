@@ -51,7 +51,7 @@ std::vector<uint8_t> translate(std::string_view instructions)
     auto commands = parse_instructions(instructions);
 
     std::vector<uint8_t> result;
-    for (std::string &cmd : commands)
+    for (std::string const &cmd : commands)
     {
         size_t const x_pos = cmd.find_first_of('x');
         size_t pos_end{x_pos};
@@ -77,7 +77,6 @@ std::vector<uint8_t> translate(std::string_view instructions)
             ++cc;
             ++pos_end;
         }
-        --pos_end;
 
         const uint16_t value = std::stoi(hex, 0, 16);
 
@@ -86,7 +85,8 @@ std::vector<uint8_t> translate(std::string_view instructions)
         {
             for (auto s : {"n16", "a16"})
             {
-                auto try_command = cmd.replace(zero_pos, 6, s);
+                std::string com{cmd};
+                auto try_command = com.replace(zero_pos, pos_end - zero_pos + 1, s);
                 Opcode op = get_opcode(try_command);
                 if (op.hex)
                 {
@@ -101,7 +101,8 @@ std::vector<uint8_t> translate(std::string_view instructions)
         {
             for (auto s : {"n8", "a8", "e8", "n16", "a16"})
             {
-                auto try_command = cmd.replace(zero_pos, 4, s);
+                std::string com{cmd};
+                auto try_command = com.replace(zero_pos, pos_end - zero_pos + 1, s);
                 Opcode op = get_opcode(try_command);
                 if (op.hex)
                 {

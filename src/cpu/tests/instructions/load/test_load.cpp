@@ -380,11 +380,20 @@ TEST(LoadTest, load_B_C_D_E_H_L_to_A)
 
 TEST(LoadTest, load_HL_to_A)
 {
-    program_creator pc;
-    // saving value 0x67 at memory location 0x100 using SP
-    // and then read this memory via HL and save it to A
-    pc.ld_SP_nn(0x67).ld_Ia16I_SP(0x100).ld_HL_nn(0x100).ld_A_IHLI();
-    Cpu cpu{pc.get()};
+    // program_creator pc;
+    // // saving value 0x67 at memory location 0x100 using SP
+    // // and then read this memory via HL and save it to A
+    // pc.ld_SP_nn(0x67).ld_Ia16I_SP(0x100).ld_HL_nn(0x100).ld_A_IHLI();
+    // Cpu cpu{pc.get()};
+
+    std::string assembly{R"(
+        LD SP, 0x67
+        LD [0x100], SP
+        LD HL, 0x100
+        LD A, [HL]
+    )"};
+    auto opcodes = translate(assembly);
+    Cpu cpu{opcodes};
 
     CpuData expected_data;
     auto f = [&expected_data](const CpuData &d, const Opcode &op) {
@@ -399,13 +408,22 @@ TEST(LoadTest, load_HL_to_A)
 
 TEST(LoadTest, load_HL_plus_to_A)
 {
-    program_creator pc;
-    pc.ld_SP_nn(0x12).ld_Ia16I_SP(0xACCA).ld_HL_nn(0xACCA).ld_A_IHL_plusI();
-    Cpu cpu{pc.get()};
+    // program_creator pc;
+    // pc.ld_SP_nn(0x12).ld_Ia16I_SP(0xACCA).ld_HL_nn(0xACCA).ld_A_IHL_plusI();
+    // Cpu cpu{pc.get()};
+
+    std::string assembly{R"(
+        LD SP, 0x12
+        LD [0xACCA], SP
+        LD HL, 0xACCA
+        LD A, [HL+]
+    )"};
+    auto opcodes = translate(assembly);
+    Cpu cpu{opcodes};
 
     CpuData expected_data;
     auto f = [&expected_data](const CpuData &d, const Opcode &op) {
-        if (op.hex == 0x2A)
+        if (op.hex == get_opcode("LD A, [HL+]").hex)
             expected_data = d;
     };
     cpu.register_function_callback(f);
@@ -520,9 +538,17 @@ TEST(LoadTest, load_DE_addr_to_A)
 
 TEST(LoadTest, load_n_to_B)
 {
-    program_creator pc;
-    pc.ld_B_n8(0x67).ld_B_n8(0x10).ld_B_n8(0xFA);
-    Cpu cpu{pc.get()};
+    // program_creator pc;
+    // pc.ld_B_n8(0x67).ld_B_n8(0x10).ld_B_n8(0xFA);
+    // Cpu cpu{pc.get()};
+
+    std::string assembly{R"(
+        LD B, 0x67
+        LD B, 0x10
+        LD B, 0xFA
+    )"};
+    auto opcodes = translate(assembly);
+    Cpu cpu{opcodes};
 
     std::vector<CpuData> expected_data;
     auto f = [&expected_data](const CpuData &d, const Opcode &op) { expected_data.push_back(d); };
