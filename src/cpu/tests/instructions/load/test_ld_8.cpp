@@ -22,6 +22,65 @@ TEST(test_load_8bit, LD_IBCI_A)
     ASSERT_EQ(expected_data.m_memory[0x59], 0x15);
 }
 
+// 0x12
+TEST(test_load_8bit, LD_IDEI_A)
+{
+    std::string assembly{R"(
+        LD DE, 0x789F
+        LD A, 0xEA
+        LD [DE], A
+    )"};
+    auto opcodes = translate(assembly);
+    Cpu cpu{opcodes};
+
+    CpuData expected_data;
+    auto f = [&expected_data](const CpuData &d, const Opcode &op) { expected_data = d; };
+    cpu.register_function_callback(f);
+    cpu.process();
+
+    ASSERT_EQ(expected_data.m_memory[0x789F], 0xEA);
+}
+
+// 0x22
+TEST(test_load_8bit, LD_IHLplusI_A)
+{
+    std::string assembly{R"(
+        LD HL, 0x9998
+        LD A, 0x61
+        LD [HL+], A
+    )"};
+    auto opcodes = translate(assembly);
+    Cpu cpu{opcodes};
+
+    CpuData expected_data;
+    auto f = [&expected_data](const CpuData &d, const Opcode &op) { expected_data = d; };
+    cpu.register_function_callback(f);
+    cpu.process();
+
+    ASSERT_EQ(expected_data.m_memory[0x9998], 0x61);
+    ASSERT_EQ(expected_data.HL.u16, 0x9999);
+}
+
+// 0x32
+TEST(test_load_8bit, LD_IHLminusI_A)
+{
+    std::string assembly{R"(
+        LD HL, 0x5
+        LD A, 0x51
+        LD [HL-], A
+    )"};
+    auto opcodes = translate(assembly);
+    Cpu cpu{opcodes};
+
+    CpuData expected_data;
+    auto f = [&expected_data](const CpuData &d, const Opcode &op) { expected_data = d; };
+    cpu.register_function_callback(f);
+    cpu.process();
+
+    ASSERT_EQ(expected_data.m_memory[0x5], 0x51);
+    ASSERT_EQ(expected_data.HL.u16, 0x4);
+}
+
 // 0xE0
 TEST(test_load_8bit, LDH_Ia8I_A)
 {
@@ -57,6 +116,179 @@ TEST(test_load_8bit, LDH_A_Ia8I)
     cpu.process();
 
     ASSERT_EQ(expected_data.AF.hi, 0x26);
+}
+
+// 0x06
+TEST(test_load_8bit, LD_B_n8)
+{
+    std::string assembly{R"(
+         LD B, 0x07
+         LD B, 0x1
+     )"};
+    auto opcodes = translate(assembly);
+    Cpu cpu{opcodes};
+
+    std::vector<CpuData> expected_data;
+    auto f = [&expected_data](const CpuData &d, const Opcode &op) { expected_data.push_back(d); };
+    cpu.register_function_callback(f);
+    cpu.process();
+
+    ASSERT_EQ(expected_data.size(), 2);
+    ASSERT_EQ(expected_data[0].BC.hi, 0x07);
+    ASSERT_EQ(expected_data[1].BC.hi, 0x1);
+}
+
+// 0x16
+TEST(test_load_8bit, LD_D_n8)
+{
+    std::string assembly{R"(
+         LD D, 0xAA
+         LD D, 0xB
+         LD D, 0x0
+     )"};
+    auto opcodes = translate(assembly);
+    Cpu cpu{opcodes};
+
+    std::vector<CpuData> expected_data;
+    auto f = [&expected_data](const CpuData &d, const Opcode &op) { expected_data.push_back(d); };
+    cpu.register_function_callback(f);
+    cpu.process();
+
+    ASSERT_EQ(expected_data.size(), 3);
+    ASSERT_EQ(expected_data[0].DE.hi, 0xAA);
+    ASSERT_EQ(expected_data[1].DE.hi, 0xB);
+    ASSERT_EQ(expected_data[2].DE.hi, 0x0);
+}
+
+// 0x26
+TEST(test_load_8bit, LD_H_n8)
+{
+    std::string assembly{R"(
+         LD H, 0x12
+         LD H, 0x59
+         LD H, 0x4
+     )"};
+    auto opcodes = translate(assembly);
+    Cpu cpu{opcodes};
+
+    std::vector<CpuData> expected_data;
+    auto f = [&expected_data](const CpuData &d, const Opcode &op) { expected_data.push_back(d); };
+    cpu.register_function_callback(f);
+    cpu.process();
+
+    ASSERT_EQ(expected_data.size(), 3);
+    ASSERT_EQ(expected_data[0].HL.hi, 0x12);
+    ASSERT_EQ(expected_data[1].HL.hi, 0x59);
+    ASSERT_EQ(expected_data[2].HL.hi, 0x4);
+}
+
+// 0x36
+TEST(test_load_8bit, LD_IHLI_n8)
+{
+    std::string assembly{R"(
+         LD HL, 0xFF32
+         LD [HL], 0x8
+         LD HL, 0x784E
+         LD [HL], 0xF6
+     )"};
+    auto opcodes = translate(assembly);
+    Cpu cpu{opcodes};
+
+    CpuData expected_data;
+    auto f = [&expected_data](const CpuData &d, const Opcode &op) { expected_data = d; };
+    cpu.register_function_callback(f);
+    cpu.process();
+
+    ASSERT_EQ(expected_data.m_memory[0xFF32], 0x8);
+    ASSERT_EQ(expected_data.m_memory[0x784E], 0xF6);
+}
+
+// 0x0E
+TEST(test_load_8bit, LD_C_n8)
+{
+    std::string assembly{R"(
+         LD C, 0x1
+         LD C, 0x01
+         LD C, 0xF5
+     )"};
+    auto opcodes = translate(assembly);
+    Cpu cpu{opcodes};
+
+    std::vector<CpuData> expected_data;
+    auto f = [&expected_data](const CpuData &d, const Opcode &op) { expected_data.push_back(d); };
+    cpu.register_function_callback(f);
+    cpu.process();
+
+    ASSERT_EQ(expected_data.size(), 3);
+    ASSERT_EQ(expected_data[0].BC.lo, 0x1);
+    ASSERT_EQ(expected_data[1].BC.lo, 0x01);
+    ASSERT_EQ(expected_data[2].BC.lo, 0xF5);
+}
+
+// 0x1E
+TEST(test_load_8bit, LD_E_n8)
+{
+    std::string assembly{R"(
+         LD E, 0x87
+         LD E, 0xA4
+         LD E, 0x8D
+     )"};
+    auto opcodes = translate(assembly);
+    Cpu cpu{opcodes};
+
+    std::vector<CpuData> expected_data;
+    auto f = [&expected_data](const CpuData &d, const Opcode &op) { expected_data.push_back(d); };
+    cpu.register_function_callback(f);
+    cpu.process();
+
+    ASSERT_EQ(expected_data.size(), 3);
+    ASSERT_EQ(expected_data[0].DE.lo, 0x87);
+    ASSERT_EQ(expected_data[1].DE.lo, 0xA4);
+    ASSERT_EQ(expected_data[2].DE.lo, 0x8D);
+}
+
+// 0x2E
+TEST(test_load_8bit, LD_L_n8)
+{
+    std::string assembly{R"(
+         LD L, 0x72
+         LD L, 0x71
+         LD L, 0x0F
+     )"};
+    auto opcodes = translate(assembly);
+    Cpu cpu{opcodes};
+
+    std::vector<CpuData> expected_data;
+    auto f = [&expected_data](const CpuData &d, const Opcode &op) { expected_data.push_back(d); };
+    cpu.register_function_callback(f);
+    cpu.process();
+
+    ASSERT_EQ(expected_data.size(), 3);
+    ASSERT_EQ(expected_data[0].HL.lo, 0x72);
+    ASSERT_EQ(expected_data[1].HL.lo, 0x71);
+    ASSERT_EQ(expected_data[2].HL.lo, 0x0F);
+}
+
+// 0x3E
+TEST(test_load_8bit, LD_A_n8)
+{
+    std::string assembly{R"(
+         LD A, 0x0
+         LD A, 0x2
+         LD A, 0x3
+     )"};
+    auto opcodes = translate(assembly);
+    Cpu cpu{opcodes};
+
+    std::vector<CpuData> expected_data;
+    auto f = [&expected_data](const CpuData &d, const Opcode &op) { expected_data.push_back(d); };
+    cpu.register_function_callback(f);
+    cpu.process();
+
+    ASSERT_EQ(expected_data.size(), 3);
+    ASSERT_EQ(expected_data[0].AF.hi, 0x0);
+    ASSERT_EQ(expected_data[1].AF.hi, 0x2);
+    ASSERT_EQ(expected_data[2].AF.hi, 0x3);
 }
 
 TEST(LoadTest, load_B_C_D_E_H_L_to_A)

@@ -128,6 +128,12 @@ void save_target(uint8_t source_value)
         else
         {
             data->m_memory[std::get<uint16_t>(target_value)] = source_value;
+
+            if (target.increment == 1)
+                *data->get_word(target.name) += 1;
+
+            if (target.decrement == 1)
+                *data->get_word(target.name) -= 1;
         }
         return;
     }
@@ -230,34 +236,36 @@ void load(Opcode const &op, CpuData &cpu_data, std::span<uint8_t> program)
     case 0xF8: // add n to SP and copy it to HL
         LD_HL_SP_e8();
         break;
-    case 0xF9: // copy HL to SP
-    case 0x08: // copy SP value into a16
-    case 0x01: // load nn to BC
-    case 0x11: // load nn to DE
-    case 0x21: // load nn to HL
-    case 0x31: // load nn to SP
-    case 0x78: // load B to A
-    case 0x79: // load C to A
-    case 0x7A: // load D to A
-    case 0x7B: // load E to A
-    case 0x7C: // load H to A
-    case 0x7D: // load L to A
-    case 0x7E: // load ( HL ) to A
-    case 0x7F: // load A to A ( wtf ? )
-    case 0x2A: // load ( HL + ) to A
-    case 0x3A: // load ( HL - ) to A
-    case 0xF2: // Put value at address $FF00 + register C into A.
-    case 0x3E: // load n to A
-    case 0xFA: // load (a16) to A
-    case 0x0A: // load (BC) to A
-    case 0x1A: // load (DE) to A
-    case 0x06: // load n to B
-    case 0x02: // LD [BC], A
-    case 0x43:
-    case 0xE2:
+    case 0xF9:
+    case 0x01:
+    case 0x11:
+    case 0x21:
+    case 0x31:
+    case 0x02:
+    case 0x12:
+    case 0x22:
+    case 0x32:
+    case 0x06:
+    case 0x16:
+    case 0x26:
+    case 0x36:
+    case 0x08:
+    case 0x0A:
+    case 0x1A:
+    case 0x2A:
+    case 0x3A:
     case 0x0E:
+    case 0x1E:
+    case 0x2E:
+    case 0x3E:
     case 0xE0:
     case 0xF0:
+    case 0xE2:
+    case 0xF2:
+    case 0xEA:
+    case 0xFA:
+    case 0x40 ... 0x7F:
+        assert(op.hex != 0x76); // Halt;
         load_source();
         break;
     case 0xF1: // pop AF
