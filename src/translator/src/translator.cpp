@@ -5,7 +5,6 @@
 #include <decoder.hpp>
 #include <string>
 
-
 namespace
 {
 std::vector<std::string> parse_instructions(std::string_view instructions)
@@ -67,7 +66,7 @@ std::vector<uint8_t> translate(std::string_view instructions)
         size_t const zero_pos = x_pos - 1;
         assert(zero_pos > 0);
 
-        char hex[4]{};
+        char hex[5]{};
 
         char const *cc = &cmd[x_pos + 1];
 
