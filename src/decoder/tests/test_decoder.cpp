@@ -204,7 +204,7 @@ TEST_F(DecoderTests, flags)
 
 TEST_F(DecoderTests, loadingCommands)
 {
-    Opcode op = get_opcode("LD BC, 0xAB");
+    Opcode op = get_opcode("LD BC, n16");
     ASSERT_EQ(op.hex, 0x01);
 
     op = get_opcode("NOP");
