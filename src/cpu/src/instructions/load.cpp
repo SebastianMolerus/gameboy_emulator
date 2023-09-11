@@ -34,7 +34,7 @@ void pop()
     auto target = data->get_word(oc->operands[0].name);
     uint16_t val = data->m_memory[data->SP.u16 + 1]; // MSB
     val <<= 8;
-    val |= data->m_memory[data->SP.u16];             // LSB
+    val |= data->m_memory[data->SP.u16]; // LSB
 
     *target = val;
 
@@ -120,7 +120,8 @@ void save_target(uint8_t source_value)
         {
             uint16_t addr{std::get<uint8_t>(target_value)};
             // LD [C], A ( special case )
-            if (oc->hex == 0xE2)
+            // LDH [a8], A ( special case )
+            if (oc->hex == 0xE2 || oc->hex == 0xE0)
                 addr |= 0xFF00;
             data->m_memory[addr] = source_value;
         }
@@ -190,7 +191,8 @@ void load_source()
         {
             uint16_t addr = std::get<uint8_t>(src_value);
             // LD A, [C] ( special case )
-            if (oc->hex == 0xF2)
+            // LDH A, [a8]
+            if (oc->hex == 0xF2 || oc->hex == 0xF0)
                 addr |= 0xFF00;
             src_value = data->m_memory[addr];
         }
@@ -254,6 +256,8 @@ void load(Opcode const &op, CpuData &cpu_data, std::span<uint8_t> program)
     case 0x43:
     case 0xE2:
     case 0x0E:
+    case 0xE0:
+    case 0xF0:
         load_source();
         break;
     case 0xF1: // pop AF

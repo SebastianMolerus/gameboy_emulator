@@ -22,6 +22,43 @@ TEST(test_load_8bit, LD_IBCI_A)
     ASSERT_EQ(expected_data.m_memory[0x59], 0x15);
 }
 
+// 0xE0
+TEST(test_load_8bit, LDH_Ia8I_A)
+{
+    std::string assembly{R"(
+        LD A, 0x99
+        LDH [0x15], A
+    )"};
+    auto opcodes = translate(assembly);
+    Cpu cpu{opcodes};
+
+    CpuData expected_data;
+    auto f = [&expected_data](const CpuData &d, const Opcode &op) { expected_data = d; };
+    cpu.register_function_callback(f);
+    cpu.process();
+
+    ASSERT_EQ(expected_data.m_memory[0xFF00 + 0x15], 0x99);
+}
+
+// 0xF0
+TEST(test_load_8bit, LDH_A_Ia8I)
+{
+    std::string assembly{R"(
+        LD SP, 0x26
+        LD [0xFF87], SP
+        LDH A, [0x87]
+    )"};
+    auto opcodes = translate(assembly);
+    Cpu cpu{opcodes};
+
+    CpuData expected_data;
+    auto f = [&expected_data](const CpuData &d, const Opcode &op) { expected_data = d; };
+    cpu.register_function_callback(f);
+    cpu.process();
+
+    ASSERT_EQ(expected_data.AF.hi, 0x26);
+}
+
 TEST(LoadTest, load_B_C_D_E_H_L_to_A)
 {
     program_creator pc;
