@@ -217,3 +217,22 @@ TEST(LoadTest, load_n_to_B)
     ASSERT_EQ(expected_data[1].BC.hi, 0x10);
     ASSERT_EQ(expected_data[2].BC.hi, 0xFA);
 }
+
+TEST(LoadTest, LD_B_E)
+{
+    // program_creator pc;
+    // pc.ld_B_n8(0x67).ld_B_n8(0x10).ld_B_n8(0xFA);
+    // Cpu cpu{pc.get()};
+    std::string assembly{R"(
+         LD DE, 0xFF77
+         LD B, E
+     )"};
+    auto opcodes = translate(assembly);
+    Cpu cpu{opcodes};
+    std::vector<CpuData> expected_data;
+    auto f = [&expected_data](const CpuData &d, const Opcode &op) { expected_data.push_back(d); };
+    cpu.register_function_callback(f);
+    cpu.process();
+
+    ASSERT_EQ(expected_data[1].BC.hi, 0x77);
+}
