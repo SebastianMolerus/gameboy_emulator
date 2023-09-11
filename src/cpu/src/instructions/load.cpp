@@ -117,7 +117,11 @@ void save_target(uint8_t source_value)
     {
         if (target_value.index() == 0)
         {
-            data->m_memory[std::get<uint8_t>(target_value)] = source_value;
+            uint16_t addr{std::get<uint8_t>(target_value)};
+            // LD [C], A ( special case )
+            if (oc->hex == 0xE2)
+                addr |= 0xFF00;
+            data->m_memory[addr] = source_value;
         }
         else
         {
@@ -179,19 +183,14 @@ void load_source()
 
     std::variant<uint8_t, uint16_t> src_value = get_operand_value(source);
 
-    // LD HL, SP + e8
-    if (oc->hex == 0xF8)
-        std::get<1>(src_value) += prog[1];
-
     if (!source.immediate)
     {
         if (src_value.index() == 0)
         {
             uint16_t addr = std::get<uint8_t>(src_value);
-
-            // LD A, [C]
+            // LD A, [C] ( special case )
             if (oc->hex == 0xF2)
-                addr += 0xFF00;
+                addr |= 0xFF00;
             src_value = data->m_memory[addr];
         }
         else
@@ -252,6 +251,8 @@ void load(Opcode const &op, CpuData &cpu_data, std::span<uint8_t> program)
     case 0x06: // load n to B
     case 0x02: // LD [BC], A
     case 0x43:
+    case 0xE2:
+    case 0x0E:
         load_source();
         break;
     case 0xF1: // pop AF
