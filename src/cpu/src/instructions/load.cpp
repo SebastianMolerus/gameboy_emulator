@@ -1,6 +1,7 @@
 #include "cpu.hpp"
 #include "decoder.hpp"
 #include <cassert>
+#include <cstring>
 #include <variant>
 
 namespace
