@@ -38,4 +38,4 @@ file(COPY ${CMAKE_CURRENT_LIST_DIR}/opcodes.json
 target_compile_definitions(
   decoder PRIVATE OPCODES_JSON_PATH="${CMAKE_BINARY_DIR}/src/opcodes.json")
 
-add_subdirectory(tests)
+add_subdirectory(ut)

@@ -333,3 +333,50 @@ TEST(test_load_8bit, LD_A_IDEI)
     ASSERT_EQ(expected_data.m_memory[0x0099], 0xAB);
     ASSERT_EQ(expected_data.m_memory[0x0099 + 1], 0xAF);
 }
+
+// 0x2A
+TEST(test_load_8bit, LD_A_IHLplusI)
+{
+    std::string assembly{R"(
+         LD SP, 0x1234
+         LD [0xFF01], SP
+         LD HL, 0xFF01
+         LD A, [HL+]
+     )"};
+    auto opcodes = translate(assembly);
+    Cpu cpu{opcodes};
+
+    CpuData expected_data;
+    auto f = [&expected_data](const CpuData &d, const Opcode &op) { expected_data = d; };
+    cpu.register_function_callback(f);
+    cpu.process();
+
+    ASSERT_EQ(expected_data.AF.hi, 0x34);
+    ASSERT_EQ(expected_data.m_memory[0xFF01], 0x34);
+    ASSERT_EQ(expected_data.m_memory[0xFF01 + 1], 0x12);
+    ASSERT_EQ(expected_data.HL.u16, 0xFF01 + 1);
+}
+
+// 0x3A
+TEST(test_load_8bit, LD_A_IHLminusI)
+{
+    std::string assembly{R"(
+         LD SP, 0x1234
+         LD [0xFF01], SP
+         LD HL, 0xFF01
+         LD A, [HL+]
+         LD A, [HL-]
+     )"};
+    auto opcodes = translate(assembly);
+    Cpu cpu{opcodes};
+
+    CpuData expected_data;
+    auto f = [&expected_data](const CpuData &d, const Opcode &op) { expected_data = d; };
+    cpu.register_function_callback(f);
+    cpu.process();
+
+    ASSERT_EQ(expected_data.AF.hi, 0x12);
+    ASSERT_EQ(expected_data.m_memory[0xFF01], 0x34);
+    ASSERT_EQ(expected_data.m_memory[0xFF01 + 1], 0x12);
+    ASSERT_EQ(expected_data.HL.u16, 0xFF01);
+}
