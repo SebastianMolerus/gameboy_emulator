@@ -18,7 +18,7 @@ jobs:
         id: install_cc
         uses: rlalik/setup-cpp-compiler@master
         with:
-          compiler: clang-latest
+          compiler: clang++-16
             
       - name: Checkout repo
         uses: actions/checkout@v3
