@@ -1,6 +1,8 @@
 #include "cpu.hpp"
-#include <format>
+#include <cstdlib>
+#include <ctime>
 #include <gtest/gtest.h>
+#include <iostream>
 #include <translator.hpp>
 
 // 0x02
@@ -385,12 +387,19 @@ TEST(test_load_8bit, LD_A_IHLminusI)
 namespace
 {
 
+template <typename T> std::string hex_string(T value)
+{
+    std::stringstream ss;
+    ss << "0x" << std::setfill('0') << std::setw(4) << std::hex << value;
+    return ss.str();
+}
+
 std::vector<uint8_t> fill_source(std::string_view src, uint8_t value)
 {
     std::string assembly{"LD "};
     assembly += src;
     assembly += ", ";
-    assembly += std::format("0x{:x}", value);
+    assembly += hex_string(value);
     return translate(assembly);
 }
 
@@ -406,12 +415,15 @@ std::vector<uint8_t> fill_destination(std::string_view dest, std::string_view sr
 } // namespace
 
 // 0x40 - 0x7F, without 0x76 ( halt )
-TEST(test_load_8bit, test_for_all_remaining)
+TEST(test_load_8bit, LD_REG8_REG8)
 {
+    srand((unsigned)time(0));
     for (auto &src : {"A", "B", "C", "D", "E", "H", "L"})
         for (auto &dst : {"A", "B", "C", "D", "E", "H", "L"})
         {
-            auto op1 = fill_source(src, 0x76);
+            auto const some_value = rand() % std::numeric_limits<uint8_t>::max();
+
+            auto op1 = fill_source(src, some_value);
             auto op2 = fill_destination(dst, src);
             op1.insert(op1.end(), op2.begin(), op2.end());
 
@@ -422,6 +434,101 @@ TEST(test_load_8bit, test_for_all_remaining)
             cpu.register_function_callback(f);
             cpu.process();
 
-            ASSERT_EQ(*expected_data.get_byte(dst), *expected_data.get_byte(src));
+            std::stringstream ss;
+            ss << "Assembly\n";
+            ss << "LD " << src << ", " << hex_string(some_value) << "\n";
+            ss << "LD " << dst << ", " << src << "\n";
+
+            ASSERT_EQ(*expected_data.get_byte(dst), *expected_data.get_byte(src)) << ss.str();
         }
+}
+
+namespace
+{
+std::vector<uint8_t> prepare_HL(uint16_t value)
+{
+    std::string assembly{"LD SP, "};
+    assembly += hex_string(value);
+    assembly += '\n';
+
+    assembly += std::string{R"(
+            LD [0xABCD], SP
+            LD HL, 0xABCD
+        )"};
+    return translate(assembly);
+}
+} // namespace
+
+// 0x40 - 0x7F, without 0x76 ( halt )
+TEST(test_load_8bit, LD_REG8_IHLI)
+{
+    auto const src = "[HL]";
+    for (auto &dst : {"A", "B", "C", "D", "E", "H", "L"})
+    {
+        auto const some_value = rand() % std::numeric_limits<uint16_t>::max();
+
+        auto opcodes = prepare_HL(some_value);
+
+        std::string assembly{"LD "};
+        assembly += dst;
+        assembly += ", ";
+        assembly += src;
+
+        auto cmd = translate(assembly);
+
+        opcodes.insert(opcodes.end(), cmd.begin(), cmd.end());
+
+        Cpu cpu{opcodes};
+
+        CpuData expected_data;
+        auto f = [&expected_data](const CpuData &d, const Opcode &op) { expected_data = d; };
+        cpu.register_function_callback(f);
+        cpu.process();
+
+        ASSERT_EQ(*expected_data.get_byte(dst), static_cast<uint8_t>(some_value)) << assembly;
+    }
+}
+
+// 0x40 - 0x7F, without 0x76 ( halt )
+TEST(test_load_8bit, LD_IHLI_REG8)
+{
+    auto const dst = "[HL]";
+    for (auto &src : {"A", "B", "C", "D", "E", "H", "L"})
+    {
+        auto const some_value = rand() % std::numeric_limits<uint8_t>::max();
+
+        std::string assembly{"LD HL, 0xAB0F\n"};
+        assembly += "LD ";
+        assembly += src;
+        assembly += ", ";
+        assembly += hex_string(some_value);
+        assembly += "\n";
+        assembly += "LD ";
+        assembly += dst;
+        assembly += ", ";
+        assembly += src;
+        auto cmd = translate(assembly);
+
+        Cpu cpu{cmd};
+
+        CpuData expected_data;
+        auto f = [&expected_data](const CpuData &d, const Opcode &op) { expected_data = d; };
+        cpu.register_function_callback(f);
+        cpu.process();
+
+        ASSERT_EQ(*expected_data.get_byte(src), some_value) << assembly;
+
+        uint16_t addr{0xAB0F};
+        if (strcmp(src, "H") == 0)
+        {
+            addr &= 0x00FF;
+            addr |= static_cast<uint16_t>(some_value << 8);
+        }
+        if (strcmp(src, "L") == 0)
+        {
+            addr &= 0xFF00;
+            addr |= static_cast<uint16_t>(some_value);
+        }
+        ASSERT_EQ(expected_data.m_memory[addr], some_value) << assembly;
+    }
 }

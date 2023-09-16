@@ -112,7 +112,7 @@ void save_target(uint8_t source_value)
     auto const &target = oc->operands[0];
     assert(target.name != nullptr);
 
-    std::variant<uint8_t, uint16_t> target_value = get_operand_value(target);
+    std::variant<uint8_t, uint16_t> const target_value = get_operand_value(target);
 
     if (!target.immediate)
     {
@@ -135,18 +135,11 @@ void save_target(uint8_t source_value)
             if (target.decrement == 1)
                 *data->get_word(target.name) -= 1;
         }
-        return;
     }
-
-    switch (strlen(target.name))
+    else
     {
-    case 1:
+        assert(strlen(target.name) == 1);
         *data->get_byte(target.name) = source_value;
-        break;
-    case 2:
-        assert(false);
-    default:
-        assert(false);
     }
 }
 
@@ -155,7 +148,7 @@ void save_target(uint16_t source_value)
     auto const &target = oc->operands[0];
     assert(target.name != nullptr);
 
-    std::variant<uint8_t, uint16_t> target_value = get_operand_value(target);
+    std::variant<uint8_t, uint16_t> const target_value = get_operand_value(target);
 
     if (!target.immediate)
     {
@@ -169,18 +162,11 @@ void save_target(uint16_t source_value)
             data->m_memory[std::get<uint16_t>(target_value)] = source_value;
             data->m_memory[std::get<uint16_t>(target_value) + 1] = source_value >> 8;
         }
-        return;
     }
-
-    switch (strlen(target.name))
+    else
     {
-    case 1:
-        assert(false);
-    case 2:
+        assert(strlen(target.name) == 2);
         *data->get_word(target.name) = source_value;
-        break;
-    default:
-        assert(false);
     }
 }
 
