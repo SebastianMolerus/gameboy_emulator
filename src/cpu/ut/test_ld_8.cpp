@@ -1,4 +1,5 @@
 #include "cpu.hpp"
+#include <format>
 #include <gtest/gtest.h>
 #include <translator.hpp>
 
@@ -379,4 +380,48 @@ TEST(test_load_8bit, LD_A_IHLminusI)
     ASSERT_EQ(expected_data.m_memory[0xFF01], 0x34);
     ASSERT_EQ(expected_data.m_memory[0xFF01 + 1], 0x12);
     ASSERT_EQ(expected_data.HL.u16, 0xFF01);
+}
+
+namespace
+{
+
+std::vector<uint8_t> fill_source(std::string_view src, uint8_t value)
+{
+    std::string assembly{"LD "};
+    assembly += src;
+    assembly += ", ";
+    assembly += std::format("0x{:x}", value);
+    return translate(assembly);
+}
+
+std::vector<uint8_t> fill_destination(std::string_view dest, std::string_view src)
+{
+    std::string assembly{"LD "};
+    assembly += dest;
+    assembly += ", ";
+    assembly += src;
+    return translate(assembly);
+}
+
+} // namespace
+
+// 0x40 - 0x7F, without 0x76 ( halt )
+TEST(test_load_8bit, test_for_all_remaining)
+{
+    for (auto &src : {"A", "B", "C", "D", "E", "H", "L"})
+        for (auto &dst : {"A", "B", "C", "D", "E", "H", "L"})
+        {
+            auto op1 = fill_source(src, 0x76);
+            auto op2 = fill_destination(dst, src);
+            op1.insert(op1.end(), op2.begin(), op2.end());
+
+            Cpu cpu{op1};
+
+            CpuData expected_data;
+            auto f = [&expected_data](const CpuData &d, const Opcode &op) { expected_data = d; };
+            cpu.register_function_callback(f);
+            cpu.process();
+
+            ASSERT_EQ(*expected_data.get_byte(dst), *expected_data.get_byte(src));
+        }
 }
