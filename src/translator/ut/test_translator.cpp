@@ -72,3 +72,27 @@ TEST(translator_test, translate_instructions_ld_3)
     ASSERT_EQ(machine_code[1], 0x00);
     ASSERT_EQ(machine_code[2], 0x01);
 }
+
+TEST(translator_test, translate_instructions_control)
+{
+    std::string st{R"(
+        NOP
+        STOP 0x7F
+        HALT
+        DI
+        PREFIX
+        EI
+    )"};
+
+    auto machine_code = translate(st);
+
+    ASSERT_EQ(machine_code.size(), 7);
+
+    ASSERT_EQ(machine_code[0], 0x00);
+    ASSERT_EQ(machine_code[1], 0x10);
+    ASSERT_EQ(machine_code[2], 0x7F);
+    ASSERT_EQ(machine_code[3], 0x76);
+    ASSERT_EQ(machine_code[4], 0xF3);
+    ASSERT_EQ(machine_code[5], 0xCB);
+    ASSERT_EQ(machine_code[6], 0xFB);
+}
