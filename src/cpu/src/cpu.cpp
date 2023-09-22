@@ -8,6 +8,7 @@
 
 extern void arithmetic(Opcode const &op, CpuData &cpu_data, std::span<uint8_t> program);
 extern void load(Opcode const &op, CpuData &cpu_data, std::span<uint8_t> program);
+extern void ctrl(Opcode const &op, CpuData &cpu_data, std::span<uint8_t> program);
 
 using mnemonic_func = std::pair<const char *, std::function<void(Opcode const &, CpuData &, std::span<uint8_t>)>>;
 std::array<mnemonic_func, 16> instruction_set{

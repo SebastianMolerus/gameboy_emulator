@@ -42,6 +42,18 @@ struct CpuData
     void set_flag(Flags flag);
     void unset_flag(Flags flag);
 
+    bool m_IME{};
+
+    uint8_t &IE()
+    {
+        return m_memory[0xFFFF];
+    }
+
+    uint8_t &IF()
+    {
+        return m_memory[0xFF0F];
+    }
+
     std::array<uint8_t, 0xFFFF> m_memory{};
 
     std::unordered_map<const char *, uint16_t *> m_register_map_word;
