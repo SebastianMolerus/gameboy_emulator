@@ -72,7 +72,7 @@ class Cpu
   private:
     bool fetch_instruction(uint8_t &opcode_hex);
     void exec(Opcode const &op);
-    CpuData m_registers;
+    CpuData m_data;
     function_callback m_callback;
     std::span<uint8_t> m_program;
 };

@@ -11,7 +11,7 @@ extern void load(Opcode const &op, CpuData &cpu_data, std::span<uint8_t> program
 extern void ctrl(Opcode const &op, CpuData &cpu_data, std::span<uint8_t> program);
 
 using mnemonic_func = std::pair<const char *, std::function<void(Opcode const &, CpuData &, std::span<uint8_t>)>>;
-std::array<mnemonic_func, 16> instruction_set{
+std::array<mnemonic_func, 19> instruction_set{
     std::make_pair(MNEMONICS_STR[0], arithmetic),  std::make_pair(MNEMONICS_STR[1], arithmetic),
     std::make_pair(MNEMONICS_STR[2], arithmetic),  std::make_pair(MNEMONICS_STR[5], arithmetic),
     std::make_pair(MNEMONICS_STR[6], arithmetic),  std::make_pair(MNEMONICS_STR[7], arithmetic),
@@ -19,7 +19,9 @@ std::array<mnemonic_func, 16> instruction_set{
     std::make_pair(MNEMONICS_STR[29], arithmetic), std::make_pair(MNEMONICS_STR[40], arithmetic),
     std::make_pair(MNEMONICS_STR[43], arithmetic), std::make_pair(MNEMONICS_STR[44], arithmetic),
     std::make_pair(MNEMONICS_STR[26], load),       std::make_pair(MNEMONICS_STR[27], load),
-    std::make_pair(MNEMONICS_STR[32], load),       std::make_pair(MNEMONICS_STR[30], load)};
+    std::make_pair(MNEMONICS_STR[32], load),       std::make_pair(MNEMONICS_STR[30], load),
+    std::make_pair(MNEMONICS_STR[28], ctrl),       std::make_pair(MNEMONICS_STR[9], ctrl),
+    std::make_pair(MNEMONICS_STR[10], ctrl)};
 
 CpuData::CpuData()
     : m_register_map_word{{OPERANDS_STR[9], &AF.u16},
@@ -68,10 +70,10 @@ Cpu::Cpu(std::span<uint8_t> program) : m_program(program)
 
 bool Cpu::fetch_instruction(uint8_t &opcode_hex)
 {
-    if (m_registers.PC.u16 >= m_program.size())
+    if (m_data.PC.u16 >= m_program.size())
         return false;
 
-    opcode_hex = m_program[m_registers.PC.u16];
+    opcode_hex = m_program[m_data.PC.u16];
     return true;
 }
 
@@ -80,13 +82,16 @@ void Cpu::exec(Opcode const &op)
     auto result = std::find_if(instruction_set.cbegin(), instruction_set.cend(),
                                [&op](mnemonic_func const &item) { return item.first == op.mnemonic; });
     assert(result != instruction_set.cend());
-    auto const oldPC = m_registers.PC.u16;
-    m_registers.PC.u16 += op.bytes;
-    std::invoke(result->second, op, m_registers, m_program.subspan(oldPC));
+    auto const oldPC = m_data.PC.u16;
+    m_data.PC.u16 += op.bytes;
+    std::invoke(result->second, op, m_data, m_program.subspan(oldPC));
 }
 
 void Cpu::process()
 {
+    bool prev_ime{m_data.m_IME};
+    bool ime_change_in_progres{};
+
     uint8_t opcode_hex;
     while (fetch_instruction(opcode_hex))
     {
@@ -95,13 +100,25 @@ void Cpu::process()
             op = get_opcode(opcode_hex);
         else
         {
-            m_registers.PC.u16 += 1;
+            m_data.PC.u16 += 1;
             assert(fetch_instruction(opcode_hex));
             op = get_pref_opcode(opcode_hex);
         }
 
         exec(op);
-        std::invoke(m_callback, m_registers, op);
+
+        if (prev_ime != m_data.m_IME)
+        {
+            m_data.m_IME = prev_ime;
+            ime_change_in_progres = true;
+        }
+        else if (ime_change_in_progres)
+        {
+            ime_change_in_progres = false;
+            m_data.m_IME = prev_ime = !m_data.m_IME;
+        }
+
+        std::invoke(m_callback, m_data, op);
     }
 }
 
