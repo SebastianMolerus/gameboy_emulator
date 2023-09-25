@@ -49,6 +49,11 @@ struct CpuData
         return m_memory[0xFFFF];
     }
 
+    //  Bit 4: Transition from High to Low of Pin number P10-P13
+    //  Bit 3: Serial I/O transfer complete
+    //  Bit 2: Timer Overflow
+    //  Bit 1: LCDC (see STAT)
+    //  Bit 0: V-Blank
     uint8_t &IF()
     {
         return m_memory[0xFF0F];
@@ -70,6 +75,10 @@ class Cpu
     void register_function_callback(function_callback callback);
 
   private:
+    void push_PC();
+    void vblank();
+    void interrupt_check();
+
     bool fetch_instruction(uint8_t &opcode_hex);
     void exec(Opcode const &op);
     CpuData m_data;
