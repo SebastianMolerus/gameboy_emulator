@@ -13,8 +13,6 @@ extern void ctrl(Opcode const &op, CpuData &cpu_data, std::span<uint8_t> program
 namespace
 {
 
-constexpr uint16_t VBLANK_ADDR = 0x0040;
-
 using mnemonic_func = std::pair<const char *, std::function<void(Opcode const &, CpuData &, std::span<uint8_t>)>>;
 std::array<mnemonic_func, 19> instruction_set{
     std::make_pair(MNEMONICS_STR[0], arithmetic),  std::make_pair(MNEMONICS_STR[1], arithmetic),
@@ -69,7 +67,7 @@ void CpuData::unset_flag(Flags flag)
     AF.lo &= ~flag;
 }
 
-Cpu::Cpu(std::span<uint8_t> program) : m_program(program)
+Cpu::Cpu(std::span<uint8_t> program, uint16_t vblank_addr) : m_program(program), m_vblank_addr{vblank_addr}
 {
     bool result{load_opcodes()};
     assert(result);
@@ -85,10 +83,11 @@ void Cpu::push_PC()
 
 void Cpu::vblank()
 {
+    push_PC();
     // vblank zeroed
     m_data.IF() &= 0xFE;
     m_data.m_IME = false;
-    m_data.PC.u16 = VBLANK_ADDR;
+    m_data.PC.u16 = m_vblank_addr;
 }
 
 void Cpu::interrupt_check()
@@ -105,9 +104,8 @@ void Cpu::interrupt_check()
     uint8_t const ieflag{m_data.IE()};
     uint8_t const iflag{m_data.IF()};
 
-    if (iflag & 0x1 & ieflag)
+    if (iflag & 0x01 & ieflag)
     {
-        push_PC();
         vblank();
     }
 }

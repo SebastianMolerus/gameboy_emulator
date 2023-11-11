@@ -59,7 +59,7 @@ struct CpuData
         return m_memory[0xFF0F];
     }
 
-    std::array<uint8_t, 0xFFFF> m_memory{};
+    std::array<uint8_t, 0xFFFF + 1> m_memory{};
 
     std::unordered_map<const char *, uint16_t *> m_register_map_word;
     std::unordered_map<const char *, uint8_t *> m_register_map_byte;
@@ -70,7 +70,7 @@ class Cpu
     using function_callback = std::function<void(const CpuData &, const Opcode &)>;
 
   public:
-    Cpu(std::span<uint8_t> program);
+    Cpu(std::span<uint8_t> program, uint16_t vblank_addr = 0x0040);
     void process();
     void register_function_callback(function_callback callback);
 
@@ -84,6 +84,8 @@ class Cpu
     CpuData m_data;
     function_callback m_callback;
     std::span<uint8_t> m_program;
+
+    uint16_t m_vblank_addr;
 };
 
 #endif
