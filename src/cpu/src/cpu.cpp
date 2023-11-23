@@ -14,7 +14,7 @@ namespace
 {
 
 using mnemonic_func = std::pair<const char *, std::function<void(Opcode const &, CpuData &, std::span<uint8_t>)>>;
-std::array<mnemonic_func, 19> instruction_set{
+std::array<mnemonic_func, 19> const instruction_set{
     std::make_pair(MNEMONICS_STR[0], arithmetic),  std::make_pair(MNEMONICS_STR[1], arithmetic),
     std::make_pair(MNEMONICS_STR[2], arithmetic),  std::make_pair(MNEMONICS_STR[5], arithmetic),
     std::make_pair(MNEMONICS_STR[6], arithmetic),  std::make_pair(MNEMONICS_STR[7], arithmetic),
@@ -28,46 +28,7 @@ std::array<mnemonic_func, 19> instruction_set{
 
 } // namespace
 
-CpuData::CpuData()
-    : m_register_map_word{{OPERANDS_STR[9], &AF.u16},
-                          {OPERANDS_STR[11], &BC.u16},
-                          {OPERANDS_STR[14], &DE.u16},
-                          {OPERANDS_STR[17], &HL.u16},
-                          {OPERANDS_STR[21], &SP.u16}},
-      m_register_map_byte{{OPERANDS_STR[8], &AF.hi},  {OPERANDS_STR[10], &BC.hi}, {OPERANDS_STR[12], &BC.lo},
-                          {OPERANDS_STR[13], &DE.hi}, {OPERANDS_STR[15], &DE.lo}, {OPERANDS_STR[16], &HL.hi},
-                          {OPERANDS_STR[18], &HL.lo}}
-{
-}
-
-uint16_t *CpuData::get_word(const char *reg_name)
-{
-    assert(m_register_map_word.contains(reg_name));
-    return m_register_map_word[reg_name];
-}
-
-uint8_t *CpuData::get_byte(const char *reg_name)
-{
-    assert(m_register_map_byte.contains(reg_name));
-    return m_register_map_byte[reg_name];
-}
-
-bool CpuData::is_flag_set(Flags flag)
-{
-    return (0 != (AF.lo & flag));
-}
-
-void CpuData::set_flag(Flags flag)
-{
-    AF.lo |= flag;
-}
-
-void CpuData::unset_flag(Flags flag)
-{
-    AF.lo &= ~flag;
-}
-
-Cpu::Cpu(std::span<uint8_t> program, uint16_t vblank_addr) : m_program(program), m_vblank_addr{vblank_addr}
+Cpu::Cpu(std::span<uint8_t> program, uint16_t vblank_addr) : m_program(program)
 {
     bool result{load_opcodes()};
     assert(result);
@@ -87,18 +48,12 @@ void Cpu::vblank()
     // vblank zeroed
     m_data.IF() &= 0xFE;
     m_data.m_IME = false;
-    m_data.PC.u16 = m_vblank_addr;
+    m_data.PC.u16 = 0x0;
 }
 
 void Cpu::interrupt_check()
 {
     if (!m_data.m_IME)
-        return;
-
-    if (!m_data.IE())
-        return;
-
-    if (!m_data.IF())
         return;
 
     uint8_t const ieflag{m_data.IE()};
@@ -107,6 +62,25 @@ void Cpu::interrupt_check()
     if (iflag & 0x01 & ieflag)
     {
         vblank();
+    }
+}
+
+void Cpu::ime()
+{
+    bool const prev_ime = m_data.m_IME;
+
+    if (m_data.m_ime_trans == IME_TRANS::ENABLE_AFTER_ONE_INSTRUCTION)
+    {
+        m_data.m_IME = true;
+    }
+    else if (m_data.m_ime_trans == IME_TRANS::DISABLE_AFTER_ONE_INSTRUCTION)
+    {
+        m_data.m_IME = false;
+    }
+
+    if (prev_ime != m_data.m_IME)
+    {
+        m_data.m_ime_trans = IME_TRANS::DONT_TOUCH;
     }
 }
 
@@ -133,40 +107,33 @@ void Cpu::exec(Opcode const &op)
 
 void Cpu::process()
 {
-    bool prev_ime{m_data.m_IME};
-    bool ime_change_in_progres{};
-
     uint8_t opcode_hex;
     while (fetch_instruction(opcode_hex))
     {
         Opcode op;
-        if (opcode_hex != 0xCB)
-            op = get_opcode(opcode_hex);
-        else
+
+        if (opcode_hex == 0xCB)
         {
             m_data.PC.u16 += 1;
-            assert(fetch_instruction(opcode_hex));
+            bool const fetchResult = fetch_instruction(opcode_hex);
+            assert(fetchResult);
+
             op = get_pref_opcode(opcode_hex);
         }
+        else
+        {
+            op = get_opcode(opcode_hex);
+        }
+
+        ime();
 
         exec(op);
-
-        if (prev_ime != m_data.m_IME)
-        {
-            m_data.m_IME = prev_ime;
-            ime_change_in_progres = true;
-        }
-        else if (ime_change_in_progres)
-        {
-            ime_change_in_progres = false;
-            m_data.m_IME = prev_ime = !m_data.m_IME;
-        }
 
         std::invoke(m_callback, m_data, op);
     }
 }
 
-void Cpu::register_function_callback(std::function<void(const CpuData &, const Opcode &)> callback)
+void Cpu::after_exec_callback(std::function<void(const CpuData &, const Opcode &)> callback)
 {
     m_callback = callback;
 }

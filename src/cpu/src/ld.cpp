@@ -105,6 +105,9 @@ std::variant<uint8_t, uint16_t> get_operand_value(Operand const &operand)
     default:
         assert(false);
     }
+
+    assert(false);
+    return {};
 }
 
 void save_target(uint8_t source_value)

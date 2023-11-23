@@ -18,7 +18,7 @@ TEST(test_load_8bit, LD_IBCI_A)
 
     CpuData expected_data;
     auto f = [&expected_data](const CpuData &d, const Opcode &op) { expected_data = d; };
-    cpu.register_function_callback(f);
+    cpu.after_exec_callback(f);
     cpu.process();
 
     ASSERT_EQ(expected_data.m_memory[0x59], 0x15);
@@ -37,7 +37,7 @@ TEST(test_load_8bit, LD_IDEI_A)
 
     CpuData expected_data;
     auto f = [&expected_data](const CpuData &d, const Opcode &op) { expected_data = d; };
-    cpu.register_function_callback(f);
+    cpu.after_exec_callback(f);
     cpu.process();
 
     ASSERT_EQ(expected_data.m_memory[0x789F], 0xEA);
@@ -56,7 +56,7 @@ TEST(test_load_8bit, LD_IHLplusI_A)
 
     CpuData expected_data;
     auto f = [&expected_data](const CpuData &d, const Opcode &op) { expected_data = d; };
-    cpu.register_function_callback(f);
+    cpu.after_exec_callback(f);
     cpu.process();
 
     ASSERT_EQ(expected_data.m_memory[0x9998], 0x61);
@@ -76,7 +76,7 @@ TEST(test_load_8bit, LD_IHLminusI_A)
 
     CpuData expected_data;
     auto f = [&expected_data](const CpuData &d, const Opcode &op) { expected_data = d; };
-    cpu.register_function_callback(f);
+    cpu.after_exec_callback(f);
     cpu.process();
 
     ASSERT_EQ(expected_data.m_memory[0x5], 0x51);
@@ -95,7 +95,7 @@ TEST(test_load_8bit, LDH_Ia8I_A)
 
     CpuData expected_data;
     auto f = [&expected_data](const CpuData &d, const Opcode &op) { expected_data = d; };
-    cpu.register_function_callback(f);
+    cpu.after_exec_callback(f);
     cpu.process();
 
     ASSERT_EQ(expected_data.m_memory[0xFF00 + 0x15], 0x99);
@@ -114,7 +114,7 @@ TEST(test_load_8bit, LDH_A_Ia8I)
 
     CpuData expected_data;
     auto f = [&expected_data](const CpuData &d, const Opcode &op) { expected_data = d; };
-    cpu.register_function_callback(f);
+    cpu.after_exec_callback(f);
     cpu.process();
 
     ASSERT_EQ(expected_data.AF.hi, 0x26);
@@ -132,7 +132,7 @@ TEST(test_load_8bit, LD_B_n8)
 
     std::vector<CpuData> expected_data;
     auto f = [&expected_data](const CpuData &d, const Opcode &op) { expected_data.push_back(d); };
-    cpu.register_function_callback(f);
+    cpu.after_exec_callback(f);
     cpu.process();
 
     ASSERT_EQ(expected_data.size(), 2);
@@ -153,7 +153,7 @@ TEST(test_load_8bit, LD_D_n8)
 
     std::vector<CpuData> expected_data;
     auto f = [&expected_data](const CpuData &d, const Opcode &op) { expected_data.push_back(d); };
-    cpu.register_function_callback(f);
+    cpu.after_exec_callback(f);
     cpu.process();
 
     ASSERT_EQ(expected_data.size(), 3);
@@ -175,7 +175,7 @@ TEST(test_load_8bit, LD_H_n8)
 
     std::vector<CpuData> expected_data;
     auto f = [&expected_data](const CpuData &d, const Opcode &op) { expected_data.push_back(d); };
-    cpu.register_function_callback(f);
+    cpu.after_exec_callback(f);
     cpu.process();
 
     ASSERT_EQ(expected_data.size(), 3);
@@ -198,7 +198,7 @@ TEST(test_load_8bit, LD_IHLI_n8)
 
     CpuData expected_data;
     auto f = [&expected_data](const CpuData &d, const Opcode &op) { expected_data = d; };
-    cpu.register_function_callback(f);
+    cpu.after_exec_callback(f);
     cpu.process();
 
     ASSERT_EQ(expected_data.m_memory[0xFF32], 0x8);
@@ -218,7 +218,7 @@ TEST(test_load_8bit, LD_C_n8)
 
     std::vector<CpuData> expected_data;
     auto f = [&expected_data](const CpuData &d, const Opcode &op) { expected_data.push_back(d); };
-    cpu.register_function_callback(f);
+    cpu.after_exec_callback(f);
     cpu.process();
 
     ASSERT_EQ(expected_data.size(), 3);
@@ -240,7 +240,7 @@ TEST(test_load_8bit, LD_E_n8)
 
     std::vector<CpuData> expected_data;
     auto f = [&expected_data](const CpuData &d, const Opcode &op) { expected_data.push_back(d); };
-    cpu.register_function_callback(f);
+    cpu.after_exec_callback(f);
     cpu.process();
 
     ASSERT_EQ(expected_data.size(), 3);
@@ -262,7 +262,7 @@ TEST(test_load_8bit, LD_L_n8)
 
     std::vector<CpuData> expected_data;
     auto f = [&expected_data](const CpuData &d, const Opcode &op) { expected_data.push_back(d); };
-    cpu.register_function_callback(f);
+    cpu.after_exec_callback(f);
     cpu.process();
 
     ASSERT_EQ(expected_data.size(), 3);
@@ -284,7 +284,7 @@ TEST(test_load_8bit, LD_A_n8)
 
     std::vector<CpuData> expected_data;
     auto f = [&expected_data](const CpuData &d, const Opcode &op) { expected_data.push_back(d); };
-    cpu.register_function_callback(f);
+    cpu.after_exec_callback(f);
     cpu.process();
 
     ASSERT_EQ(expected_data.size(), 3);
@@ -307,7 +307,7 @@ TEST(test_load_8bit, LD_A_IBCI)
 
     CpuData expected_data;
     auto f = [&expected_data](const CpuData &d, const Opcode &op) { expected_data = d; };
-    cpu.register_function_callback(f);
+    cpu.after_exec_callback(f);
     cpu.process();
 
     ASSERT_EQ(expected_data.AF.hi, 0x10);
@@ -329,7 +329,7 @@ TEST(test_load_8bit, LD_A_IDEI)
 
     CpuData expected_data;
     auto f = [&expected_data](const CpuData &d, const Opcode &op) { expected_data = d; };
-    cpu.register_function_callback(f);
+    cpu.after_exec_callback(f);
     cpu.process();
 
     ASSERT_EQ(expected_data.AF.hi, 0xAB);
@@ -351,7 +351,7 @@ TEST(test_load_8bit, LD_A_IHLplusI)
 
     CpuData expected_data;
     auto f = [&expected_data](const CpuData &d, const Opcode &op) { expected_data = d; };
-    cpu.register_function_callback(f);
+    cpu.after_exec_callback(f);
     cpu.process();
 
     ASSERT_EQ(expected_data.AF.hi, 0x34);
@@ -375,7 +375,7 @@ TEST(test_load_8bit, LD_A_IHLminusI)
 
     CpuData expected_data;
     auto f = [&expected_data](const CpuData &d, const Opcode &op) { expected_data = d; };
-    cpu.register_function_callback(f);
+    cpu.after_exec_callback(f);
     cpu.process();
 
     ASSERT_EQ(expected_data.AF.hi, 0x12);
@@ -431,7 +431,7 @@ TEST(test_load_8bit, LD_REG8_REG8)
 
             CpuData expected_data;
             auto f = [&expected_data](const CpuData &d, const Opcode &op) { expected_data = d; };
-            cpu.register_function_callback(f);
+            cpu.after_exec_callback(f);
             cpu.process();
 
             std::stringstream ss;
@@ -482,7 +482,7 @@ TEST(test_load_8bit, LD_REG8_IHLI)
 
         CpuData expected_data;
         auto f = [&expected_data](const CpuData &d, const Opcode &op) { expected_data = d; };
-        cpu.register_function_callback(f);
+        cpu.after_exec_callback(f);
         cpu.process();
 
         ASSERT_EQ(*expected_data.get_byte(dst), static_cast<uint8_t>(some_value)) << assembly;
@@ -513,7 +513,7 @@ TEST(test_load_8bit, LD_IHLI_REG8)
 
         CpuData expected_data;
         auto f = [&expected_data](const CpuData &d, const Opcode &op) { expected_data = d; };
-        cpu.register_function_callback(f);
+        cpu.after_exec_callback(f);
         cpu.process();
 
         ASSERT_EQ(*expected_data.get_byte(src), some_value) << assembly;

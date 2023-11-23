@@ -66,7 +66,7 @@ TEST(ADDTest, add_8bit_register_to_acc)
     // Waiting for nop implementation
     std::array<uint8_t, 8> program = {0x80, 0x80, 0x81, 0x82, 0x83, 0x84, 0x85, 0x87};
     Cpu cpu{program};
-    cpu.register_function_callback(add_8bit_reg_to_acc_operation_callback);
+    cpu.after_exec_callback(add_8bit_reg_to_acc_operation_callback);
     cpu.process();
 }
 
@@ -76,6 +76,6 @@ TEST(ADDTest, add_16bit_register_to_hl)
     // Waiting for nop implementation
     std::array<uint8_t, 5> program = {0x09, 0x09, 0x19, 0x29, 0x39};
     Cpu cpu{program};
-    cpu.register_function_callback(add_16bit_reg_to_hl_operation_callback);
+    cpu.after_exec_callback(add_16bit_reg_to_hl_operation_callback);
     cpu.process();
 }

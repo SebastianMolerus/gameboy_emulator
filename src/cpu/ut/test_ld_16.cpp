@@ -24,7 +24,7 @@ TEST(test_load_16bit, LD_BC_n16)
     Cpu cpu{opcodes};
 
     std::vector<CpuData> expected_data;
-    cpu.register_function_callback([&expected_data](const CpuData &d, const Opcode &) { expected_data.push_back(d); });
+    cpu.after_exec_callback([&expected_data](const CpuData &d, const Opcode &) { expected_data.push_back(d); });
     cpu.process();
 
     ASSERT_EQ(expected_data.size(), 4);
@@ -59,7 +59,7 @@ TEST(test_load_16bit, LD_DE_n16)
     Cpu cpu{opcodes};
 
     std::vector<CpuData> expected_data;
-    cpu.register_function_callback([&expected_data](const CpuData &d, const Opcode &) { expected_data.push_back(d); });
+    cpu.after_exec_callback([&expected_data](const CpuData &d, const Opcode &) { expected_data.push_back(d); });
     cpu.process();
 
     ASSERT_EQ(expected_data.size(), 4);
@@ -94,7 +94,7 @@ TEST(test_load_16bit, LD_HL_n16)
     Cpu cpu{opcodes};
 
     std::vector<CpuData> expected_data;
-    cpu.register_function_callback([&expected_data](const CpuData &d, const Opcode &) { expected_data.push_back(d); });
+    cpu.after_exec_callback([&expected_data](const CpuData &d, const Opcode &) { expected_data.push_back(d); });
     cpu.process();
 
     ASSERT_EQ(expected_data.size(), 4);
@@ -129,7 +129,7 @@ TEST(test_load_16bit, LD_SP_n16)
     Cpu cpu{opcodes};
 
     std::vector<CpuData> expected_data;
-    cpu.register_function_callback([&expected_data](const CpuData &d, const Opcode &) { expected_data.push_back(d); });
+    cpu.after_exec_callback([&expected_data](const CpuData &d, const Opcode &) { expected_data.push_back(d); });
     cpu.process();
 
     ASSERT_EQ(expected_data.size(), 4);
@@ -170,7 +170,7 @@ TEST(test_load_16bit, LD_HL_SP_e8)
         if (op.hex == get_opcode("LD HL, SP + e8").hex)
             expected_data.push_back(d);
     };
-    cpu.register_function_callback(f);
+    cpu.after_exec_callback(f);
     cpu.process();
 
     ASSERT_EQ(expected_data.size(), 3);
@@ -209,7 +209,7 @@ TEST(test_load_16bit, LD_HL_SP_e8_half_carry)
         if (op.hex == get_opcode("LD HL, SP + e8").hex)
             expected_data.push_back(d);
     };
-    cpu.register_function_callback(f);
+    cpu.after_exec_callback(f);
     cpu.process();
 
     ASSERT_EQ(expected_data.size(), 2);
@@ -235,7 +235,7 @@ TEST(test_load_16bit, LD_HL_SP_e8_carry)
         if (op.hex == get_opcode("LD HL, SP + e8").hex)
             expected_data.push_back(d);
     };
-    cpu.register_function_callback(f);
+    cpu.after_exec_callback(f);
     cpu.process();
 
     ASSERT_EQ(expected_data.size(), 2);
@@ -256,7 +256,7 @@ TEST(test_load_16bit, LD_Ia16I_SP)
 
     CpuData expected_data;
     auto f = [&expected_data](const CpuData &d, const Opcode &op) { expected_data = d; };
-    cpu.register_function_callback(f);
+    cpu.after_exec_callback(f);
     cpu.process();
 
     ASSERT_EQ(expected_data.m_memory[0x1], 0xAA);
@@ -275,7 +275,7 @@ TEST(test_load_16bit, LD_SP_HL)
 
     CpuData expected_data;
     auto f = [&expected_data](const CpuData &d, const Opcode &op) { expected_data = d; };
-    cpu.register_function_callback(f);
+    cpu.after_exec_callback(f);
     cpu.process();
 
     ASSERT_EQ(expected_data.HL.u16, 0xABCD);
@@ -295,7 +295,7 @@ TEST(test_load_16bit, PUSH_BC)
 
     CpuData expected_data;
     auto f = [&expected_data](const CpuData &d, const Opcode &op) { expected_data = d; };
-    cpu.register_function_callback(f);
+    cpu.after_exec_callback(f);
     cpu.process();
 
     // Is stack decremented by 2 bytes
@@ -316,7 +316,7 @@ TEST(test_load_16bit, PUSH_DE)
 
     CpuData expected_data;
     auto f = [&expected_data](const CpuData &d, const Opcode &op) { expected_data = d; };
-    cpu.register_function_callback(f);
+    cpu.after_exec_callback(f);
     cpu.process();
 
     // Is stack decremented by 2 bytes
@@ -337,7 +337,7 @@ TEST(test_load_16bit, PUSH_HL)
 
     CpuData expected_data;
     auto f = [&expected_data](const CpuData &d, const Opcode &op) { expected_data = d; };
-    cpu.register_function_callback(f);
+    cpu.after_exec_callback(f);
     cpu.process();
 
     // Is stack decremented by 2 bytes
@@ -359,7 +359,7 @@ TEST(test_load_16bit, PUSH_AF)
 
     CpuData expected_data;
     auto f = [&expected_data](const CpuData &d, const Opcode &op) { expected_data = d; };
-    cpu.register_function_callback(f);
+    cpu.after_exec_callback(f);
     cpu.process();
 
     // Is stack decremented by 2 bytes
@@ -381,7 +381,7 @@ TEST(test_load_16bit, pop_BC)
 
     CpuData expected_data;
     auto f = [&expected_data](const CpuData &d, const Opcode &op) { expected_data = d; };
-    cpu.register_function_callback(f);
+    cpu.after_exec_callback(f);
     cpu.process();
 
     ASSERT_EQ(expected_data.SP.u16, 0x12);
@@ -402,7 +402,7 @@ TEST(test_load_16bit, pop_DE)
 
     CpuData expected_data;
     auto f = [&expected_data](const CpuData &d, const Opcode &op) { expected_data = d; };
-    cpu.register_function_callback(f);
+    cpu.after_exec_callback(f);
     cpu.process();
 
     ASSERT_EQ(expected_data.SP.u16, 0x89);
@@ -423,7 +423,7 @@ TEST(test_load_16bit, pop_HL)
 
     CpuData expected_data;
     auto f = [&expected_data](const CpuData &d, const Opcode &op) { expected_data = d; };
-    cpu.register_function_callback(f);
+    cpu.after_exec_callback(f);
     cpu.process();
 
     ASSERT_EQ(expected_data.SP.u16, 0x99);
@@ -447,7 +447,7 @@ TEST(test_load_16bit, pop_AF)
         if (op.hex == 0xF1)
             expected_data = d;
     };
-    cpu.register_function_callback(f);
+    cpu.after_exec_callback(f);
     cpu.process();
 
     ASSERT_EQ(expected_data.SP.u16, 0x303);

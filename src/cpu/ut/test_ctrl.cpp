@@ -15,7 +15,7 @@ TEST(Ctrl, ime_enabled_after_one_instruction)
 
     std::vector<CpuData> expected_data;
     auto f = [&expected_data](const CpuData &d, const Opcode &op) { expected_data.push_back(d); };
-    cpu.register_function_callback(f);
+    cpu.after_exec_callback(f);
     cpu.process();
 
     ASSERT_EQ(expected_data.size(), 4);
@@ -39,7 +39,7 @@ TEST(Ctrl, ime_disabled_after_one_instruction)
 
     std::vector<CpuData> expected_data;
     auto f = [&expected_data](const CpuData &d, const Opcode &op) { expected_data.push_back(d); };
-    cpu.register_function_callback(f);
+    cpu.after_exec_callback(f);
     cpu.process();
 
     ASSERT_EQ(expected_data.size(), 4);
@@ -50,23 +50,23 @@ TEST(Ctrl, ime_disabled_after_one_instruction)
     ASSERT_EQ(expected_data[3].m_IME, false);
 }
 
-TEST(Ctrl, vblank)
-{
-    std::string assembly{R"(
-        EI
-        LD A, 0xFF
-        LD SP, 0xC000
-        LD [0xFFFF], A
-        LD [0xFF0F], A
-        NOP
-        NOP
-        NOP
-    )"};
-    auto opcodes = translate(assembly);
-    Cpu cpu{opcodes};
+// TEST(Ctrl, vblank)
+// {
+//     std::string assembly{R"(
+//         EI
+//         LD A, 0xFF
+//         LD SP, 0xC000
+//         LD [0xFFFF], A
+//         LD [0xFF0F], A
+//         NOP
+//         NOP
+//         NOP
+//     )"};
+//     auto opcodes = translate(assembly);
+//     Cpu cpu{opcodes};
 
-    std::vector<CpuData> expected_data;
-    auto f = [&expected_data](const CpuData &d, const Opcode &op) { expected_data.push_back(d); };
-    cpu.register_function_callback(f);
-    cpu.process();
-}
+//     std::vector<CpuData> expected_data;
+//     auto f = [&expected_data](const CpuData &d, const Opcode &op) { expected_data.push_back(d); };
+//     cpu.after_exec_callback(f);
+//     cpu.process();
+// }

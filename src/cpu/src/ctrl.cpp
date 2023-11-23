@@ -10,17 +10,18 @@ std::span<uint8_t> prog;
 
 void EI()
 {
-    data->m_IME = true;
+    data->m_ime_trans = IME_TRANS::ENABLE_AFTER_ONE_INSTRUCTION;
 }
 
 void DI()
 {
-    data->m_IME = false;
+    data->m_ime_trans = IME_TRANS::DISABLE_AFTER_ONE_INSTRUCTION;
 }
 
 void NOP()
 {
 }
+
 } // namespace
 
 void ctrl(Opcode const &op, CpuData &cpu_data, std::span<uint8_t> program)

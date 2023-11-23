@@ -69,10 +69,7 @@ void fill_operands(Pair const &operands, Opcode &new_opcode)
             {
                 std::string_view operand_name = operand.value_.get_str();
                 auto result = std::find(OPERANDS_STR.begin(), OPERANDS_STR.end(), operand_name);
-                if (result == OPERANDS_STR.end())
-                {
-                    int a = 10;
-                }
+                assert(result != OPERANDS_STR.end());
                 new_operand.name = *result;
             }
             else if (operand.name_ == "immediate")
