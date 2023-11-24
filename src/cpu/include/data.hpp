@@ -45,6 +45,8 @@ struct CpuData
         FLAG_Z = (1 << 6)
     };
 
+    void push_PC();
+
     bool is_flag_set(Flags flag);
     void set_flag(Flags flag);
     void unset_flag(Flags flag);

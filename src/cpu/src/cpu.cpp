@@ -2,6 +2,7 @@
 #include <algorithm>
 #include <array>
 #include <cassert>
+#include <chrono>
 #include <common.hpp>
 #include <functional>
 #include <unordered_map>
@@ -26,6 +27,8 @@ std::array<mnemonic_func, 19> const instruction_set{
     std::make_pair(MNEMONICS_STR[28], ctrl),       std::make_pair(MNEMONICS_STR[9], ctrl),
     std::make_pair(MNEMONICS_STR[10], ctrl)};
 
+constexpr uint8_t VBLANK = 0x1;
+
 } // namespace
 
 Cpu::Cpu(std::span<uint8_t> program, uint16_t vblank_addr) : m_program(program)
@@ -34,21 +37,12 @@ Cpu::Cpu(std::span<uint8_t> program, uint16_t vblank_addr) : m_program(program)
     assert(result);
 }
 
-void Cpu::push_PC()
-{
-    assert(m_data.SP.u16 >= 2);
-    m_data.SP.u16 -= 2;
-    m_data.m_memory[m_data.SP.u16] = m_data.PC.lo;
-    m_data.m_memory[m_data.SP.u16 + 1] = m_data.PC.hi;
-}
-
 void Cpu::vblank()
 {
-    push_PC();
-    // vblank zeroed
-    m_data.IF() &= 0xFE;
+    m_data.push_PC();
+    m_data.IF() &= (~VBLANK);
     m_data.m_IME = false;
-    m_data.PC.u16 = 0x0;
+    m_data.PC.u16 = VBLANK_ADDR;
 }
 
 void Cpu::interrupt_check()
@@ -59,7 +53,7 @@ void Cpu::interrupt_check()
     uint8_t const ieflag{m_data.IE()};
     uint8_t const iflag{m_data.IF()};
 
-    if (iflag & 0x01 & ieflag)
+    if (iflag & VBLANK & ieflag)
     {
         vblank();
     }
@@ -107,9 +101,17 @@ void Cpu::exec(Opcode const &op)
 
 void Cpu::process()
 {
+    auto dt = std::chrono::system_clock::now();
     uint8_t opcode_hex;
     while (fetch_instruction(opcode_hex))
     {
+        auto const now = std::chrono::system_clock::now();
+        if (std::chrono::duration_cast<std::chrono::milliseconds>(now - dt).count() >= 16.6)
+        {
+            dt = now;
+            m_data.IF() &= VBLANK;
+        }
+
         Opcode op;
 
         if (opcode_hex == 0xCB)
@@ -136,4 +138,10 @@ void Cpu::process()
 void Cpu::after_exec_callback(std::function<void(const CpuData &, const Opcode &)> callback)
 {
     m_callback = callback;
+}
+
+void Cpu::enable_ir()
+{
+    m_data.m_IME = true;
+    m_data.IE() = 0xFF;
 }

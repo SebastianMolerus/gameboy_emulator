@@ -26,6 +26,14 @@ uint8_t *CpuData::get_byte(const char *reg_name)
     return m_register_map_byte[reg_name];
 }
 
+void CpuData::push_PC()
+{
+    assert(SP.u16 >= 2);
+    SP.u16 -= 2;
+    m_memory[SP.u16] = PC.lo;
+    m_memory[SP.u16 + 1] = PC.hi;
+}
+
 bool CpuData::is_flag_set(Flags flag)
 {
     return (0 != (AF.lo & flag));

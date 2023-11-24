@@ -7,6 +7,8 @@
 #include <functional>
 #include <span>
 
+constexpr uint16_t VBLANK_ADDR = 0x40;
+
 class Cpu
 {
     using function_callback = std::function<void(const CpuData &, const Opcode &)>;
@@ -15,9 +17,9 @@ class Cpu
     Cpu(std::span<uint8_t> program, uint16_t vblank_addr = 0x0040);
     void process();
     void after_exec_callback(function_callback callback);
+    void enable_ir();
 
   private:
-    void push_PC();
     void vblank();
     void interrupt_check();
     void ime();
