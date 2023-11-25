@@ -107,7 +107,9 @@ void Cpu::process()
     while (fetch_instruction(opcode_hex))
     {
         auto const now = std::chrono::system_clock::now();
-        if (std::chrono::duration_cast<std::chrono::milliseconds>(now - dt).count() >= 16.6)
+        auto const dur = std::chrono::duration_cast<std::chrono::milliseconds>(now - dt).count();
+
+        if (dur >= 16.6)
         {
             dt = now;
             m_data.IF() |= VBLANK_FLAG;

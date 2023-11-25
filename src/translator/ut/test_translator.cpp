@@ -115,3 +115,15 @@ TEST(translator_test, translate_instructions_ld_4)
     ASSERT_EQ(machine_code[4], 0xFF);
     ASSERT_EQ(machine_code[5], 0xFF);
 }
+
+TEST(translator_test, translate_instructions_ld_5)
+{
+    std::string st{R"(
+        LD A, [HL]
+    )"};
+
+    auto machine_code = translate(st);
+
+    ASSERT_EQ(machine_code.size(), 1);
+    ASSERT_EQ(machine_code[0], 0x7E);
+}

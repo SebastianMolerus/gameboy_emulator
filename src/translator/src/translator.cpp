@@ -1,4 +1,5 @@
 #include "translator.hpp"
+#include <boost/algorithm/string.hpp>
 #include <cassert>
 #include <cctype>
 #include <cstring>
@@ -9,39 +10,37 @@ namespace
 {
 std::vector<std::string> parse_instructions(std::string_view instructions)
 {
-    std::vector<std::string> result;
+    std::vector<std::string> lines;
 
-    auto first_char = instructions.find_first_not_of(" \n");
-    auto last_char = instructions.find_last_not_of(" \n");
-
-    auto const s = instructions.size();
-
-    instructions.remove_prefix(first_char);
-    instructions.remove_suffix(s - 1 - last_char);
-
-    std::string str;
-    for (auto iter = instructions.begin(); iter != instructions.end();)
+    std::string line;
+    for (auto const &cc : instructions)
     {
-        if (*iter != '\n')
+        if (cc == '\n')
         {
-            str += *iter;
-            ++iter;
-            continue;
+            // remove comment
+            size_t const pos = line.find_first_of('/');
+            if (pos != std::string::npos)
+            {
+                line.erase(pos);
+            }
+
+            boost::algorithm::trim(line);
+            if (!line.empty())
+            {
+                lines.push_back(line);
+                line.clear();
+            }
         }
         else
         {
-            result.push_back(str);
-            str.clear();
-
-            while (std::isspace(static_cast<int>(*iter)))
-                ++iter;
+            line += cc;
         }
     }
 
-    if (!str.empty())
-        result.push_back(str);
+    if (line.find_first_not_of(' ') != std::string::npos)
+        lines.push_back(line);
 
-    return result;
+    return lines;
 }
 } // namespace
 
