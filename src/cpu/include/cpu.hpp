@@ -12,12 +12,13 @@ constexpr uint16_t VBLANK_ADDR = 0x40;
 class Cpu
 {
     using function_callback = std::function<void(const CpuData &, const Opcode &)>;
+    using interrupt_callback = std::function<void(const CpuData &)>;
 
   public:
     Cpu(std::span<uint8_t> program, uint16_t vblank_addr = 0x0040);
     void process();
     void after_exec_callback(function_callback callback);
-    void enable_ir();
+    void vblank_callback(interrupt_callback callback);
 
   private:
     void vblank();
@@ -26,8 +27,10 @@ class Cpu
     bool fetch_instruction(uint8_t &opcode_hex);
     void exec(Opcode const &op);
     CpuData m_data;
-    function_callback m_callback;
     std::span<uint8_t> m_program;
+
+    function_callback m_callback;
+    interrupt_callback m_vblank_cb;
 };
 
 #endif

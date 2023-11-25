@@ -81,9 +81,12 @@ std::vector<uint8_t> translate(std::string_view instructions)
 
         const uint16_t value = std::stoi(hex, 0, 16);
 
+        auto const old_size = result.size();
+
         // 16 bit
         if (value & 0xFF00)
         {
+
             for (auto s : {"n16", "a16"})
             {
                 std::string com{cmd};
@@ -115,6 +118,9 @@ std::vector<uint8_t> translate(std::string_view instructions)
                 }
             }
         }
+
+        // something was added
+        assert(old_size != result.size());
     }
 
     return result;

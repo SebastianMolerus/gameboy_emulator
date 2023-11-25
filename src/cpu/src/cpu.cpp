@@ -27,7 +27,7 @@ std::array<mnemonic_func, 19> const instruction_set{
     std::make_pair(MNEMONICS_STR[28], ctrl),       std::make_pair(MNEMONICS_STR[9], ctrl),
     std::make_pair(MNEMONICS_STR[10], ctrl)};
 
-constexpr uint8_t VBLANK = 0x1;
+constexpr uint8_t VBLANK_FLAG = 0x1;
 
 } // namespace
 
@@ -40,9 +40,10 @@ Cpu::Cpu(std::span<uint8_t> program, uint16_t vblank_addr) : m_program(program)
 void Cpu::vblank()
 {
     m_data.push_PC();
-    m_data.IF() &= (~VBLANK);
+    m_data.IF() &= (~VBLANK_FLAG);
     m_data.m_IME = false;
     m_data.PC.u16 = VBLANK_ADDR;
+    std::invoke(m_vblank_cb, m_data);
 }
 
 void Cpu::interrupt_check()
@@ -53,7 +54,7 @@ void Cpu::interrupt_check()
     uint8_t const ieflag{m_data.IE()};
     uint8_t const iflag{m_data.IF()};
 
-    if (iflag & VBLANK & ieflag)
+    if (iflag & VBLANK_FLAG & ieflag)
     {
         vblank();
     }
@@ -109,7 +110,7 @@ void Cpu::process()
         if (std::chrono::duration_cast<std::chrono::milliseconds>(now - dt).count() >= 16.6)
         {
             dt = now;
-            m_data.IF() &= VBLANK;
+            m_data.IF() |= VBLANK_FLAG;
         }
 
         Opcode op;
@@ -135,13 +136,12 @@ void Cpu::process()
     }
 }
 
+void Cpu::vblank_callback(interrupt_callback callback)
+{
+    m_vblank_cb = callback;
+}
+
 void Cpu::after_exec_callback(std::function<void(const CpuData &, const Opcode &)> callback)
 {
     m_callback = callback;
-}
-
-void Cpu::enable_ir()
-{
-    m_data.m_IME = true;
-    m_data.IE() = 0xFF;
 }

@@ -387,7 +387,7 @@ TEST(test_load_8bit, LD_A_IHLminusI)
 namespace
 {
 
-template <typename T> std::string hex_string(T value)
+std::string hex_string(uint16_t value)
 {
     std::stringstream ss;
     ss << "0x" << std::setfill('0') << std::setw(4) << std::hex << value;

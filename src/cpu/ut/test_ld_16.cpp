@@ -250,6 +250,7 @@ TEST(test_load_16bit, LD_Ia16I_SP)
     std::string assembly{R"(
         LD SP, 0xBBAA
         LD [0x1], SP
+        LD [0xFFFF], SP
     )"};
     auto opcodes = translate(assembly);
     Cpu cpu{opcodes};

@@ -63,7 +63,7 @@ struct CpuData
         return m_memory[0xFF0F];
     }
 
-    std::array<uint8_t, 0xFFFF + 1> m_memory{};
+    std::array<uint8_t, 0xFFFF + 2> m_memory{};
 
     std::unordered_map<const char *, uint16_t *> m_register_map_word;
     std::unordered_map<const char *, uint8_t *> m_register_map_byte;
