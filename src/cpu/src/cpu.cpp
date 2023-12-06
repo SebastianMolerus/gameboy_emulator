@@ -1,110 +1,39 @@
-#include "cpu.hpp"
-#include <algorithm>
-#include <array>
 #include <cassert>
-#include <common.hpp>
-#include <functional>
-#include <unordered_map>
+#include <cpu.hpp>
+#include <decoder.hpp>
 
-extern void arithmetic(Opcode const &op, CpuData &cpu_data, std::span<uint8_t> program);
-extern void load(Opcode const &op, CpuData &cpu_data, std::span<uint8_t> program);
+namespace
+{
+constexpr uint8_t PREFIXED_OPCODE{0xCB};
 
-using mnemonic_func = std::pair<const char *, std::function<void(Opcode const &, CpuData &, std::span<uint8_t>)>>;
-std::array<mnemonic_func, 16> instruction_set{
-    std::make_pair(MNEMONICS_STR[0], arithmetic),  std::make_pair(MNEMONICS_STR[1], arithmetic),
-    std::make_pair(MNEMONICS_STR[2], arithmetic),  std::make_pair(MNEMONICS_STR[5], arithmetic),
-    std::make_pair(MNEMONICS_STR[6], arithmetic),  std::make_pair(MNEMONICS_STR[7], arithmetic),
-    std::make_pair(MNEMONICS_STR[8], arithmetic),  std::make_pair(MNEMONICS_STR[23], arithmetic),
-    std::make_pair(MNEMONICS_STR[29], arithmetic), std::make_pair(MNEMONICS_STR[40], arithmetic),
-    std::make_pair(MNEMONICS_STR[43], arithmetic), std::make_pair(MNEMONICS_STR[44], arithmetic),
-    std::make_pair(MNEMONICS_STR[26], load),       std::make_pair(MNEMONICS_STR[27], load),
-    std::make_pair(MNEMONICS_STR[32], load),       std::make_pair(MNEMONICS_STR[30], load)};
+} // namespace
 
-CpuData::CpuData()
-    : m_register_map_word{{OPERANDS_STR[9], &AF.u16},
-                          {OPERANDS_STR[11], &BC.u16},
-                          {OPERANDS_STR[14], &DE.u16},
-                          {OPERANDS_STR[17], &HL.u16},
-                          {OPERANDS_STR[21], &SP.u16}},
-      m_register_map_byte{{OPERANDS_STR[8], &AF.hi},  {OPERANDS_STR[10], &BC.hi}, {OPERANDS_STR[12], &BC.lo},
-                          {OPERANDS_STR[13], &DE.hi}, {OPERANDS_STR[15], &DE.lo}, {OPERANDS_STR[16], &HL.hi},
-                          {OPERANDS_STR[18], &HL.lo}}
+cpu::cpu(rw_device &rw_device) : m_rw_device{rw_device}, m_mnemonic_map{{"LD", &cpu::ld}}
 {
 }
 
-uint16_t *CpuData::get_word(const char *reg_name)
+void cpu::start()
 {
-    assert(m_register_map_word.contains(reg_name));
-    return m_register_map_word[reg_name];
-}
-
-uint8_t *CpuData::get_byte(const char *reg_name)
-{
-    assert(m_register_map_byte.contains(reg_name));
-    return m_register_map_byte[reg_name];
-}
-
-bool CpuData::is_flag_set(Flags flag)
-{
-    return (0 != (AF.lo & flag));
-}
-
-void CpuData::set_flag(Flags flag)
-{
-    AF.lo |= flag;
-}
-
-void CpuData::unset_flag(Flags flag)
-{
-    AF.lo &= ~flag;
-}
-
-Cpu::Cpu(std::span<uint8_t> program) : m_program(program)
-{
-    bool result{load_opcodes()};
-    assert(result);
-}
-
-bool Cpu::fetch_instruction(uint8_t &opcode_hex)
-{
-    if (m_registers.PC.u16 >= m_program.size())
-        return false;
-
-    opcode_hex = m_program[m_registers.PC.u16];
-    return true;
-}
-
-void Cpu::exec(Opcode const &op)
-{
-    auto result = std::find_if(instruction_set.cbegin(), instruction_set.cend(),
-                               [&op](mnemonic_func const &item) { return item.first == op.mnemonic; });
-    assert(result != instruction_set.cend());
-    auto const oldPC = m_registers.PC.u16;
-    m_registers.PC.u16 += op.bytes;
-    std::invoke(result->second, op, m_registers, m_program.subspan(oldPC));
-}
-
-void Cpu::process()
-{
-    uint8_t opcode_hex;
-    while (fetch_instruction(opcode_hex))
+    load_opcodes();
+    while (1)
     {
-        Opcode op;
-        if (opcode_hex != 0xCB)
-            op = get_opcode(opcode_hex);
-        else
+        uint8_t opcode = get_next_byte();
+
+        Opcode op{get_opcode(opcode)};
+        if (opcode == PREFIXED_OPCODE)
         {
-            m_registers.PC.u16 += 1;
-            assert(fetch_instruction(opcode_hex));
-            op = get_pref_opcode(opcode_hex);
+            opcode = get_next_byte();
+            op = get_pref_opcode(opcode);
         }
 
-        exec(op);
-        std::invoke(m_callback, m_registers, op);
+        // assert(m_mnemonic_map.contains(op.mnemonic));
+
+        auto func = m_mnemonic_map[op.mnemonic];
+        std::invoke(func, this);
     }
 }
 
-void Cpu::register_function_callback(std::function<void(const CpuData &, const Opcode &)> callback)
+uint8_t cpu::get_next_byte()
 {
-    m_callback = callback;
+    return m_rw_device.read(m_regs.m_PC.u16++);
 }
