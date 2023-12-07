@@ -9,14 +9,16 @@
 
 struct Operand
 {
-    const char *name{};
+    const char *name{}; // A, a8, $28, B
+
     // default value (-1) as "not SET"
     // 1 as TRUE
     // 0 as FALSE
-    int8_t bytes{-1};
     int8_t immediate{-1};
     int8_t increment{-1};
     int8_t decrement{-1};
+
+    int8_t bytes{-1};
 };
 
 struct Opcode
@@ -24,8 +26,9 @@ struct Opcode
     const char *mnemonic{nullptr};
     uint8_t bytes{};
     uint8_t hex{};
-    std::array<uint8_t, 2> cycles{0xFF, 0xFF};
-    std::array<Operand, 3> operands;
+    std::array<uint8_t, 2> data{};
+    std::array<uint8_t, 2> cycles{};
+    std::array<Operand, 3> operands{};
     // Z, N, H, C
     std::array<const char *, 4> flags;
     bool immediate;

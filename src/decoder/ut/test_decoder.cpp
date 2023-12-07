@@ -52,15 +52,15 @@ TEST_F(DecoderTests, cycles)
 {
     Opcode op = get_opcode(0x01);
     ASSERT_EQ(op.cycles[0], 12);
-    ASSERT_EQ(op.cycles[1], 0xFF);
+    ASSERT_EQ(op.cycles[1], 0x0);
 
     op = get_opcode(0x07);
     ASSERT_EQ(op.cycles[0], 4);
-    ASSERT_EQ(op.cycles[1], 0xFF);
+    ASSERT_EQ(op.cycles[1], 0x0);
 
     op = get_opcode(0x0A);
     ASSERT_EQ(op.cycles[0], 8);
-    ASSERT_EQ(op.cycles[1], 0xFF);
+    ASSERT_EQ(op.cycles[1], 0x0);
 
     op = get_opcode(0x20);
     ASSERT_EQ(op.cycles[0], 12);
