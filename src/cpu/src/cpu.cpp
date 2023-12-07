@@ -13,29 +13,32 @@ void cpu::start()
     load_opcodes();
     while (1)
     {
-        m_op = get_opcode(read_byte());
-
-        auto func = m_mapper.find(m_op.mnemonic);
-        assert(func != m_mapper.end());
-
-        for (auto i = 0; i < m_op.bytes - 1; ++i)
-            m_op.data[i] = read_byte();
-
-        uint8_t const wait_cycles = std::invoke(func->second, this);
-
-        // ADD WAIT HERE
-
-        // Callback for UTs
-        if (m_callback)
+        if (rw_device::data d = read_byte(); d.second)
         {
-            bool should_quit = std::invoke(m_callback, m_regs);
-            if (should_quit)
-                break;
+            m_op = get_opcode(d.first);
+
+            auto func = m_mapper.find(m_op.mnemonic);
+            assert(func != m_mapper.end());
+
+            for (auto i = 0; i < m_op.bytes - 1; ++i)
+                m_op.data[i] = read_byte().first;
+
+            uint8_t const wait_cycles = std::invoke(func->second, this);
+
+            // ADD WAIT HERE
+
+            // Callback for UTs
+            if (m_callback)
+                std::invoke(m_callback, m_regs);
+        }
+        else
+        {
+            return;
         }
     }
 }
 
-uint8_t cpu::read_byte()
+rw_device::data cpu::read_byte()
 {
     return m_rw_device.read(PC()++);
 }
@@ -77,6 +80,7 @@ uint8_t &cpu::A()
 
 uint8_t cpu::ld()
 {
+    return 1;
     switch (m_op.hex)
     {
     case 0xF8:

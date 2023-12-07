@@ -1,5 +1,6 @@
 #include "cpu.hpp"
 #include <cstdint>
+#include <gmock/gmock.h>
 #include <gtest/gtest.h>
 #include <translator.hpp>
 
@@ -163,7 +164,9 @@ TEST(test_load_16bit, LD_HL_SP_e8)
         LD HL, SP + 0x81
     )"};
     auto opcodes = translate(assembly);
-    cpu cpu{opcodes};
+
+    rw_mock mock;
+    cpu cpu{mock};
 
     std::vector<CpuData> expected_data;
     auto f = [&expected_data](const CpuData &d, const Opcode &op) {

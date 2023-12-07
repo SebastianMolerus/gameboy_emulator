@@ -8,8 +8,9 @@
 
 struct rw_device
 {
+    using data = std::pair<uint8_t, bool>;
     virtual ~rw_device() = default;
-    virtual uint8_t read(uint16_t addr) = 0;
+    virtual data read(uint16_t addr) = 0;
     virtual void write(uint16_t addr, uint8_t data) = 0;
 };
 
@@ -59,7 +60,7 @@ class cpu
     using processing_func = uint8_t (cpu::*)();
     static const std::unordered_map<const char *, processing_func> m_mapper;
 
-    uint8_t read_byte();
+    rw_device::data read_byte();
 
     void set(flag f);
     void reset(flag f);
