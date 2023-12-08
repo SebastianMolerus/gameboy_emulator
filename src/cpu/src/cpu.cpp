@@ -27,7 +27,7 @@ void cpu::start()
 
         if (m_callback)
         {
-            if (bool res = std::invoke(m_callback, m_reg, m_op); res)
+            if (bool res = std::invoke(m_callback, m_reg, m_op, wait_cycles); res)
                 return;
         }
     }

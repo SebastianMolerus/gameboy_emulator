@@ -8,8 +8,6 @@
 #include <unordered_map>
 #include <variant>
 
-class cpu;
-
 struct rw_device
 {
     virtual ~rw_device() = default;
@@ -19,7 +17,7 @@ struct rw_device
 
 class cpu
 {
-    using cb = std::function<bool(registers const &, opcode const &op)>;
+    using cb = std::function<bool(registers const &, opcode const &op, uint8_t)>;
 
   public:
     cpu(rw_device &rw_device, cb callback = nullptr);
@@ -45,6 +43,8 @@ class cpu
     uint8_t ld();
     uint8_t LD_HL_SP_e8();
     uint8_t LD_REG16_n16();
+    uint8_t LD_Ia16I_SP();
+    uint8_t LD_SP_HL();
 };
 
 #endif

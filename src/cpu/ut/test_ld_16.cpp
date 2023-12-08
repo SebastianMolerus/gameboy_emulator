@@ -24,7 +24,8 @@ TEST(test_load_16bit, LD_BC_n16)
     auto opcodes = translate(assembly);
     rw_mock mock{opcodes};
     std::vector<registers> expected_data;
-    cpu cpu{mock, [&expected_data](registers const &regs, opcode const &op) {
+    cpu cpu{mock, [&expected_data](registers const &regs, opcode const &op, uint8_t wait_cycles) {
+                assert(wait_cycles == 12);
                 expected_data.push_back(regs);
                 if (expected_data.size() == 4)
                     return true;
@@ -63,7 +64,8 @@ TEST(test_load_16bit, LD_DE_n16)
     auto opcodes = translate(assembly);
     rw_mock mock{opcodes};
     std::vector<registers> expected_data;
-    cpu cpu{mock, [&expected_data](registers const &regs, opcode const &op) {
+    cpu cpu{mock, [&expected_data](registers const &regs, opcode const &op, uint8_t wait_cycles) {
+                assert(wait_cycles == 12);
                 expected_data.push_back(regs);
                 if (expected_data.size() == 4)
                     return true;
@@ -102,7 +104,8 @@ TEST(test_load_16bit, LD_HL_n16)
     auto opcodes = translate(assembly);
     rw_mock mock{opcodes};
     std::vector<registers> expected_data;
-    cpu cpu{mock, [&expected_data](registers const &regs, opcode const &op) {
+    cpu cpu{mock, [&expected_data](registers const &regs, opcode const &op, uint8_t wait_cycles) {
+                assert(wait_cycles == 12);
                 expected_data.push_back(regs);
                 if (expected_data.size() == 4)
                     return true;
@@ -141,7 +144,8 @@ TEST(test_load_16bit, LD_SP_n16)
     auto opcodes = translate(assembly);
     rw_mock mock{opcodes};
     std::vector<registers> expected_data;
-    cpu cpu{mock, [&expected_data](registers const &regs, opcode const &op) {
+    cpu cpu{mock, [&expected_data](registers const &regs, opcode const &op, uint8_t wait_cycles) {
+                assert(wait_cycles == 12);
                 expected_data.push_back(regs);
                 if (expected_data.size() == 4)
                     return true;
@@ -183,9 +187,12 @@ TEST(test_load_16bit, LD_HL_SP_e8)
     auto opcodes = translate(assembly);
     rw_mock mock{opcodes};
     std::vector<registers> expected_data;
-    cpu cpu{mock, [&expected_data](registers const &regs, opcode const &op) {
+    cpu cpu{mock, [&expected_data](registers const &regs, opcode const &op, uint8_t wait_cycles) {
                 if (op.m_hex == get_opcode("LD HL, SP + e8").m_hex)
+                {
+                    assert(wait_cycles == 12);
                     expected_data.push_back(regs);
+                }
                 if (expected_data.size() == 3)
                     return true;
                 return false;
@@ -227,9 +234,12 @@ TEST(test_load_16bit, LD_HL_SP_e8_half_carry)
     auto opcodes = translate(assembly);
     rw_mock mock{opcodes};
     std::vector<registers> expected_data;
-    cpu cpu{mock, [&expected_data](registers const &regs, opcode const &op) {
+    cpu cpu{mock, [&expected_data](registers const &regs, opcode const &op, uint8_t wait_cycles) {
                 if (op.m_hex == get_opcode("LD HL, SP + e8").m_hex)
+                {
+                    assert(wait_cycles == 12);
                     expected_data.push_back(regs);
+                }
                 if (expected_data.size() == 2)
                     return true;
                 return false;
@@ -254,9 +264,12 @@ TEST(test_load_16bit, LD_HL_SP_e8_carry)
     auto opcodes = translate(assembly);
     rw_mock mock{opcodes};
     std::vector<registers> expected_data;
-    cpu cpu{mock, [&expected_data](registers const &regs, opcode const &op) {
+    cpu cpu{mock, [&expected_data](registers const &regs, opcode const &op, uint8_t wait_cycles) {
                 if (op.m_hex == get_opcode("LD HL, SP + e8").m_hex)
+                {
+                    assert(wait_cycles == 12);
                     expected_data.push_back(regs);
+                }
                 if (expected_data.size() == 2)
                     return true;
                 return false;
@@ -269,43 +282,55 @@ TEST(test_load_16bit, LD_HL_SP_e8_carry)
     ASSERT_TRUE(expected_data[1].is_flag_set(flag::C));
 }
 
-// // 0x08
-// TEST(test_load_16bit, LD_Ia16I_SP)
-// {
-//     std::string assembly{R"(
-//         LD SP, 0xBBAA
-//         LD [0x1], SP
-//     )"};
-//     auto opcodes = translate(assembly);
-//     Cpu cpu{opcodes};
+// 0x08
+TEST(test_load_16bit, LD_Ia16I_SP)
+{
+    std::string assembly{R"(
+        LD SP, 0xBBAA
+        LD [0x20], SP
+    )"};
+    auto opcodes = translate(assembly);
+    rw_mock mock{opcodes};
+    std::vector<registers> expected_data;
+    cpu cpu{mock, [&expected_data](registers const &regs, opcode const &op, uint8_t wait_cycles) {
+                expected_data.push_back(regs);
+                if (expected_data.size() == 2)
+                {
+                    assert(wait_cycles == 20);
+                    return true;
+                }
+                return false;
+            }};
+    cpu.start();
 
-//     CpuData expected_data;
-//     auto f = [&expected_data](const CpuData &d, const Opcode &op) { expected_data = d; };
-//     cpu.register_function_callback(f);
-//     cpu.process();
+    ASSERT_EQ(mock.m_ram[0x20], 0xAA);
+    ASSERT_EQ(mock.m_ram[0x21], 0xBB);
+}
 
-//     ASSERT_EQ(expected_data.m_memory[0x1], 0xAA);
-//     ASSERT_EQ(expected_data.m_memory[0x2], 0xBB);
-// }
+// 0xF9
+TEST(test_load_16bit, LD_SP_HL)
+{
+    std::string assembly{R"(
+        LD HL, 0xABCD
+        LD SP, HL
+    )"};
+    auto opcodes = translate(assembly);
+    rw_mock mock{opcodes};
+    std::vector<registers> expected_data;
+    cpu cpu{mock, [&expected_data](registers const &regs, opcode const &op, uint8_t wait_cycles) {
+                expected_data.push_back(regs);
+                if (expected_data.size() == 2)
+                {
+                    assert(wait_cycles == 8);
+                    return true;
+                }
+                return false;
+            }};
+    cpu.start();
 
-// // 0xF9
-// TEST(test_load_16bit, LD_SP_HL)
-// {
-//     std::string assembly{R"(
-//         LD HL, 0xABCD
-//         LD SP, HL
-//     )"};
-//     auto opcodes = translate(assembly);
-//     Cpu cpu{opcodes};
-
-//     CpuData expected_data;
-//     auto f = [&expected_data](const CpuData &d, const Opcode &op) { expected_data = d; };
-//     cpu.register_function_callback(f);
-//     cpu.process();
-
-//     ASSERT_EQ(expected_data.HL.u16, 0xABCD);
-//     ASSERT_EQ(expected_data.SP.u16, expected_data.HL.u16);
-// }
+    ASSERT_EQ(expected_data[0].HL(), 0xABCD);
+    ASSERT_EQ(expected_data[1].SP(), expected_data[1].HL());
+}
 
 // // 0xC5
 // TEST(test_load_16bit, PUSH_BC)

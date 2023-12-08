@@ -5,8 +5,12 @@ uint8_t cpu::ld()
 {
     switch (m_op.m_hex)
     {
-    case 0xF8: // add n to SP and copy it to HL
+    case 0xF8: // add e8 ( singed data ) to SP and copy it to HL
         return LD_HL_SP_e8();
+    case 0xF9:
+        return LD_SP_HL();
+    case 0x08:
+        return LD_Ia16I_SP();
     case 0x01:
     case 0x11:
     case 0x21:
@@ -60,7 +64,7 @@ uint8_t cpu::LD_HL_SP_e8()
     }
     m_reg.HL() = SP;
 
-    return m_op.m_cycles[0] / 4;
+    return m_op.m_cycles[0];
 }
 
 uint8_t cpu::LD_REG16_n16()
@@ -73,5 +77,23 @@ uint8_t cpu::LD_REG16_n16()
 
     m_reg.get_word(m_op.m_operands[0].m_name) = value;
 
-    return m_op.m_cycles[0] / 4;
+    return m_op.m_cycles[0];
+}
+
+uint8_t cpu::LD_Ia16I_SP()
+{
+    uint16_t addr = m_op.m_data[1];
+    addr <<= 8;
+    addr |= m_op.m_data[0];
+
+    m_rw_device.write(addr, m_reg.m_SP.m_lo);
+    m_rw_device.write(addr + 1, m_reg.m_SP.m_hi);
+
+    return m_op.m_cycles[0];
+}
+
+uint8_t cpu::LD_SP_HL()
+{
+    m_reg.get_word("SP") = m_reg.get_word("HL");
+    return m_op.m_cycles[0];
 }
