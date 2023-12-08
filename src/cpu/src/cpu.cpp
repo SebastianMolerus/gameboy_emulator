@@ -25,7 +25,6 @@ void cpu::start()
 
         // ADD WAIT HERE
 
-        // Callback for UTs
         if (m_callback)
         {
             if (bool res = std::invoke(m_callback, m_reg, m_op); res)

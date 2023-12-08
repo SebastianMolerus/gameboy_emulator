@@ -13,6 +13,14 @@ typedef union {
     };
 } register_u16;
 
+enum flag : uint8_t
+{
+    C = (1 << 3),
+    H = (1 << 4),
+    N = (1 << 5),
+    Z = (1 << 6)
+};
+
 struct registers
 {
     register_u16 m_AF{0x0000};
@@ -46,9 +54,25 @@ struct registers
     {
         return m_DE.m_u16;
     }
+    uint8_t &D()
+    {
+        return m_DE.m_hi;
+    }
+    uint8_t &E()
+    {
+        return m_DE.m_lo;
+    }
     uint16_t &HL()
     {
         return m_HL.m_u16;
+    }
+    uint8_t &H()
+    {
+        return m_HL.m_hi;
+    }
+    uint8_t &L()
+    {
+        return m_HL.m_lo;
     }
     uint16_t &SP()
     {
@@ -79,6 +103,11 @@ struct registers
         }
 
         assert(false);
+    }
+
+    bool is_flag_set(flag flag)
+    {
+        return (0 != (m_AF.m_lo & flag));
     }
 };
 

@@ -35,7 +35,7 @@ uint8_t cpu::LD_HL_SP_e8()
     reset(flag::Z);
     reset(flag::N);
 
-    uint16_t &SP = m_reg.SP();
+    uint16_t SP = m_reg.SP();
 
     uint8_t val = m_op.m_data[0];
     bool minus = val & 0x80;

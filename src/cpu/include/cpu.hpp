@@ -26,14 +26,6 @@ class cpu
 
     void start();
 
-    enum flag : uint8_t
-    {
-        C = (1 << 3),
-        H = (1 << 4),
-        N = (1 << 5),
-        Z = (1 << 6)
-    };
-
   private:
     registers m_reg;
     rw_device &m_rw_device;
