@@ -20,14 +20,12 @@ uint8_t cpu::ld()
     case 0xC1: // pop BC
     case 0xD1: // pop DE
     case 0xE1: // pop HL
-        // pop();
-        break;
+        return pop();
     case 0xC5: // push BC
     case 0xF5: // push AF
     case 0xD5: // push DE
     case 0xE5: // push HL
         return push();
-        break;
     case 0x7A:
         return LD_REG8_REG8();
     default:
@@ -123,5 +121,21 @@ uint8_t cpu::LD_REG8_REG8()
     assert(m_op.m_operands[0].m_name);
     assert(m_op.m_operands[1].m_name);
     m_reg.get_byte(m_op.m_operands[0].m_name) = m_reg.get_byte(m_op.m_operands[1].m_name);
+    return m_op.m_cycles[0];
+}
+
+uint8_t cpu::pop()
+{
+    assert(m_op.m_operands[0].m_name);
+    uint16_t &target_REG = m_reg.get_word(m_op.m_operands[0].m_name);
+
+    uint8_t const lo = m_rw_device.read(m_reg.SP());
+    uint8_t const hi = m_rw_device.read(++m_reg.SP());
+    ++m_reg.SP();
+
+    target_REG = hi;
+    target_REG <<= 8;
+    target_REG |= lo;
+
     return m_op.m_cycles[0];
 }

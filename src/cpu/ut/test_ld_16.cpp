@@ -1,16 +1,7 @@
 #include "cpu.hpp"
-#include <cstdint>
 #include <gtest/gtest.h>
 #include <translator.hpp>
 #include <utils.h>
-
-// uint16_t read_word_from_stack(CpuData const &data)
-// {
-//     uint16_t result = data.m_memory[data.SP.u16 + 1];
-//     result <<= 8;
-//     result |= data.m_memory[data.SP.u16];
-//     return result;
-// }
 
 // 0x01
 TEST(test_load_16bit, LD_BC_n16)
@@ -445,89 +436,110 @@ TEST(test_load_16bit, PUSH_AF)
     ASSERT_EQ(mock.m_ram[expected_data.SP() + 1], 0xBD);
 }
 
-// // 0xC1
-// TEST(test_load_16bit, pop_BC)
-// {
-//     std::string assembly{R"(
-//         LD SP, 0x12
-//         LD HL, 0xF0F0
-//         PUSH HL
-//         POP BC
-//     )"};
-//     auto opcodes = translate(assembly);
-//     Cpu cpu{opcodes};
+// 0xC1
+TEST(test_load_16bit, pop_BC)
+{
+    std::string assembly{R"(
+        LD SP, 0xFF12
+        LD HL, 0xF0F0
+        PUSH HL
+        POP BC
+    )"};
+    auto opcodes = translate(assembly);
+    rw_mock mock{opcodes};
+    registers expected_data;
+    cpu cpu{mock, [&expected_data](registers const &regs, opcode const &op, uint8_t wait_cycles) {
+                if (op.m_hex == get_opcode("POP BC").m_hex)
+                {
+                    assert(wait_cycles == 12);
+                    expected_data = regs;
+                    return true;
+                }
+                return false;
+            }};
+    cpu.start();
 
-//     CpuData expected_data;
-//     auto f = [&expected_data](const CpuData &d, const Opcode &op) { expected_data = d; };
-//     cpu.register_function_callback(f);
-//     cpu.process();
+    ASSERT_EQ(expected_data.SP(), 0xFF12);
+    ASSERT_EQ(expected_data.BC(), 0xF0F0);
+}
 
-//     ASSERT_EQ(expected_data.SP.u16, 0x12);
-//     ASSERT_EQ(expected_data.BC.u16, 0xF0F0);
-// }
+// 0xD1
+TEST(test_load_16bit, pop_DE)
+{
+    std::string assembly{R"(
+        LD SP, 0xAA89
+        LD HL, 0x1561
+        PUSH HL
+        POP DE
+    )"};
+    auto opcodes = translate(assembly);
+    rw_mock mock{opcodes};
+    registers expected_data;
+    cpu cpu{mock, [&expected_data](registers const &regs, opcode const &op, uint8_t wait_cycles) {
+                if (op.m_hex == get_opcode("POP DE").m_hex)
+                {
+                    assert(wait_cycles == 12);
+                    expected_data = regs;
+                    return true;
+                }
+                return false;
+            }};
+    cpu.start();
 
-// // 0xD1
-// TEST(test_load_16bit, pop_DE)
-// {
-//     std::string assembly{R"(
-//         LD SP, 0x89
-//         LD HL, 0x1561
-//         PUSH HL
-//         POP DE
-//     )"};
-//     auto opcodes = translate(assembly);
-//     Cpu cpu{opcodes};
+    ASSERT_EQ(expected_data.SP(), 0xAA89);
+    ASSERT_EQ(expected_data.DE(), 0x1561);
+}
 
-//     CpuData expected_data;
-//     auto f = [&expected_data](const CpuData &d, const Opcode &op) { expected_data = d; };
-//     cpu.register_function_callback(f);
-//     cpu.process();
+// 0xE1
+TEST(test_load_16bit, pop_HL)
+{
+    std::string assembly{R"(
+        LD SP, 0xAF99
+        LD BC, 0xBABE
+        PUSH BC
+        POP HL
+    )"};
+    auto opcodes = translate(assembly);
+    rw_mock mock{opcodes};
+    registers expected_data;
+    cpu cpu{mock, [&expected_data](registers const &regs, opcode const &op, uint8_t wait_cycles) {
+                if (op.m_hex == get_opcode("POP HL").m_hex)
+                {
+                    assert(wait_cycles == 12);
+                    expected_data = regs;
+                    return true;
+                }
+                return false;
+            }};
+    cpu.start();
 
-//     ASSERT_EQ(expected_data.SP.u16, 0x89);
-//     ASSERT_EQ(expected_data.DE.u16, 0x1561);
-// }
+    ASSERT_EQ(expected_data.SP(), 0xAF99);
+    ASSERT_EQ(expected_data.HL(), 0xBABE);
+}
 
-// // 0xE1
-// TEST(test_load_16bit, pop_HL)
-// {
-//     std::string assembly{R"(
-//         LD SP, 0x99
-//         LD BC, 0xBABE
-//         PUSH BC
-//         POP HL
-//     )"};
-//     auto opcodes = translate(assembly);
-//     Cpu cpu{opcodes};
+// 0xF1
+TEST(test_load_16bit, pop_AF)
+{
+    std::string assembly{R"(
+        LD SP, 0x303
+        LD DE, 0xBAFE
+        PUSH DE
+        POP AF
+    )"};
+    auto opcodes = translate(assembly);
+    rw_mock mock{opcodes};
+    registers expected_data;
+    cpu cpu{mock, [&expected_data](registers const &regs, opcode const &op, uint8_t wait_cycles) {
+                if (op.m_hex == get_opcode("POP AF").m_hex)
+                {
+                    assert(wait_cycles == 12);
+                    expected_data = regs;
+                    return true;
+                }
+                return false;
+            }};
+    cpu.start();
 
-//     CpuData expected_data;
-//     auto f = [&expected_data](const CpuData &d, const Opcode &op) { expected_data = d; };
-//     cpu.register_function_callback(f);
-//     cpu.process();
-
-//     ASSERT_EQ(expected_data.SP.u16, 0x99);
-//     ASSERT_EQ(expected_data.HL.u16, 0xBABE);
-// }
-
-// // 0xF1
-// TEST(test_load_16bit, pop_AF)
-// {
-//     std::string assembly{R"(
-//         LD SP, 0x303
-//         LD DE, 0xBAFE
-//         PUSH DE
-//         POP AF
-//     )"};
-//     auto opcodes = translate(assembly);
-//     Cpu cpu{opcodes};
-
-//     CpuData expected_data;
-//     auto f = [&expected_data](const CpuData &d, const Opcode &op) {
-//         if (op.hex == 0xF1)
-//             expected_data = d;
-//     };
-//     cpu.register_function_callback(f);
-//     cpu.process();
-
-//     ASSERT_EQ(expected_data.SP.u16, 0x303);
-//     ASSERT_EQ(expected_data.AF.u16, 0xBAFE);
-// }
+    ASSERT_EQ(expected_data.SP(), 0x303);
+    ASSERT_EQ(expected_data.AF(), 0xBAFE);
+}
