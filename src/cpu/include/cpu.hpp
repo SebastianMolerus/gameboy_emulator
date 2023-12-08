@@ -12,15 +12,14 @@ class cpu;
 
 struct rw_device
 {
-    using data = std::pair<uint8_t, bool>;
     virtual ~rw_device() = default;
-    virtual data read(uint16_t addr) = 0;
+    virtual uint8_t read(uint16_t addr) = 0;
     virtual void write(uint16_t addr, uint8_t data) = 0;
 };
 
 class cpu
 {
-    using cb = std::function<bool(registers const &)>;
+    using cb = std::function<bool(registers const &, opcode const &op)>;
 
   public:
     cpu(rw_device &rw_device, cb callback = nullptr);
@@ -38,20 +37,22 @@ class cpu
   private:
     registers m_reg;
     rw_device &m_rw_device;
-    Opcode m_op;
+    opcode m_op;
 
     cb m_callback;
 
     using processing_func = uint8_t (cpu::*)();
     static const std::unordered_map<const char *, processing_func> m_mapper;
 
-    rw_device::data read_byte();
-
-    uint8_t ld();
-    uint8_t LD_HL_SP_e8();
+    uint8_t read_byte();
 
     void set(flag f);
     void reset(flag f);
+
+  private:
+    uint8_t ld();
+    uint8_t LD_HL_SP_e8();
+    uint8_t LD_REG16_n16();
 };
 
 #endif

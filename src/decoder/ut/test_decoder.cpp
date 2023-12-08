@@ -23,89 +23,89 @@ class DecoderTests : public ::testing::Test
 
 TEST_F(DecoderTests, mnemonic_check)
 {
-    Opcode op = get_opcode(0x01);
-    ASSERT_EQ(op.mnemonic, "LD");
+    opcode op = get_opcode(0x01);
+    ASSERT_EQ(op.m_mnemonic, "LD");
 
     op = get_opcode(0x24);
-    ASSERT_EQ(op.mnemonic, "INC");
+    ASSERT_EQ(op.m_mnemonic, "INC");
 
     op = get_opcode(0x25);
-    ASSERT_EQ(op.mnemonic, "DEC");
+    ASSERT_EQ(op.m_mnemonic, "DEC");
 
     op = get_opcode(0x9E);
-    ASSERT_EQ(op.mnemonic, "SBC");
+    ASSERT_EQ(op.m_mnemonic, "SBC");
 }
 
 TEST_F(DecoderTests, bytes)
 {
-    Opcode op = get_opcode(0x03);
-    ASSERT_EQ(op.bytes, 1);
+    opcode op = get_opcode(0x03);
+    ASSERT_EQ(op.m_bytes, 1);
 
     op = get_opcode(0xCA);
-    ASSERT_EQ(op.bytes, 3);
+    ASSERT_EQ(op.m_bytes, 3);
 
     op = get_opcode(0x06);
-    ASSERT_EQ(op.bytes, 2);
+    ASSERT_EQ(op.m_bytes, 2);
 }
 
 TEST_F(DecoderTests, cycles)
 {
-    Opcode op = get_opcode(0x01);
-    ASSERT_EQ(op.cycles[0], 12);
-    ASSERT_EQ(op.cycles[1], 0x0);
+    opcode op = get_opcode(0x01);
+    ASSERT_EQ(op.m_cycles[0], 12);
+    ASSERT_EQ(op.m_cycles[1], 0x0);
 
     op = get_opcode(0x07);
-    ASSERT_EQ(op.cycles[0], 4);
-    ASSERT_EQ(op.cycles[1], 0x0);
+    ASSERT_EQ(op.m_cycles[0], 4);
+    ASSERT_EQ(op.m_cycles[1], 0x0);
 
     op = get_opcode(0x0A);
-    ASSERT_EQ(op.cycles[0], 8);
-    ASSERT_EQ(op.cycles[1], 0x0);
+    ASSERT_EQ(op.m_cycles[0], 8);
+    ASSERT_EQ(op.m_cycles[1], 0x0);
 
     op = get_opcode(0x20);
-    ASSERT_EQ(op.cycles[0], 12);
-    ASSERT_EQ(op.cycles[1], 8);
+    ASSERT_EQ(op.m_cycles[0], 12);
+    ASSERT_EQ(op.m_cycles[1], 8);
 }
 
 TEST_F(DecoderTests, immediate)
 {
-    Opcode op = get_opcode(0x0A);
-    ASSERT_FALSE(op.immediate);
+    opcode op = get_opcode(0x0A);
+    ASSERT_FALSE(op.m_immediate);
 
     op = get_opcode(0x2A);
-    ASSERT_FALSE(op.immediate);
+    ASSERT_FALSE(op.m_immediate);
 
     op = get_opcode(0x0F);
-    ASSERT_TRUE(op.immediate);
+    ASSERT_TRUE(op.m_immediate);
 
     op = get_opcode(0x1F);
-    ASSERT_TRUE(op.immediate);
+    ASSERT_TRUE(op.m_immediate);
 }
 
 TEST_F(DecoderTests, operands_A)
 {
-    Opcode op = get_opcode(0x22);
+    opcode op = get_opcode(0x22);
 
-    Operand const op1 = op.operands[0];
-    ASSERT_EQ(op1.name, "HL");
-    ASSERT_EQ(op1.increment, 1);
-    ASSERT_EQ(op1.immediate, 0);
-    ASSERT_EQ(op1.decrement, -1);
-    ASSERT_EQ(op1.bytes, -1);
+    operand const op1 = op.m_operands[0];
+    ASSERT_EQ(op1.m_name, "HL");
+    ASSERT_EQ(op1.m_increment, 1);
+    ASSERT_EQ(op1.m_immediate, 0);
+    ASSERT_EQ(op1.m_decrement, -1);
+    ASSERT_EQ(op1.m_bytes, -1);
 
-    Operand const op2 = op.operands[1];
-    ASSERT_EQ(op2.name, "A");
-    ASSERT_EQ(op2.immediate, 1);
-    ASSERT_EQ(op2.increment, -1);
-    ASSERT_EQ(op2.decrement, -1);
-    ASSERT_EQ(op2.bytes, -1);
+    operand const op2 = op.m_operands[1];
+    ASSERT_EQ(op2.m_name, "A");
+    ASSERT_EQ(op2.m_immediate, 1);
+    ASSERT_EQ(op2.m_increment, -1);
+    ASSERT_EQ(op2.m_decrement, -1);
+    ASSERT_EQ(op2.m_bytes, -1);
 
-    ASSERT_EQ(op.operands[2].name, nullptr);
+    ASSERT_EQ(op.m_operands[2].m_name, nullptr);
 }
 
 TEST_F(DecoderTests, operands_B)
 {
-    Opcode op = get_opcode(0x32);
+    opcode op = get_opcode(0x32);
 
     Operand const op1 = op.operands[0];
     ASSERT_EQ(op1.name, "HL");
@@ -126,7 +126,7 @@ TEST_F(DecoderTests, operands_B)
 
 TEST_F(DecoderTests, operands_C)
 {
-    Opcode op = get_opcode(0x01);
+    opcode op = get_opcode(0x01);
 
     Operand const op1 = op.operands[0];
     ASSERT_EQ(op1.name, "BC");
@@ -147,7 +147,7 @@ TEST_F(DecoderTests, operands_C)
 
 TEST_F(DecoderTests, operands_D)
 {
-    Opcode op = get_opcode(0xF8);
+    opcode op = get_opcode(0xF8);
 
     Operand const op1 = op.operands[0];
     ASSERT_EQ(op1.name, "HL");
@@ -173,7 +173,7 @@ TEST_F(DecoderTests, operands_D)
 
 TEST_F(DecoderTests, flags)
 {
-    Opcode op = get_opcode(0xF1);
+    opcode op = get_opcode(0xF1);
 
     ASSERT_EQ(op.flags[0], "Z");
     ASSERT_EQ(op.flags[1], "N");
@@ -204,7 +204,7 @@ TEST_F(DecoderTests, flags)
 
 TEST_F(DecoderTests, loadingCommands)
 {
-    Opcode op = get_opcode("LD BC, n16");
+    opcode op = get_opcode("LD BC, n16");
     ASSERT_EQ(op.hex, 0x01);
 
     op = get_opcode("NOP");

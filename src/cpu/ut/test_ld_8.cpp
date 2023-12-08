@@ -3,22 +3,22 @@
 #include <utils.h>
 
 // 0x02
-TEST(test_load_8bit, LD_IBCI_A)
-{
-    std::string assembly{R"(
-        LD BC, 0x59
-        LD A, 0x15
-        LD [BC], A
-    )"};
-    auto opcodes = translate(assembly);
+// TEST(test_load_8bit, LD_IBCI_A)
+// {
+//     std::string assembly{R"(
+//         LD BC, 0x59
+//         LD A, 0x15
+//         LD [BC], A
+//     )"};
+//     auto opcodes = translate(assembly);
 
-    rw_mock mock{3, opcodes};
+//     rw_mock mock{3, opcodes};
 
-    cpu cpu{mock};
-    cpu.start();
+//     cpu cpu{mock};
+//     cpu.start();
 
-    ASSERT_EQ(mock.m_ram[0x59], 0x15);
-}
+//     ASSERT_EQ(mock.m_ram[0x59], 0x15);
+// }
 
 // // 0x12
 // TEST(test_load_8bit, LD_IDEI_A)

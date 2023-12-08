@@ -12,32 +12,29 @@ void cpu::start()
     load_opcodes();
     while (1)
     {
-        if (rw_device::data d = read_byte(); d.second)
+        uint8_t const hex = read_byte();
+        m_op = get_opcode(hex);
+
+        auto func = m_mapper.find(m_op.m_mnemonic);
+        assert(func != m_mapper.end());
+
+        for (auto i = 0; i < m_op.m_bytes - 1; ++i)
+            m_op.m_data[i] = read_byte();
+
+        uint8_t const wait_cycles = std::invoke(func->second, *this);
+
+        // ADD WAIT HERE
+
+        // Callback for UTs
+        if (m_callback)
         {
-            m_op = get_opcode(d.first);
-
-            auto func = m_mapper.find(m_op.mnemonic);
-            assert(func != m_mapper.end());
-
-            for (auto i = 0; i < m_op.bytes - 1; ++i)
-                m_op.data[i] = read_byte().first;
-
-            uint8_t const wait_cycles = std::invoke(func->second, *this);
-
-            // ADD WAIT HERE
-
-            // Callback for UTs
-            if (m_callback)
-                std::invoke(m_callback, m_reg);
-        }
-        else
-        {
-            return;
+            if (bool res = std::invoke(m_callback, m_reg, m_op); res)
+                return;
         }
     }
 }
 
-rw_device::data cpu::read_byte()
+uint8_t cpu::read_byte()
 {
     return m_rw_device.read(m_reg.PC()++);
 }

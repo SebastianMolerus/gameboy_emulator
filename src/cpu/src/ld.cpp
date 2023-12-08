@@ -3,42 +3,15 @@
 
 uint8_t cpu::ld()
 {
-    switch (m_op.hex)
+    switch (m_op.m_hex)
     {
     case 0xF8: // add n to SP and copy it to HL
         return LD_HL_SP_e8();
-    case 0xF9:
     case 0x01:
     case 0x11:
     case 0x21:
     case 0x31:
-    case 0x02:
-    case 0x12:
-    case 0x22:
-    case 0x32:
-    case 0x06:
-    case 0x16:
-    case 0x26:
-    case 0x36:
-    case 0x08:
-    case 0x0A:
-    case 0x1A:
-    case 0x2A:
-    case 0x3A:
-    case 0x0E:
-    case 0x1E:
-    case 0x2E:
-    case 0x3E:
-    case 0xE0:
-    case 0xF0:
-    case 0xE2:
-    case 0xF2:
-    case 0xEA:
-    case 0xFA:
-    case 0x40 ... 0x7F:
-        assert(m_op.hex != 0x76); // Halt;
-        // load_source();
-        break;
+        return LD_REG16_n16();
     case 0xF1: // pop AF
     case 0xC1: // pop BC
     case 0xD1: // pop DE
@@ -64,7 +37,7 @@ uint8_t cpu::LD_HL_SP_e8()
 
     uint16_t &SP = m_reg.SP();
 
-    uint8_t val = m_op.data[0];
+    uint8_t val = m_op.m_data[0];
     bool minus = val & 0x80;
     val &= 0x7F;
 
@@ -87,5 +60,18 @@ uint8_t cpu::LD_HL_SP_e8()
     }
     m_reg.HL() = SP;
 
-    return m_op.cycles[0] / 4;
+    return m_op.m_cycles[0] / 4;
+}
+
+uint8_t cpu::LD_REG16_n16()
+{
+    assert(m_op.m_operands[0].m_name);
+
+    uint16_t value = m_op.m_data[1];
+    value <<= 8;
+    value |= m_op.m_data[0];
+
+    m_reg.get_word(m_op.m_operands[0].m_name) = value;
+
+    return m_op.m_cycles[0] / 4;
 }

@@ -1,6 +1,7 @@
 #ifndef REG_HPP
 #define REG_HPP
 
+#include <cassert>
 #include <cstdint>
 
 typedef union {
@@ -33,6 +34,14 @@ struct registers
     {
         return m_BC.m_u16;
     }
+    uint8_t &B()
+    {
+        return m_BC.m_hi;
+    }
+    uint8_t &C()
+    {
+        return m_BC.m_lo;
+    }
     uint16_t &DE()
     {
         return m_DE.m_u16;
@@ -48,6 +57,28 @@ struct registers
     uint16_t &PC()
     {
         return m_PC.m_u16;
+    }
+
+    uint16_t &get_word(const char *reg)
+    {
+        if (strcmp(reg, "BC") == 0)
+        {
+            return BC();
+        }
+        else if (strcmp(reg, "DE") == 0)
+        {
+            return DE();
+        }
+        else if (strcmp(reg, "HL") == 0)
+        {
+            return HL();
+        }
+        else if (strcmp(reg, "SP") == 0)
+        {
+            return SP();
+        }
+
+        assert(false);
     }
 };
 

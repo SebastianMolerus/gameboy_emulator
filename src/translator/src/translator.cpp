@@ -59,7 +59,7 @@ std::vector<uint8_t> translate(std::string_view instructions)
 
         if (x_pos == std::string::npos)
         {
-            result.push_back(get_opcode(cmd).hex);
+            result.push_back(get_opcode(cmd).m_hex);
             continue;
         }
 
@@ -88,10 +88,10 @@ std::vector<uint8_t> translate(std::string_view instructions)
             {
                 std::string com{cmd};
                 auto try_command = com.replace(zero_pos, pos_end - zero_pos + 1, s);
-                Opcode op = get_opcode(try_command);
-                if (op.hex)
+                opcode op = get_opcode(try_command);
+                if (op.m_hex)
                 {
-                    result.push_back(op.hex);
+                    result.push_back(op.m_hex);
                     result.push_back(value);
                     result.push_back(value >> 8);
                     break;
@@ -104,10 +104,10 @@ std::vector<uint8_t> translate(std::string_view instructions)
             {
                 std::string com{cmd};
                 auto try_command = com.replace(zero_pos, pos_end - zero_pos + 1, s);
-                Opcode op = get_opcode(try_command);
-                if (op.hex)
+                opcode op = get_opcode(try_command);
+                if (op.m_hex)
                 {
-                    result.push_back(op.hex);
+                    result.push_back(op.m_hex);
                     result.push_back(value);
                     if (strcmp(s, "n16") == 0 || strcmp(s, "a16") == 0)
                         result.push_back(0x0);

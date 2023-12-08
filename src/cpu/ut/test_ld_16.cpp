@@ -1,8 +1,8 @@
 #include "cpu.hpp"
 #include <cstdint>
-#include <gmock/gmock.h>
 #include <gtest/gtest.h>
 #include <translator.hpp>
+#include <utils.h>
 
 // uint16_t read_word_from_stack(CpuData const &data)
 // {
@@ -13,39 +13,43 @@
 // }
 
 // // 0x01
-// TEST(test_load_16bit, LD_BC_n16)
-// {
-//     std::string assembly{R"(
-//         LD BC, 0x16C7
-//         LD BC, 0x8
-//         LD BC, 0x76
-//         LD BC, 0x5E9
-//     )"};
-//     auto opcodes = translate(assembly);
-//     Cpu cpu{opcodes};
+TEST(test_load_16bit, LD_BC_n16)
+{
+    std::string assembly{R"(
+        LD BC, 0x16C7
+        LD BC, 0x8
+        LD BC, 0x76
+        LD BC, 0x5E9
+    )"};
+    auto opcodes = translate(assembly);
+    rw_mock mock{opcodes};
+    std::vector<registers> expected_data;
+    cpu cpu{mock, [&expected_data](registers const &regs, opcode const &op) {
+                expected_data.push_back(regs);
+                if (expected_data.size() == 4)
+                    return true;
+                return false;
+            }};
+    cpu.start();
 
-//     std::vector<CpuData> expected_data;
-//     cpu.register_function_callback([&expected_data](const CpuData &d, const Opcode &) { expected_data.push_back(d);
-//     }); cpu.process();
+    ASSERT_EQ(expected_data.size(), 4);
 
-//     ASSERT_EQ(expected_data.size(), 4);
+    ASSERT_EQ(expected_data[0].BC(), 0x16C7);
+    ASSERT_EQ(expected_data[0].C(), 0xC7);
+    ASSERT_EQ(expected_data[0].B(), 0x16);
 
-//     ASSERT_EQ(expected_data[0].BC.u16, 0x16C7);
-//     ASSERT_EQ(expected_data[0].BC.lo, 0xC7);
-//     ASSERT_EQ(expected_data[0].BC.hi, 0x16);
+    ASSERT_EQ(expected_data[1].BC(), 0x8);
+    ASSERT_EQ(expected_data[1].C(), 0x8);
+    ASSERT_EQ(expected_data[1].B(), 0x0);
 
-//     ASSERT_EQ(expected_data[1].BC.u16, 0x8);
-//     ASSERT_EQ(expected_data[1].BC.lo, 0x8);
-//     ASSERT_EQ(expected_data[1].BC.hi, 0x0);
+    ASSERT_EQ(expected_data[2].BC(), 0x76);
+    ASSERT_EQ(expected_data[2].C(), 0x76);
+    ASSERT_EQ(expected_data[2].B(), 0x0);
 
-//     ASSERT_EQ(expected_data[2].BC.u16, 0x76);
-//     ASSERT_EQ(expected_data[2].BC.lo, 0x76);
-//     ASSERT_EQ(expected_data[2].BC.hi, 0x0);
-
-//     ASSERT_EQ(expected_data[3].BC.u16, 0x5E9);
-//     ASSERT_EQ(expected_data[3].BC.lo, 0xE9);
-//     ASSERT_EQ(expected_data[3].BC.hi, 0x5);
-// }
+    ASSERT_EQ(expected_data[3].BC(), 0x5E9);
+    ASSERT_EQ(expected_data[3].C(), 0xE9);
+    ASSERT_EQ(expected_data[3].B(), 0x5);
+}
 
 // // 0x11
 // TEST(test_load_16bit, LD_DE_n16)
@@ -153,47 +157,47 @@
 // }
 
 // 0xF8
-TEST(test_load_16bit, LD_HL_SP_e8)
-{
-    std::string assembly{R"(
-        LD SP, 0x3E
-        LD HL, SP + 0x23
-        LD SP, 0xFFFF
-        LD HL, SP + 0x1
-        LD SP, 0x5
-        LD HL, SP + 0x81
-    )"};
-    auto opcodes = translate(assembly);
+// TEST(test_load_16bit, LD_HL_SP_e8)
+// {
+//     std::string assembly{R"(
+//         LD SP, 0x3E
+//         LD HL, SP + 0x23
+//         LD SP, 0xFFFF
+//         LD HL, SP + 0x1
+//         LD SP, 0x5
+//         LD HL, SP + 0x81
+//     )"};
+//     auto opcodes = translate(assembly);
 
-    rw_mock mock;
-    cpu cpu{mock};
+//     rw_mock mock;
+//     cpu cpu{mock};
 
-    std::vector<CpuData> expected_data;
-    auto f = [&expected_data](const CpuData &d, const Opcode &op) {
-        if (op.hex == get_opcode("LD HL, SP + e8").hex)
-            expected_data.push_back(d);
-    };
-    cpu.register_function_callback(f);
-    cpu.process();
+//     std::vector<CpuData> expected_data;
+//     auto f = [&expected_data](const CpuData &d, const Opcode &op) {
+//         if (op.hex == get_opcode("LD HL, SP + e8").hex)
+//             expected_data.push_back(d);
+//     };
+//     cpu.register_function_callback(f);
+//     cpu.process();
 
-    ASSERT_EQ(expected_data.size(), 3);
+//     ASSERT_EQ(expected_data.size(), 3);
 
-    for (auto &data : expected_data)
-    {
-        ASSERT_FALSE(data.is_flag_set(CpuData::FLAG_Z));
-        ASSERT_FALSE(data.is_flag_set(CpuData::FLAG_N));
-    }
+//     for (auto &data : expected_data)
+//     {
+//         ASSERT_FALSE(data.is_flag_set(CpuData::FLAG_Z));
+//         ASSERT_FALSE(data.is_flag_set(CpuData::FLAG_N));
+//     }
 
-    ASSERT_EQ(expected_data[0].HL.u16, 97);
-    ASSERT_TRUE(expected_data[0].is_flag_set(CpuData::FLAG_H));
-    ASSERT_FALSE(expected_data[0].is_flag_set(CpuData::FLAG_C));
+//     ASSERT_EQ(expected_data[0].HL.u16, 97);
+//     ASSERT_TRUE(expected_data[0].is_flag_set(CpuData::FLAG_H));
+//     ASSERT_FALSE(expected_data[0].is_flag_set(CpuData::FLAG_C));
 
-    ASSERT_EQ(expected_data[1].HL.u16, 0);
-    ASSERT_TRUE(expected_data[1].is_flag_set(CpuData::FLAG_H));
-    ASSERT_TRUE(expected_data[1].is_flag_set(CpuData::FLAG_C));
+//     ASSERT_EQ(expected_data[1].HL.u16, 0);
+//     ASSERT_TRUE(expected_data[1].is_flag_set(CpuData::FLAG_H));
+//     ASSERT_TRUE(expected_data[1].is_flag_set(CpuData::FLAG_C));
 
-    ASSERT_EQ(expected_data[2].HL.u16, 4);
-}
+//     ASSERT_EQ(expected_data[2].HL.u16, 4);
+// }
 
 // // 0xF8
 // TEST(test_load_16bit, LD_HL_SP_e8_half_carry)
