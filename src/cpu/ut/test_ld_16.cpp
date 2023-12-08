@@ -333,89 +333,117 @@ TEST(test_load_16bit, LD_SP_HL)
 }
 
 // // 0xC5
-// TEST(test_load_16bit, PUSH_BC)
-// {
-//     std::string assembly{R"(
-//         LD SP, 0xA
-//         LD BC, 0x548A
-//         PUSH BC
-//     )"};
-//     auto opcodes = translate(assembly);
-//     Cpu cpu{opcodes};
+TEST(test_load_16bit, PUSH_BC)
+{
+    std::string assembly{R"(
+        LD SP, 0xFF
+        LD BC, 0x548A
+        PUSH BC
+    )"};
+    auto opcodes = translate(assembly);
+    rw_mock mock{opcodes};
+    registers expected_data;
+    cpu cpu{mock, [&expected_data](registers const &regs, opcode const &op, uint8_t wait_cycles) {
+                if (op.m_hex == get_opcode("PUSH BC").m_hex)
+                {
+                    assert(wait_cycles == 16);
+                    expected_data = regs;
+                    return true;
+                }
+                return false;
+            }};
+    cpu.start();
 
-//     CpuData expected_data;
-//     auto f = [&expected_data](const CpuData &d, const Opcode &op) { expected_data = d; };
-//     cpu.register_function_callback(f);
-//     cpu.process();
+    // Is stack decremented by 2 bytes
+    ASSERT_EQ(expected_data.SP(), 0xFD);
+    ASSERT_EQ(mock.m_ram[expected_data.SP()], 0x8A);
+    ASSERT_EQ(mock.m_ram[expected_data.SP() + 1], 0x54);
+}
 
-//     // Is stack decremented by 2 bytes
-//     ASSERT_EQ(expected_data.SP.u16, 8);
-//     ASSERT_EQ(read_word_from_stack(expected_data), 0x548A);
-// }
+// 0xD5
+TEST(test_load_16bit, PUSH_DE)
+{
+    std::string assembly{R"(
+        LD SP, 0xFFBB
+        LD DE, 0xAAFF
+        PUSH DE
+    )"};
+    auto opcodes = translate(assembly);
+    rw_mock mock{opcodes};
+    registers expected_data;
+    cpu cpu{mock, [&expected_data](registers const &regs, opcode const &op, uint8_t wait_cycles) {
+                if (op.m_hex == get_opcode("PUSH DE").m_hex)
+                {
+                    assert(wait_cycles == 16);
+                    expected_data = regs;
+                    return true;
+                }
+                return false;
+            }};
+    cpu.start();
 
-// // 0xD5
-// TEST(test_load_16bit, PUSH_DE)
-// {
-//     std::string assembly{R"(
-//         LD SP, 0xBB
-//         LD DE, 0xAAFF
-//         PUSH DE
-//     )"};
-//     auto opcodes = translate(assembly);
-//     Cpu cpu{opcodes};
+    // Is stack decremented by 2 bytes
+    ASSERT_EQ(expected_data.SP(), 0xFFB9);
+    ASSERT_EQ(mock.m_ram[expected_data.SP()], 0xFF);
+    ASSERT_EQ(mock.m_ram[expected_data.SP() + 1], 0xAA);
+}
 
-//     CpuData expected_data;
-//     auto f = [&expected_data](const CpuData &d, const Opcode &op) { expected_data = d; };
-//     cpu.register_function_callback(f);
-//     cpu.process();
+// 0xE5
+TEST(test_load_16bit, PUSH_HL)
+{
+    std::string assembly{R"(
+        LD SP, 0xFFAB
+        LD HL, 0x1234
+        PUSH HL
+    )"};
+    auto opcodes = translate(assembly);
+    rw_mock mock{opcodes};
+    registers expected_data;
+    cpu cpu{mock, [&expected_data](registers const &regs, opcode const &op, uint8_t wait_cycles) {
+                if (op.m_hex == get_opcode("PUSH HL").m_hex)
+                {
+                    assert(wait_cycles == 16);
+                    expected_data = regs;
+                    return true;
+                }
+                return false;
+            }};
+    cpu.start();
 
-//     // Is stack decremented by 2 bytes
-//     ASSERT_EQ(expected_data.SP.u16, 0xBB - 2);
-//     ASSERT_EQ(read_word_from_stack(expected_data), 0xAAFF);
-// }
+    // Is stack decremented by 2 bytes
+    ASSERT_EQ(expected_data.SP(), 0xFFA9);
+    ASSERT_EQ(mock.m_ram[expected_data.SP()], 0x34);
+    ASSERT_EQ(mock.m_ram[expected_data.SP() + 1], 0x12);
+}
 
-// // 0xE5
-// TEST(test_load_16bit, PUSH_HL)
-// {
-//     std::string assembly{R"(
-//         LD SP, 0xAB
-//         LD HL, 0x1234
-//         PUSH HL
-//     )"};
-//     auto opcodes = translate(assembly);
-//     Cpu cpu{opcodes};
+// 0xF5
+TEST(test_load_16bit, PUSH_AF)
+{
+    std::string assembly{R"(
+        LD SP, 0x100
+        LD DE, 0xBD00
+        LD A, D
+        PUSH AF
+    )"};
+    auto opcodes = translate(assembly);
+    rw_mock mock{opcodes};
+    registers expected_data;
+    cpu cpu{mock, [&expected_data](registers const &regs, opcode const &op, uint8_t wait_cycles) {
+                if (op.m_hex == get_opcode("PUSH AF").m_hex)
+                {
+                    assert(wait_cycles == 16);
+                    expected_data = regs;
+                    return true;
+                }
+                return false;
+            }};
+    cpu.start();
 
-//     CpuData expected_data;
-//     auto f = [&expected_data](const CpuData &d, const Opcode &op) { expected_data = d; };
-//     cpu.register_function_callback(f);
-//     cpu.process();
-
-//     // Is stack decremented by 2 bytes
-//     ASSERT_EQ(expected_data.SP.u16, 0xAB - 2);
-//     ASSERT_EQ(read_word_from_stack(expected_data), 0x1234);
-// }
-
-// // 0xF5
-// TEST(test_load_16bit, PUSH_AF)
-// {
-//     std::string assembly{R"(
-//         LD SP, 0x100
-//         LD DE, 0xBD00
-//         LD A, D
-//         PUSH AF
-//     )"};
-//     auto opcodes = translate(assembly);
-//     Cpu cpu{opcodes};
-
-//     CpuData expected_data;
-//     auto f = [&expected_data](const CpuData &d, const Opcode &op) { expected_data = d; };
-//     cpu.register_function_callback(f);
-//     cpu.process();
-
-//     // Is stack decremented by 2 bytes
-//     ASSERT_EQ(expected_data.SP.u16, 0x0100 - 2);
-//     ASSERT_EQ(read_word_from_stack(expected_data), 0xBD00);
-// }
+    // Is stack decremented by 2 bytes
+    ASSERT_EQ(expected_data.SP(), 0xFE);
+    ASSERT_EQ(mock.m_ram[expected_data.SP()], 0x00);
+    ASSERT_EQ(mock.m_ram[expected_data.SP() + 1], 0xBD);
+}
 
 // // 0xC1
 // TEST(test_load_16bit, pop_BC)

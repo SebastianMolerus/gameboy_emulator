@@ -26,8 +26,10 @@ uint8_t cpu::ld()
     case 0xF5: // push AF
     case 0xD5: // push DE
     case 0xE5: // push HL
-        // push();
+        return push();
         break;
+    case 0x7A:
+        return LD_REG8_REG8();
     default:
         assert(false);
     }
@@ -95,5 +97,31 @@ uint8_t cpu::LD_Ia16I_SP()
 uint8_t cpu::LD_SP_HL()
 {
     m_reg.get_word("SP") = m_reg.get_word("HL");
+    return m_op.m_cycles[0];
+}
+
+uint8_t cpu::push()
+{
+    assert(m_op.m_operands[0].m_name);
+
+    // Do we have enough space
+    assert(m_reg.SP() >= 2);
+
+    // decrease stack first
+    m_reg.SP() -= 2;
+
+    uint16_t const source_REG = m_reg.get_word(m_op.m_operands[0].m_name);
+
+    m_rw_device.write(m_reg.SP(), source_REG);
+    m_rw_device.write(m_reg.SP() + 1, source_REG >> 8);
+
+    return m_op.m_cycles[0];
+}
+
+uint8_t cpu::LD_REG8_REG8()
+{
+    assert(m_op.m_operands[0].m_name);
+    assert(m_op.m_operands[1].m_name);
+    m_reg.get_byte(m_op.m_operands[0].m_name) = m_reg.get_byte(m_op.m_operands[1].m_name);
     return m_op.m_cycles[0];
 }

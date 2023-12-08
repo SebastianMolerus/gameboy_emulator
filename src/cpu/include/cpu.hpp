@@ -45,6 +45,8 @@ class cpu
     uint8_t LD_REG16_n16();
     uint8_t LD_Ia16I_SP();
     uint8_t LD_SP_HL();
+    uint8_t push();
+    uint8_t LD_REG8_REG8();
 };
 
 #endif

@@ -101,7 +101,24 @@ struct registers
         {
             return SP();
         }
+        else if (strcmp(reg, "AF") == 0)
+        {
+            return AF();
+        }
 
+        assert(false);
+    }
+
+    uint8_t &get_byte(const char *reg)
+    {
+        if (strcmp(reg, "A") == 0)
+        {
+            return A();
+        }
+        if (strcmp(reg, "D") == 0)
+        {
+            return D();
+        }
         assert(false);
     }
 

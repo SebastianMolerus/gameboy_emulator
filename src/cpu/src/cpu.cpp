@@ -1,7 +1,8 @@
 #include <cassert>
 #include <cpu.hpp>
 
-const std::unordered_map<const char *, cpu::processing_func> cpu::m_mapper{{"LD", &cpu::ld}, {"LDH", &cpu::ld}};
+const std::unordered_map<const char *, cpu::processing_func> cpu::m_mapper{
+    {"LD", &cpu::ld}, {"LDH", &cpu::ld}, {"PUSH", &cpu::ld}};
 
 cpu::cpu(rw_device &rw_device, cb callback) : m_rw_device{rw_device}, m_callback{callback}
 {
