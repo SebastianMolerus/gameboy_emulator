@@ -1,5 +1,7 @@
 #include <cassert>
 #include <cpu.hpp>
+#include <sstream>
+#include <stdexcept>
 
 const std::unordered_map<const char *, cpu::processing_func> cpu::m_mapper{
     {"LD", &cpu::ld}, {"LDH", &cpu::ld}, {"PUSH", &cpu::ld}, {"POP", &cpu::ld}};
@@ -17,7 +19,12 @@ void cpu::start()
         m_op = get_opcode(hex);
 
         auto func = m_mapper.find(m_op.m_mnemonic);
-        assert(func != m_mapper.end());
+        if (func == m_mapper.end())
+        {
+            std::stringstream ss;
+            ss << "CPU: cannot find [" << m_op.m_mnemonic << "] in mapped functions.";
+            throw std::runtime_error(ss.str());
+        }
 
         for (auto i = 0; i < m_op.m_bytes - 1; ++i)
             m_op.m_data[i] = read_byte();

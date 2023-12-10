@@ -1,4 +1,6 @@
 #include <gtest/gtest.h>
+#include <iostream>
+#include <sstream>
 #include <translator.hpp>
 #include <utils.h>
 
@@ -684,151 +686,73 @@ TEST(test_load_8bit, LD_REG8_IHLI_)
     ASSERT_EQ(expected_data[6], 0x09);
 }
 
-// namespace
-// {
+// Combination of loads from [A B C D E H L] registers to [A B C D E H L] registers
+// 0x40 0x41 0x42 0x43 0x44 0x45
+// 0x50 0x51 0x52 0x53 0x54 0x55
+// 0x60 0x61 0x62 0x63 0x64 0x65
+// 0x47 0x48 0x49 0x4A 0x4B 0x4C 0x4D
+// 0x57 0x58 0x59 0x5A 0x5B 0x5C 0x5D
+// 0x67 0x68 0x69 0x6A 0x6B 0x6C 0x6D
+// 0x78 0x79 0x7A 0x7B 0x7C 0x7D
+// 0x4F 0x5F 0x6F 0x7F
+uint8_t test(std::span<uint8_t> opcodes, uint8_t source_value)
+{
+    rw_mock mock{opcodes};
+    uint8_t expected_data;
+    int instruction_cc{};
+    cpu cpu{mock,
+            [&expected_data, &mock, &instruction_cc](registers const &regs, opcode const &op, uint8_t wait_cycles) {
+                ++instruction_cc;
+                if (instruction_cc == 2)
+                {
+                    expected_data = regs.get_byte(op.m_operands[0].m_name);
+                    return true;
+                }
+                else
+                    return false;
+            }};
+    cpu.start();
+    return expected_data;
+}
 
-// template <typename T> std::string hex_string(T value)
-// {
-//     std::stringstream ss;
-//     ss << "0x" << std::setfill('0') << std::setw(4) << std::hex << value;
-//     return ss.str();
-// }
+TEST(test_load_8bit, LD_REG8_REG8)
+{
+    srand((unsigned)time(NULL));
+    std::vector<uint8_t> opcodes_to_cover{0x40, 0x41, 0x42, 0x43, 0x44, 0x45, 0x50, 0x51, 0x52, 0x53, 0x54, 0x55, 0x60,
+                                          0x61, 0x62, 0x63, 0x64, 0x65, 0x47, 0x48, 0x49, 0x4A, 0x4B, 0x4C, 0x4D, 0x57,
+                                          0x58, 0x59, 0x5A, 0x5B, 0x5C, 0x5D, 0x67, 0x68, 0x69, 0x6A, 0x6B, 0x6C, 0x6D,
+                                          0x78, 0x79, 0x7A, 0x7B, 0x7C, 0x7D, 0x4F, 0x5F, 0x6F, 0x7F};
 
-// std::vector<uint8_t> fill_source(std::string_view src, uint8_t value)
-// {
-//     std::string assembly{"LD "};
-//     assembly += src;
-//     assembly += ", ";
-//     assembly += hex_string(value);
-//     return translate(assembly);
-// }
+    for (auto source : {'A', 'B', 'C', 'D', 'E', 'H', 'L'})
+        for (auto destination : {'A', 'B', 'C', 'D', 'E', 'H', 'L'})
+        {
 
-// std::vector<uint8_t> fill_destination(std::string_view dest, std::string_view src)
-// {
-//     std::string assembly{"LD "};
-//     assembly += dest;
-//     assembly += ", ";
-//     assembly += src;
-//     return translate(assembly);
-// }
+            int source_value = rand();
+            source_value &= 0xFF;
+            std::stringstream ss;
+            ss << "0x" << std::hex << source_value;
 
-// } // namespace
+            std::string cmd = "LD ";
+            cmd += source;
+            cmd += ", ";
+            cmd += ss.str();
+            cmd += '\n';
 
-// // 0x40 - 0x7F, without 0x76 ( halt )
-// TEST(test_load_8bit, LD_REG8_REG8)
-// {
-//     srand((unsigned)time(0));
-//     for (auto &src : {"A", "B", "C", "D", "E", "H", "L"})
-//         for (auto &dst : {"A", "B", "C", "D", "E", "H", "L"})
-//         {
-//             auto const some_value = rand() % std::numeric_limits<uint8_t>::max();
+            cmd += "LD ";
+            cmd += destination;
+            cmd += ", ";
+            cmd += source;
 
-//             auto op1 = fill_source(src, some_value);
-//             auto op2 = fill_destination(dst, src);
-//             op1.insert(op1.end(), op2.begin(), op2.end());
+            auto opcodes = translate(cmd);
+            ASSERT_EQ(opcodes.size(), 3);
 
-//             Cpu cpu{op1};
+            auto dest_value = test(opcodes, source_value);
 
-//             CpuData expected_data;
-//             auto f = [&expected_data](const CpuData &d, const Opcode &op) { expected_data = d; };
-//             cpu.register_function_callback(f);
-//             cpu.process();
+            ASSERT_EQ(dest_value, source_value) << "DEBUG INFO: " << cmd;
 
-//             std::stringstream ss;
-//             ss << "Assembly\n";
-//             ss << "LD " << src << ", " << hex_string(some_value) << "\n";
-//             ss << "LD " << dst << ", " << src << "\n";
+            opcodes_to_cover.erase(remove(opcodes_to_cover.begin(), opcodes_to_cover.end(), opcodes[2]),
+                                   opcodes_to_cover.end());
+        }
 
-//             ASSERT_EQ(*expected_data.get_byte(dst), *expected_data.get_byte(src)) << ss.str();
-//         }
-// }
-
-// namespace
-// {
-// std::vector<uint8_t> prepare_HL(uint16_t value)
-// {
-//     std::string assembly{"LD SP, "};
-//     assembly += hex_string(value);
-//     assembly += '\n';
-
-//     assembly += std::string{R"(
-//             LD [0xABCD], SP
-//             LD HL, 0xABCD
-//         )"};
-//     return translate(assembly);
-// }
-// } // namespace
-
-// // 0x40 - 0x7F, without 0x76 ( halt )
-// TEST(test_load_8bit, LD_REG8_IHLI)
-// {
-//     auto const src = "[HL]";
-//     for (auto &dst : {"A", "B", "C", "D", "E", "H", "L"})
-//     {
-//         auto const some_value = rand() % std::numeric_limits<uint16_t>::max();
-
-//         auto opcodes = prepare_HL(some_value);
-
-//         std::string assembly{"LD "};
-//         assembly += dst;
-//         assembly += ", ";
-//         assembly += src;
-
-//         auto cmd = translate(assembly);
-
-//         opcodes.insert(opcodes.end(), cmd.begin(), cmd.end());
-
-//         Cpu cpu{opcodes};
-
-//         CpuData expected_data;
-//         auto f = [&expected_data](const CpuData &d, const Opcode &op) { expected_data = d; };
-//         cpu.register_function_callback(f);
-//         cpu.process();
-
-//         ASSERT_EQ(*expected_data.get_byte(dst), static_cast<uint8_t>(some_value)) << assembly;
-//     }
-// }
-
-// // 0x40 - 0x7F, without 0x76 ( halt )
-// TEST(test_load_8bit, LD_IHLI_REG8)
-// {
-//     auto const dst = "[HL]";
-//     for (auto &src : {"A", "B", "C", "D", "E", "H", "L"})
-//     {
-//         auto const some_value = rand() % std::numeric_limits<uint8_t>::max();
-
-//         std::string assembly{"LD HL, 0xAB0F\n"};
-//         assembly += "LD ";
-//         assembly += src;
-//         assembly += ", ";
-//         assembly += hex_string(some_value);
-//         assembly += "\n";
-//         assembly += "LD ";
-//         assembly += dst;
-//         assembly += ", ";
-//         assembly += src;
-//         auto cmd = translate(assembly);
-
-//         Cpu cpu{cmd};
-
-//         CpuData expected_data;
-//         auto f = [&expected_data](const CpuData &d, const Opcode &op) { expected_data = d; };
-//         cpu.register_function_callback(f);
-//         cpu.process();
-
-//         ASSERT_EQ(*expected_data.get_byte(src), some_value) << assembly;
-
-//         uint16_t addr{0xAB0F};
-//         if (strcmp(src, "H") == 0)
-//         {
-//             addr &= 0x00FF;
-//             addr |= static_cast<uint16_t>(some_value << 8);
-//         }
-//         if (strcmp(src, "L") == 0)
-//         {
-//             addr &= 0xFF00;
-//             addr |= static_cast<uint16_t>(some_value);
-//         }
-//         ASSERT_EQ(expected_data.m_memory[addr], some_value) << assembly;
-//     }
-// }
+    ASSERT_EQ(opcodes_to_cover.size(), 0);
+}
