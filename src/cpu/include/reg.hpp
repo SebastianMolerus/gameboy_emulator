@@ -3,6 +3,7 @@
 
 #include <cassert>
 #include <cstdint>
+#include <cstring>
 
 typedef union {
     uint16_t m_u16;
