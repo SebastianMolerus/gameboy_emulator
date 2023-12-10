@@ -55,6 +55,8 @@ class cpu
     uint8_t LDH();
     uint8_t LD_REG8_IREG16I();
     uint8_t LD_Ia16I_A();
+    uint8_t LD_ICI_A();
+    uint8_t LD_IHLI_REG8();
 };
 
 #endif

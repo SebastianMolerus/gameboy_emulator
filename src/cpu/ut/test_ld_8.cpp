@@ -516,6 +516,174 @@ TEST(test_load_8bit, LD_A_Ia16I)
     ASSERT_EQ(expected_data.A(), 0x67);
 }
 
+// 0xE2
+TEST(test_load_8bit, LD_ICI_A)
+{
+    std::string assembly{R"(
+         LD A, 0x71
+         LD C, 0x39
+         LD [C], A
+     )"};
+    auto opcodes = translate(assembly);
+    rw_mock mock{opcodes};
+    cpu cpu{mock, [](registers const &regs, opcode const &op, uint8_t wait_cycles) {
+                if (get_opcode("LD [C], A").m_hex == op.m_hex)
+                {
+                    assert(wait_cycles == 8);
+                    return true;
+                }
+                return false;
+            }};
+    cpu.start();
+
+    ASSERT_EQ(mock.m_ram[0xFF39], 0x71);
+}
+
+// 0xF2
+TEST(test_load_8bit, LD_A_ICI)
+{
+    std::string assembly{R"(
+         LD C, 0xEB
+         LD A, [C]
+     )"};
+    auto opcodes = translate(assembly);
+    rw_mock mock{opcodes};
+    mock.m_ram[0xFFEB] = 0x8E;
+    registers expected_data;
+    cpu cpu{mock, [&expected_data](registers const &regs, opcode const &op, uint8_t wait_cycles) {
+                if (get_opcode("LD A, [C]").m_hex == op.m_hex)
+                {
+                    expected_data = regs;
+                    assert(wait_cycles == 8);
+                    return true;
+                }
+                return false;
+            }};
+    cpu.start();
+
+    ASSERT_EQ(expected_data.A(), 0x8E);
+}
+
+// 0x70 0x71 0x72 0x73 0x77
+TEST(test_load_8bit, LD_IHLI_reg8)
+{
+    std::string assembly{R"(
+        LD B, 0x1
+        LD C, 0x2
+        LD D, 0x3
+        LD E, 0x4
+        LD A, 0x5
+        LD HL, 0xF1F2
+        LD [HL], B
+        LD [HL], C
+        LD [HL], D
+        LD [HL], E
+        LD [HL], A
+     )"};
+    auto opcodes = translate(assembly);
+    rw_mock mock{opcodes};
+    std::vector<uint8_t> expected_data;
+    cpu cpu{mock, [&expected_data, &mock](registers const &regs, opcode const &op, uint8_t wait_cycles) {
+                if (op.m_hex >= 0x70 && op.m_hex <= 0x77)
+                {
+                    assert(wait_cycles == 8);
+                    expected_data.push_back(mock.m_ram[0xF1F2]);
+                }
+
+                if (get_opcode("LD [HL], A").m_hex == op.m_hex)
+                    return true;
+
+                return false;
+            }};
+    cpu.start();
+
+    ASSERT_EQ(expected_data[0], 0x1);
+    ASSERT_EQ(expected_data[1], 0x2);
+    ASSERT_EQ(expected_data[2], 0x3);
+    ASSERT_EQ(expected_data[3], 0x4);
+    ASSERT_EQ(expected_data[4], 0x5);
+}
+
+// 0x74 0x75
+TEST(test_load_8bit, LD_IHLI_H_or_L)
+{
+    std::string assembly{R"(
+        LD HL, 0x659D
+        LD [HL], L
+        LD HL, 0x659D
+        LD [HL], H
+     )"};
+    auto opcodes = translate(assembly);
+    rw_mock mock{opcodes};
+    std::vector<uint8_t> expected_data;
+    cpu cpu{mock, [&expected_data, &mock](registers const &regs, opcode const &op, uint8_t wait_cycles) {
+                if (op.m_hex >= 0x74 && op.m_hex <= 0x75)
+                {
+                    assert(wait_cycles == 8);
+                    expected_data.push_back(mock.m_ram[0x659D]);
+                }
+
+                if (get_opcode("LD [HL], H").m_hex == op.m_hex)
+                    return true;
+
+                return false;
+            }};
+    cpu.start();
+
+    ASSERT_EQ(expected_data.size(), 2);
+    ASSERT_EQ(expected_data[0], 0x9D);
+    ASSERT_EQ(expected_data[1], 0x65);
+}
+
+// 0x46 0x56 0x66 0x4E 0x5E 0x6E 0x7E
+TEST(test_load_8bit, LD_REG8_IHLI_)
+{
+    std::string assembly{R"(
+        LD HL, 0x1234
+        LD B, [HL]
+        LD D, [HL]
+        LD H, [HL]
+        LD C, [HL]
+        LD E, [HL]
+        LD L, [HL]
+        LD A, [HL]
+     )"};
+    auto opcodes = translate(assembly);
+    rw_mock mock{opcodes};
+    mock.m_ram[0x1234] = 0x5F;
+    mock.m_ram[0x5F34] = 0x66;
+    mock.m_ram[0x5F66] = 0x09;
+
+    std::vector<uint8_t> expected_data;
+    cpu cpu{mock, [&expected_data, &mock](registers const &regs, opcode const &op, uint8_t wait_cycles) {
+                if (op.m_hex != 0x21)
+                {
+                    assert(wait_cycles == 8);
+                    expected_data.push_back(regs.get_byte(op.m_operands[0].m_name));
+                }
+
+                if (get_opcode("LD A, [HL]").m_hex == op.m_hex)
+                    return true;
+
+                return false;
+            }};
+    cpu.start();
+
+    ASSERT_EQ(expected_data.size(), 7);
+
+    ASSERT_EQ(expected_data[0], 0x5F);
+    ASSERT_EQ(expected_data[1], 0x5F);
+    ASSERT_EQ(expected_data[2], 0x5F);
+
+    // 0x5F34
+    ASSERT_EQ(expected_data[3], 0x66);
+    ASSERT_EQ(expected_data[4], 0x66);
+    ASSERT_EQ(expected_data[5], 0x66);
+
+    // 0x5F66
+    ASSERT_EQ(expected_data[6], 0x09);
+}
+
 // namespace
 // {
 

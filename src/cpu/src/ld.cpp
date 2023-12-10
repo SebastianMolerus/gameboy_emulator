@@ -22,6 +22,14 @@ uint8_t cpu::ld()
     case 0x56:
     case 0x66:
         return LD_REG8_IREG16I();
+    case 0x70:
+    case 0x71:
+    case 0x72:
+    case 0x73:
+    case 0x74:
+    case 0x75:
+    case 0x77:
+        return LD_IHLI_REG8();
     case 0x06:
     case 0x16:
     case 0x26:
@@ -45,6 +53,9 @@ uint8_t cpu::ld()
     case 0xEA:
     case 0xFA:
         return LD_Ia16I_A();
+    case 0xE2:
+    case 0xF2:
+        return LD_ICI_A();
     case 0xE0:
     case 0xF0:
         return LDH();
@@ -265,5 +276,32 @@ uint8_t cpu::LD_Ia16I_A()
         m_rw_device.write(addr, m_reg.A());
     }
 
+    return m_op.m_cycles[0];
+}
+
+uint8_t cpu::LD_ICI_A()
+{
+    assert(m_op.m_operands[0].m_name);
+    assert(m_op.m_operands[1].m_name);
+
+    // LD A, [C] -> LD A, [C + 0xFF00]
+    if (m_op.m_operands[0].m_immediate == 1)
+    {
+        m_reg.A() = m_rw_device.read(m_reg.C() + 0xFF00);
+    }
+
+    // LD [C], A -> LD [C + 0xFF00], A
+    if (m_op.m_operands[1].m_immediate == 1)
+    {
+        m_rw_device.write(m_reg.C() + 0xFF00, m_reg.A());
+    }
+
+    return m_op.m_cycles[0];
+}
+
+uint8_t cpu::LD_IHLI_REG8()
+{
+    assert(m_op.m_operands[1].m_name);
+    m_rw_device.write(m_reg.HL(), m_reg.get_byte(m_op.m_operands[1].m_name));
     return m_op.m_cycles[0];
 }

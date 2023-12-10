@@ -111,6 +111,11 @@ struct registers
         return ret;
     }
 
+    uint8_t get_byte(const char *reg) const
+    {
+        return const_cast<registers *>(this)->get_byte(reg);
+    }
+
     uint8_t &get_byte(const char *reg)
     {
         if (strcmp(reg, "A") == 0)
