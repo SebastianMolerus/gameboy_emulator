@@ -13,5 +13,3 @@ find_package(GTest CONFIG REQUIRED)
 add_subdirectory(src)
 
 add_executable(RM_GB_Emu_App src/main.cpp)
-
-target_link_libraries(RM_GB_Emu_App PRIVATE cartridge_loader cpu)

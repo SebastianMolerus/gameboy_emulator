@@ -107,139 +107,139 @@ TEST_F(DecoderTests, operands_B)
 {
     opcode op = get_opcode(0x32);
 
-    Operand const op1 = op.operands[0];
-    ASSERT_EQ(op1.name, "HL");
-    ASSERT_EQ(op1.increment, -1);
-    ASSERT_EQ(op1.immediate, 0);
-    ASSERT_EQ(op1.decrement, 1);
-    ASSERT_EQ(op1.bytes, -1);
+    operand const op1 = op.m_operands[0];
+    ASSERT_EQ(op1.m_name, "HL");
+    ASSERT_EQ(op1.m_increment, -1);
+    ASSERT_EQ(op1.m_immediate, 0);
+    ASSERT_EQ(op1.m_decrement, 1);
+    ASSERT_EQ(op1.m_bytes, -1);
 
-    Operand const op2 = op.operands[1];
-    ASSERT_EQ(op2.name, "A");
-    ASSERT_EQ(op2.immediate, 1);
-    ASSERT_EQ(op2.increment, -1);
-    ASSERT_EQ(op2.decrement, -1);
-    ASSERT_EQ(op2.bytes, -1);
+    operand const op2 = op.m_operands[1];
+    ASSERT_EQ(op2.m_name, "A");
+    ASSERT_EQ(op2.m_immediate, 1);
+    ASSERT_EQ(op2.m_increment, -1);
+    ASSERT_EQ(op2.m_decrement, -1);
+    ASSERT_EQ(op2.m_bytes, -1);
 
-    ASSERT_EQ(op.operands[2].name, nullptr);
+    ASSERT_EQ(op.m_operands[2].m_name, nullptr);
 }
 
 TEST_F(DecoderTests, operands_C)
 {
     opcode op = get_opcode(0x01);
 
-    Operand const op1 = op.operands[0];
-    ASSERT_EQ(op1.name, "BC");
-    ASSERT_EQ(op1.increment, -1);
-    ASSERT_EQ(op1.immediate, 1);
-    ASSERT_EQ(op1.decrement, -1);
-    ASSERT_EQ(op1.bytes, -1);
+    operand const op1 = op.m_operands[0];
+    ASSERT_EQ(op1.m_name, "BC");
+    ASSERT_EQ(op1.m_increment, -1);
+    ASSERT_EQ(op1.m_immediate, 1);
+    ASSERT_EQ(op1.m_decrement, -1);
+    ASSERT_EQ(op1.m_bytes, -1);
 
-    Operand const op2 = op.operands[1];
-    ASSERT_EQ(op2.name, "n16");
-    ASSERT_EQ(op2.immediate, 1);
-    ASSERT_EQ(op2.increment, -1);
-    ASSERT_EQ(op2.decrement, -1);
-    ASSERT_EQ(op2.bytes, 2);
+    operand const op2 = op.m_operands[1];
+    ASSERT_EQ(op2.m_name, "n16");
+    ASSERT_EQ(op2.m_immediate, 1);
+    ASSERT_EQ(op2.m_increment, -1);
+    ASSERT_EQ(op2.m_decrement, -1);
+    ASSERT_EQ(op2.m_bytes, 2);
 
-    ASSERT_EQ(op.operands[2].name, nullptr);
+    ASSERT_EQ(op.m_operands[2].m_name, nullptr);
 }
 
 TEST_F(DecoderTests, operands_D)
 {
     opcode op = get_opcode(0xF8);
 
-    Operand const op1 = op.operands[0];
-    ASSERT_EQ(op1.name, "HL");
-    ASSERT_EQ(op1.increment, -1);
-    ASSERT_EQ(op1.immediate, 1);
-    ASSERT_EQ(op1.decrement, -1);
-    ASSERT_EQ(op1.bytes, -1);
+    operand const op1 = op.m_operands[0];
+    ASSERT_EQ(op1.m_name, "HL");
+    ASSERT_EQ(op1.m_increment, -1);
+    ASSERT_EQ(op1.m_immediate, 1);
+    ASSERT_EQ(op1.m_decrement, -1);
+    ASSERT_EQ(op1.m_bytes, -1);
 
-    Operand const op2 = op.operands[1];
-    ASSERT_EQ(op2.name, "SP");
-    ASSERT_EQ(op2.immediate, 1);
-    ASSERT_EQ(op2.increment, 1);
-    ASSERT_EQ(op2.decrement, -1);
-    ASSERT_EQ(op2.bytes, -1);
+    operand const op2 = op.m_operands[1];
+    ASSERT_EQ(op2.m_name, "SP");
+    ASSERT_EQ(op2.m_immediate, 1);
+    ASSERT_EQ(op2.m_increment, 1);
+    ASSERT_EQ(op2.m_decrement, -1);
+    ASSERT_EQ(op2.m_bytes, -1);
 
-    Operand const op3 = op.operands[2];
-    ASSERT_EQ(op3.name, "e8");
-    ASSERT_EQ(op3.immediate, 1);
-    ASSERT_EQ(op3.increment, -1);
-    ASSERT_EQ(op3.decrement, -1);
-    ASSERT_EQ(op3.bytes, 1);
+    operand const op3 = op.m_operands[2];
+    ASSERT_EQ(op3.m_name, "e8");
+    ASSERT_EQ(op3.m_immediate, 1);
+    ASSERT_EQ(op3.m_increment, -1);
+    ASSERT_EQ(op3.m_decrement, -1);
+    ASSERT_EQ(op3.m_bytes, 1);
 }
 
 TEST_F(DecoderTests, flags)
 {
     opcode op = get_opcode(0xF1);
 
-    ASSERT_EQ(op.flags[0], "Z");
-    ASSERT_EQ(op.flags[1], "N");
-    ASSERT_EQ(op.flags[2], "H");
-    ASSERT_EQ(op.flags[3], "C");
+    ASSERT_EQ(op.m_flags[0], "Z");
+    ASSERT_EQ(op.m_flags[1], "N");
+    ASSERT_EQ(op.m_flags[2], "H");
+    ASSERT_EQ(op.m_flags[3], "C");
 
     op = get_opcode(0xF8);
 
-    ASSERT_EQ(op.flags[0], "0");
-    ASSERT_EQ(op.flags[1], "0");
-    ASSERT_EQ(op.flags[2], "H");
-    ASSERT_EQ(op.flags[3], "C");
+    ASSERT_EQ(op.m_flags[0], "0");
+    ASSERT_EQ(op.m_flags[1], "0");
+    ASSERT_EQ(op.m_flags[2], "H");
+    ASSERT_EQ(op.m_flags[3], "C");
 
     op = get_opcode(0x01);
 
-    ASSERT_EQ(op.flags[0], "-");
-    ASSERT_EQ(op.flags[1], "-");
-    ASSERT_EQ(op.flags[2], "-");
-    ASSERT_EQ(op.flags[3], "-");
+    ASSERT_EQ(op.m_flags[0], "-");
+    ASSERT_EQ(op.m_flags[1], "-");
+    ASSERT_EQ(op.m_flags[2], "-");
+    ASSERT_EQ(op.m_flags[3], "-");
 
     op = get_opcode(0x04);
 
-    ASSERT_EQ(op.flags[0], "Z");
-    ASSERT_EQ(op.flags[1], "0");
-    ASSERT_EQ(op.flags[2], "H");
-    ASSERT_EQ(op.flags[3], "-");
+    ASSERT_EQ(op.m_flags[0], "Z");
+    ASSERT_EQ(op.m_flags[1], "0");
+    ASSERT_EQ(op.m_flags[2], "H");
+    ASSERT_EQ(op.m_flags[3], "-");
 }
 
 TEST_F(DecoderTests, loadingCommands)
 {
     opcode op = get_opcode("LD BC, n16");
-    ASSERT_EQ(op.hex, 0x01);
+    ASSERT_EQ(op.m_hex, 0x01);
 
     op = get_opcode("NOP");
-    ASSERT_EQ(op.hex, 0x00);
+    ASSERT_EQ(op.m_hex, 0x00);
 
     op = get_opcode("AND A, [HL]");
-    ASSERT_EQ(op.hex, 0xA6);
+    ASSERT_EQ(op.m_hex, 0xA6);
 
     op = get_opcode("LD [HL+], A");
-    ASSERT_EQ(op.hex, 0x22);
+    ASSERT_EQ(op.m_hex, 0x22);
 
     op = get_opcode("RLCA");
-    ASSERT_EQ(op.hex, 0x07);
+    ASSERT_EQ(op.m_hex, 0x07);
 
     op = get_opcode("LD A, [HL-]");
-    ASSERT_EQ(op.hex, 0x3A);
+    ASSERT_EQ(op.m_hex, 0x3A);
 
     op = get_opcode("LD B, H");
-    ASSERT_EQ(op.hex, 0x44);
+    ASSERT_EQ(op.m_hex, 0x44);
 
     op = get_opcode("PREFIX");
-    ASSERT_EQ(op.hex, 0xCB);
+    ASSERT_EQ(op.m_hex, 0xCB);
 
     op = get_opcode("RES 6, [HL]");
-    ASSERT_EQ(op.hex, 0xB6);
+    ASSERT_EQ(op.m_hex, 0xB6);
 
     op = get_opcode("LD A, [HL+]");
-    ASSERT_EQ(op.hex, 0x2A);
+    ASSERT_EQ(op.m_hex, 0x2A);
 
     op = get_opcode("LD HL, SP + e8");
-    ASSERT_EQ(op.hex, 0xF8);
+    ASSERT_EQ(op.m_hex, 0xF8);
 
     op = get_opcode("LD BC, n16");
-    ASSERT_EQ(op.hex, 0x01);
+    ASSERT_EQ(op.m_hex, 0x01);
 
     op = get_opcode("JR e8");
-    ASSERT_EQ(op.hex, 0x18);
+    ASSERT_EQ(op.m_hex, 0x18);
 }
