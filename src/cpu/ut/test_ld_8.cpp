@@ -474,6 +474,48 @@ TEST(test_load_8bit, LD_A_IHLminusI)
     ASSERT_EQ(expected_data.HL(), 0xFF01);
 }
 
+// 0xEA
+TEST(test_load_8bit, LD_Ia16I_A)
+{
+    std::string assembly{R"(
+         LD A, 0xAC
+         LD [0xDEC5], A
+     )"};
+    auto opcodes = translate(assembly);
+    rw_mock mock{opcodes};
+    cpu cpu{mock, [](registers const &regs, opcode const &op, uint8_t wait_cycles) {
+                if (get_opcode("LD [a16], A").m_hex == op.m_hex)
+                {
+                    assert(wait_cycles == 16);
+                    return true;
+                }
+                return false;
+            }};
+    cpu.start();
+
+    ASSERT_EQ(mock.m_ram[0xDEC5], 0xAC);
+}
+
+// 0xFA
+TEST(test_load_8bit, LD_A_Ia16I)
+{
+    std::string assembly{R"(
+         LD A, [0xAB43]
+     )"};
+    auto opcodes = translate(assembly);
+    rw_mock mock{opcodes};
+    mock.m_ram[0xAB43] = 0x67;
+    registers expected_data;
+    cpu cpu{mock, [&expected_data](registers const &regs, opcode const &op, uint8_t wait_cycles) {
+                expected_data = regs;
+                assert(wait_cycles == 16);
+                return true;
+            }};
+    cpu.start();
+
+    ASSERT_EQ(expected_data.A(), 0x67);
+}
+
 // namespace
 // {
 

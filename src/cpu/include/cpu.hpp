@@ -20,6 +20,8 @@ class cpu
     using cb = std::function<bool(registers const &, opcode const &op, uint8_t)>;
 
   public:
+    // Callback is called after each instruction
+    // registers, opcode and wait time for instruction can be viewed
     cpu(rw_device &rw_device, cb callback = nullptr);
 
     void start();
@@ -52,6 +54,7 @@ class cpu
     uint8_t LD_REG_n8();
     uint8_t LDH();
     uint8_t LD_REG8_IREG16I();
+    uint8_t LD_Ia16I_A();
 };
 
 #endif

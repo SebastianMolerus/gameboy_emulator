@@ -42,6 +42,9 @@ uint8_t cpu::ld()
     case 0x21:
     case 0x31:
         return LD_REG16_n16();
+    case 0xEA:
+    case 0xFA:
+        return LD_Ia16I_A();
     case 0xE0:
     case 0xF0:
         return LDH();
@@ -237,6 +240,30 @@ uint8_t cpu::LD_REG8_IREG16I()
 
     if (m_op.m_operands[1].m_decrement == 1)
         --m_reg.get_word("HL");
+
+    return m_op.m_cycles[0];
+}
+
+uint8_t cpu::LD_Ia16I_A()
+{
+    assert(m_op.m_operands[0].m_name);
+    assert(m_op.m_operands[1].m_name);
+
+    uint16_t addr = m_op.m_data[1];
+    addr <<= 8;
+    addr |= m_op.m_data[0];
+
+    // LD A, [a16]
+    if (m_op.m_operands[0].m_immediate == 1)
+    {
+        m_reg.A() = m_rw_device.read(addr);
+    }
+
+    // LD [a16], A
+    if (m_op.m_operands[1].m_immediate == 1)
+    {
+        m_rw_device.write(addr, m_reg.A());
+    }
 
     return m_op.m_cycles[0];
 }
