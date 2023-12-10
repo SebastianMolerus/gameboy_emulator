@@ -7,7 +7,21 @@ uint8_t cpu::ld()
     {
     case 0x02:
     case 0x12:
+    case 0x22:
+    case 0x32:
         return LD_IREG16I_A();
+    case 0x0A:
+    case 0x1A:
+    case 0x2A:
+    case 0x3A:
+    case 0x4E:
+    case 0x5E:
+    case 0x6E:
+    case 0x7E:
+    case 0x46:
+    case 0x56:
+    case 0x66:
+        return LD_REG8_IREG16I();
     case 0x06:
     case 0x16:
     case 0x26:
@@ -28,6 +42,9 @@ uint8_t cpu::ld()
     case 0x21:
     case 0x31:
         return LD_REG16_n16();
+    case 0xE0:
+    case 0xF0:
+        return LDH();
     case 0xF1: // pop AF
     case 0xC1: // pop BC
     case 0xD1: // pop DE
@@ -162,6 +179,13 @@ uint8_t cpu::LD_IREG16I_A()
 
     const uint16_t addr = m_reg.get_word(m_op.m_operands[0].m_name);
     m_rw_device.write(addr, m_reg.get_byte(m_op.m_operands[1].m_name));
+
+    if (m_op.m_operands[0].m_increment == 1)
+        ++m_reg.get_word("HL");
+
+    if (m_op.m_operands[0].m_decrement == 1)
+        --m_reg.get_word("HL");
+
     return m_op.m_cycles[0];
 }
 
@@ -170,15 +194,49 @@ uint8_t cpu::LD_REG_n8()
     assert(m_op.m_operands[0].m_name);
     uint8_t const value = m_op.m_data[0];
 
-    // LD [HL], n8
     if (!m_op.m_operands[0].m_immediate)
     {
+        // LD [HL], n8
         m_rw_device.write(m_reg.HL(), value);
     }
     else
     {
         m_reg.get_byte(m_op.m_operands[0].m_name) = value;
     }
+
+    return m_op.m_cycles[0];
+}
+
+uint8_t cpu::LDH()
+{
+    // LDH [a8], A -> LDH [a8 + 0xFF00], A
+    if (m_op.m_hex == 0xE0)
+    {
+        m_rw_device.write(m_op.m_data[0] + 0xFF00, m_reg.A());
+    }
+
+    // LDH A, [a8] -> LDH A, [a8 + 0xFF00]
+    if (m_op.m_hex == 0xF0)
+    {
+        m_reg.A() = m_rw_device.read(m_op.m_data[0] + 0xFF00);
+    }
+
+    return m_op.m_cycles[0];
+}
+
+uint8_t cpu::LD_REG8_IREG16I()
+{
+    assert(m_op.m_operands[0].m_name);
+    assert(m_op.m_operands[1].m_name);
+
+    uint8_t const data = m_rw_device.read(m_reg.get_word(m_op.m_operands[1].m_name));
+    m_reg.get_byte(m_op.m_operands[0].m_name) = data;
+
+    if (m_op.m_operands[1].m_increment == 1)
+        ++m_reg.get_word("HL");
+
+    if (m_op.m_operands[1].m_decrement == 1)
+        --m_reg.get_word("HL");
 
     return m_op.m_cycles[0];
 }

@@ -27,101 +27,127 @@ TEST(test_load_8bit, LD_IBCI_A)
     ASSERT_EQ(mock.m_ram[0x59], 0x15);
 }
 
-// // 0x12
-// TEST(test_load_8bit, LD_IDEI_A)
-// {
-//     std::string assembly{R"(
-//         LD DE, 0x789F
-//         LD A, 0xEA
-//         LD [DE], A
-//     )"};
-//     auto opcodes = translate(assembly);
-//     Cpu cpu{opcodes};
+// 0x12
+TEST(test_load_8bit, LD_IDEI_A)
+{
+    std::string assembly{R"(
+        LD DE, 0x789F
+        LD A, 0xEA
+        LD [DE], A
+    )"};
+    auto opcodes = translate(assembly);
+    rw_mock mock{opcodes};
+    cpu cpu{mock, [](registers const &regs, opcode const &op, uint8_t wait_cycles) {
+                if (op.m_hex == get_opcode("LD [DE], A").m_hex)
+                {
+                    assert(wait_cycles == 8);
+                    return true;
+                }
+                return false;
+            }};
+    cpu.start();
 
-//     CpuData expected_data;
-//     auto f = [&expected_data](const CpuData &d, const Opcode &op) { expected_data = d; };
-//     cpu.register_function_callback(f);
-//     cpu.process();
+    ASSERT_EQ(mock.m_ram[0x789F], 0xEA);
+}
 
-//     ASSERT_EQ(expected_data.m_memory[0x789F], 0xEA);
-// }
+// 0x22
+TEST(test_load_8bit, LD_IHLplusI_A)
+{
+    std::string assembly{R"(
+        LD HL, 0x9998
+        LD A, 0x61
+        LD [HL+], A
+    )"};
+    auto opcodes = translate(assembly);
+    rw_mock mock{opcodes};
+    registers expected_data;
+    cpu cpu{mock, [&expected_data](registers const &regs, opcode const &op, uint8_t wait_cycles) {
+                if (op.m_hex == get_opcode("LD [HL+], A").m_hex)
+                {
+                    expected_data = regs;
+                    assert(wait_cycles == 8);
+                    return true;
+                }
+                return false;
+            }};
+    cpu.start();
 
-// // 0x22
-// TEST(test_load_8bit, LD_IHLplusI_A)
-// {
-//     std::string assembly{R"(
-//         LD HL, 0x9998
-//         LD A, 0x61
-//         LD [HL+], A
-//     )"};
-//     auto opcodes = translate(assembly);
-//     Cpu cpu{opcodes};
+    ASSERT_EQ(mock.m_ram[0x9998], 0x61);
+    ASSERT_EQ(expected_data.HL(), 0x9999);
+}
 
-//     CpuData expected_data;
-//     auto f = [&expected_data](const CpuData &d, const Opcode &op) { expected_data = d; };
-//     cpu.register_function_callback(f);
-//     cpu.process();
+// 0x32
+TEST(test_load_8bit, LD_IHLminusI_A)
+{
+    std::string assembly{R"(
+        LD HL, 0x50
+        LD A, 0x51
+        LD [HL-], A
+    )"};
+    auto opcodes = translate(assembly);
+    rw_mock mock{opcodes};
+    registers expected_data;
+    cpu cpu{mock, [&expected_data](registers const &regs, opcode const &op, uint8_t wait_cycles) {
+                if (op.m_hex == get_opcode("LD [HL-], A").m_hex)
+                {
+                    expected_data = regs;
+                    assert(wait_cycles == 8);
+                    return true;
+                }
+                return false;
+            }};
+    cpu.start();
 
-//     ASSERT_EQ(expected_data.m_memory[0x9998], 0x61);
-//     ASSERT_EQ(expected_data.HL.u16, 0x9999);
-// }
+    ASSERT_EQ(mock.m_ram[0x50], 0x51);
+    ASSERT_EQ(expected_data.HL(), 0x4F);
+}
 
-// // 0x32
-// TEST(test_load_8bit, LD_IHLminusI_A)
-// {
-//     std::string assembly{R"(
-//         LD HL, 0x5
-//         LD A, 0x51
-//         LD [HL-], A
-//     )"};
-//     auto opcodes = translate(assembly);
-//     Cpu cpu{opcodes};
+// 0xE0
+TEST(test_load_8bit, LDH_Ia8I_A)
+{
+    std::string assembly{R"(
+        LD A, 0x99
+        LDH [0x15], A
+    )"};
+    auto opcodes = translate(assembly);
+    rw_mock mock{opcodes};
+    cpu cpu{mock, [](registers const &regs, opcode const &op, uint8_t wait_cycles) {
+                if (op.m_hex == get_opcode("LDH [a8], A").m_hex)
+                {
+                    assert(wait_cycles == 12);
+                    return true;
+                }
+                return false;
+            }};
+    cpu.start();
 
-//     CpuData expected_data;
-//     auto f = [&expected_data](const CpuData &d, const Opcode &op) { expected_data = d; };
-//     cpu.register_function_callback(f);
-//     cpu.process();
+    ASSERT_EQ(mock.m_ram[0xFF00 + 0x15], 0x99);
+}
 
-//     ASSERT_EQ(expected_data.m_memory[0x5], 0x51);
-//     ASSERT_EQ(expected_data.HL.u16, 0x4);
-// }
+// 0xF0
+TEST(test_load_8bit, LDH_A_Ia8I)
+{
+    std::string assembly{R"(
+        LD SP, 0x26
+        LD [0xFF87], SP
+        LDH A, [0x87]
+    )"};
+    auto opcodes = translate(assembly);
+    rw_mock mock{opcodes};
+    registers expected_data;
+    cpu cpu{mock, [&expected_data](registers const &regs, opcode const &op, uint8_t wait_cycles) {
+                if (op.m_hex == get_opcode("LDH A, [a8]").m_hex)
+                {
+                    expected_data = regs;
+                    assert(wait_cycles == 12);
+                    return true;
+                }
+                return false;
+            }};
+    cpu.start();
 
-// // 0xE0
-// TEST(test_load_8bit, LDH_Ia8I_A)
-// {
-//     std::string assembly{R"(
-//         LD A, 0x99
-//         LDH [0x15], A
-//     )"};
-//     auto opcodes = translate(assembly);
-//     Cpu cpu{opcodes};
-
-//     CpuData expected_data;
-//     auto f = [&expected_data](const CpuData &d, const Opcode &op) { expected_data = d; };
-//     cpu.register_function_callback(f);
-//     cpu.process();
-
-//     ASSERT_EQ(expected_data.m_memory[0xFF00 + 0x15], 0x99);
-// }
-
-// // 0xF0
-// TEST(test_load_8bit, LDH_A_Ia8I)
-// {
-//     std::string assembly{R"(
-//         LD SP, 0x26
-//         LD [0xFF87], SP
-//         LDH A, [0x87]
-//     )"};
-//     auto opcodes = translate(assembly);
-//     Cpu cpu{opcodes};
-
-//     CpuData expected_data;
-//     auto f = [&expected_data](const CpuData &d, const Opcode &op) { expected_data = d; };
-//     cpu.register_function_callback(f);
-//     cpu.process();
-
-//     ASSERT_EQ(expected_data.AF.hi, 0x26);
-// }
+    ASSERT_EQ(expected_data.A(), 0x26);
+}
 
 // 0x06
 TEST(test_load_8bit, LD_B_n8)
@@ -333,96 +359,120 @@ TEST(test_load_8bit, LD_A_n8)
     ASSERT_EQ(expected_data[2].A(), 0x3);
 }
 
-// // 0x0A
-// TEST(test_load_8bit, LD_A_IBCI)
-// {
-//     std::string assembly{R"(
-//          LD SP, 0x8510
-//          LD [0x667], SP
-//          LD BC, 0x667
-//          LD A, [BC]
-//      )"};
-//     auto opcodes = translate(assembly);
-//     Cpu cpu{opcodes};
+// 0x0A
+TEST(test_load_8bit, LD_A_IBCI)
+{
+    std::string assembly{R"(
+         LD SP, 0x8510
+         LD [0x667], SP
+         LD BC, 0x667
+         LD A, [BC]
+     )"};
+    auto opcodes = translate(assembly);
+    rw_mock mock{opcodes};
+    registers expected_data;
+    cpu cpu{mock, [&expected_data](registers const &regs, opcode const &op, uint8_t wait_cycles) {
+                if (get_opcode("LD A, [BC]").m_hex == op.m_hex)
+                {
+                    assert(wait_cycles == 8);
+                    expected_data = regs;
+                    return true;
+                }
+                return false;
+            }};
+    cpu.start();
 
-//     CpuData expected_data;
-//     auto f = [&expected_data](const CpuData &d, const Opcode &op) { expected_data = d; };
-//     cpu.register_function_callback(f);
-//     cpu.process();
+    ASSERT_EQ(expected_data.A(), 0x10);
+    ASSERT_EQ(mock.m_ram[0x667], 0x10);
+    ASSERT_EQ(mock.m_ram[0x667 + 1], 0x85);
+}
 
-//     ASSERT_EQ(expected_data.AF.hi, 0x10);
-//     ASSERT_EQ(expected_data.m_memory[0x667], 0x10);
-//     ASSERT_EQ(expected_data.m_memory[0x667 + 1], 0x85);
-// }
+// 0x1A
+TEST(test_load_8bit, LD_A_IDEI)
+{
+    std::string assembly{R"(
+         LD SP, 0xAFAB
+         LD [0x0099], SP
+         LD DE, 0x0099
+         LD A, [DE]
+     )"};
+    auto opcodes = translate(assembly);
+    rw_mock mock{opcodes};
+    registers expected_data;
+    cpu cpu{mock, [&expected_data](registers const &regs, opcode const &op, uint8_t wait_cycles) {
+                if (get_opcode("LD A, [DE]").m_hex == op.m_hex)
+                {
+                    assert(wait_cycles == 8);
+                    expected_data = regs;
+                    return true;
+                }
+                return false;
+            }};
+    cpu.start();
 
-// // 0x1A
-// TEST(test_load_8bit, LD_A_IDEI)
-// {
-//     std::string assembly{R"(
-//          LD SP, 0xAFAB
-//          LD [0x0099], SP
-//          LD DE, 0x0099
-//          LD A, [DE]
-//      )"};
-//     auto opcodes = translate(assembly);
-//     Cpu cpu{opcodes};
+    ASSERT_EQ(expected_data.A(), 0xAB);
+    ASSERT_EQ(mock.m_ram[0x0099], 0xAB);
+    ASSERT_EQ(mock.m_ram[0x0099 + 1], 0xAF);
+}
 
-//     CpuData expected_data;
-//     auto f = [&expected_data](const CpuData &d, const Opcode &op) { expected_data = d; };
-//     cpu.register_function_callback(f);
-//     cpu.process();
+// 0x2A
+TEST(test_load_8bit, LD_A_IHLplusI)
+{
+    std::string assembly{R"(
+         LD SP, 0x1234
+         LD [0xFF01], SP
+         LD HL, 0xFF01
+         LD A, [HL+]
+     )"};
+    auto opcodes = translate(assembly);
+    rw_mock mock{opcodes};
+    registers expected_data;
+    cpu cpu{mock, [&expected_data](registers const &regs, opcode const &op, uint8_t wait_cycles) {
+                if (get_opcode("LD A, [HL+]").m_hex == op.m_hex)
+                {
+                    assert(wait_cycles == 8);
+                    expected_data = regs;
+                    return true;
+                }
+                return false;
+            }};
+    cpu.start();
 
-//     ASSERT_EQ(expected_data.AF.hi, 0xAB);
-//     ASSERT_EQ(expected_data.m_memory[0x0099], 0xAB);
-//     ASSERT_EQ(expected_data.m_memory[0x0099 + 1], 0xAF);
-// }
+    ASSERT_EQ(expected_data.A(), 0x34);
+    ASSERT_EQ(mock.m_ram[0xFF01], 0x34);
+    ASSERT_EQ(mock.m_ram[0xFF01 + 1], 0x12);
+    ASSERT_EQ(expected_data.HL(), 0xFF01 + 1);
+}
 
-// // 0x2A
-// TEST(test_load_8bit, LD_A_IHLplusI)
-// {
-//     std::string assembly{R"(
-//          LD SP, 0x1234
-//          LD [0xFF01], SP
-//          LD HL, 0xFF01
-//          LD A, [HL+]
-//      )"};
-//     auto opcodes = translate(assembly);
-//     Cpu cpu{opcodes};
+// 0x3A
+TEST(test_load_8bit, LD_A_IHLminusI)
+{
+    std::string assembly{R"(
+         LD SP, 0x1234
+         LD [0xFF01], SP
+         LD HL, 0xFF01
+         LD A, [HL+]
+         LD A, [HL-]
+     )"};
+    auto opcodes = translate(assembly);
+    rw_mock mock{opcodes};
+    registers expected_data;
+    cpu cpu{mock, [&expected_data](registers const &regs, opcode const &op, uint8_t wait_cycles) {
+                if (get_opcode("LD A, [HL-]").m_hex == op.m_hex)
+                {
+                    assert(wait_cycles == 8);
+                    expected_data = regs;
+                    return true;
+                }
+                return false;
+            }};
+    cpu.start();
 
-//     CpuData expected_data;
-//     auto f = [&expected_data](const CpuData &d, const Opcode &op) { expected_data = d; };
-//     cpu.register_function_callback(f);
-//     cpu.process();
-
-//     ASSERT_EQ(expected_data.AF.hi, 0x34);
-//     ASSERT_EQ(expected_data.m_memory[0xFF01], 0x34);
-//     ASSERT_EQ(expected_data.m_memory[0xFF01 + 1], 0x12);
-//     ASSERT_EQ(expected_data.HL.u16, 0xFF01 + 1);
-// }
-
-// // 0x3A
-// TEST(test_load_8bit, LD_A_IHLminusI)
-// {
-//     std::string assembly{R"(
-//          LD SP, 0x1234
-//          LD [0xFF01], SP
-//          LD HL, 0xFF01
-//          LD A, [HL+]
-//          LD A, [HL-]
-//      )"};
-//     auto opcodes = translate(assembly);
-//     Cpu cpu{opcodes};
-
-//     CpuData expected_data;
-//     auto f = [&expected_data](const CpuData &d, const Opcode &op) { expected_data = d; };
-//     cpu.register_function_callback(f);
-//     cpu.process();
-
-//     ASSERT_EQ(expected_data.AF.hi, 0x12);
-//     ASSERT_EQ(expected_data.m_memory[0xFF01], 0x34);
-//     ASSERT_EQ(expected_data.m_memory[0xFF01 + 1], 0x12);
-//     ASSERT_EQ(expected_data.HL.u16, 0xFF01);
-// }
+    ASSERT_EQ(expected_data.A(), 0x12);
+    ASSERT_EQ(mock.m_ram[0xFF01], 0x34);
+    ASSERT_EQ(mock.m_ram[0xFF01 + 1], 0x12);
+    ASSERT_EQ(expected_data.HL(), 0xFF01);
+}
 
 // namespace
 // {
