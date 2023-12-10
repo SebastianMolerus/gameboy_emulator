@@ -5,6 +5,18 @@ uint8_t cpu::ld()
 {
     switch (m_op.m_hex)
     {
+    case 0x02:
+    case 0x12:
+        return LD_IREG16I_A();
+    case 0x06:
+    case 0x16:
+    case 0x26:
+    case 0x36:
+    case 0x0E:
+    case 0x1E:
+    case 0x2E:
+    case 0x3E:
+        return LD_REG_n8();
     case 0xF8: // add e8 ( singed data ) to SP and copy it to HL
         return LD_HL_SP_e8();
     case 0xF9:
@@ -31,6 +43,9 @@ uint8_t cpu::ld()
     default:
         assert(false);
     }
+
+    static uint8_t ret{0xFF};
+    return ret;
 }
 
 // // 0xF8 : Put SP + n effective address into HL
@@ -136,6 +151,34 @@ uint8_t cpu::pop()
     target_REG = hi;
     target_REG <<= 8;
     target_REG |= lo;
+
+    return m_op.m_cycles[0];
+}
+
+uint8_t cpu::LD_IREG16I_A()
+{
+    assert(m_op.m_operands[0].m_name);
+    assert(m_op.m_operands[1].m_name);
+
+    const uint16_t addr = m_reg.get_word(m_op.m_operands[0].m_name);
+    m_rw_device.write(addr, m_reg.get_byte(m_op.m_operands[1].m_name));
+    return m_op.m_cycles[0];
+}
+
+uint8_t cpu::LD_REG_n8()
+{
+    assert(m_op.m_operands[0].m_name);
+    uint8_t const value = m_op.m_data[0];
+
+    // LD [HL], n8
+    if (!m_op.m_operands[0].m_immediate)
+    {
+        m_rw_device.write(m_reg.HL(), value);
+    }
+    else
+    {
+        m_reg.get_byte(m_op.m_operands[0].m_name) = value;
+    }
 
     return m_op.m_cycles[0];
 }

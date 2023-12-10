@@ -48,6 +48,8 @@ class cpu
     uint8_t push();
     uint8_t pop();
     uint8_t LD_REG8_REG8();
+    uint8_t LD_IREG16I_A();
+    uint8_t LD_REG_n8();
 };
 
 #endif

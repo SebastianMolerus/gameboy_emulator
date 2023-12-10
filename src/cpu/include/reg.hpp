@@ -107,6 +107,8 @@ struct registers
         }
 
         assert(false);
+        static uint16_t ret{0xFFFF};
+        return ret;
     }
 
     uint8_t &get_byte(const char *reg)
@@ -119,7 +121,29 @@ struct registers
         {
             return D();
         }
+        if (strcmp(reg, "L") == 0)
+        {
+            return L();
+        }
+        if (strcmp(reg, "E") == 0)
+        {
+            return E();
+        }
+        if (strcmp(reg, "C") == 0)
+        {
+            return C();
+        }
+        if (strcmp(reg, "H") == 0)
+        {
+            return H();
+        }
+        if (strcmp(reg, "B") == 0)
+        {
+            return B();
+        }
         assert(false);
+        static uint8_t ret{0xFF};
+        return ret;
     }
 
     bool is_flag_set(flag flag)

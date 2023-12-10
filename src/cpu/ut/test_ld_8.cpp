@@ -3,22 +3,29 @@
 #include <utils.h>
 
 // 0x02
-// TEST(test_load_8bit, LD_IBCI_A)
-// {
-//     std::string assembly{R"(
-//         LD BC, 0x59
-//         LD A, 0x15
-//         LD [BC], A
-//     )"};
-//     auto opcodes = translate(assembly);
+TEST(test_load_8bit, LD_IBCI_A)
+{
+    std::string assembly{R"(
+        LD BC, 0x59
+        LD A, 0x15
+        LD [BC], A
+    )"};
+    auto opcodes = translate(assembly);
+    rw_mock mock{opcodes};
+    registers expected_data;
+    cpu cpu{mock, [&expected_data](registers const &regs, opcode const &op, uint8_t wait_cycles) {
+                if (op.m_hex == get_opcode("LD [BC], A").m_hex)
+                {
+                    expected_data = regs;
+                    assert(wait_cycles == 8);
+                    return true;
+                }
+                return false;
+            }};
+    cpu.start();
 
-//     rw_mock mock{3, opcodes};
-
-//     cpu cpu{mock};
-//     cpu.start();
-
-//     ASSERT_EQ(mock.m_ram[0x59], 0x15);
-// }
+    ASSERT_EQ(mock.m_ram[0x59], 0x15);
+}
 
 // // 0x12
 // TEST(test_load_8bit, LD_IDEI_A)
@@ -116,178 +123,215 @@
 //     ASSERT_EQ(expected_data.AF.hi, 0x26);
 // }
 
-// // 0x06
-// TEST(test_load_8bit, LD_B_n8)
-// {
-//     std::string assembly{R"(
-//          LD B, 0x07
-//          LD B, 0x1
-//      )"};
-//     auto opcodes = translate(assembly);
-//     Cpu cpu{opcodes};
+// 0x06
+TEST(test_load_8bit, LD_B_n8)
+{
+    std::string assembly{R"(
+         LD B, 0x07
+         LD B, 0x1
+     )"};
+    auto opcodes = translate(assembly);
+    rw_mock mock{opcodes};
+    std::vector<registers> expected_data;
+    cpu cpu{mock, [&expected_data](registers const &regs, opcode const &op, uint8_t wait_cycles) {
+                assert(wait_cycles == 8);
+                expected_data.push_back(regs);
+                if (expected_data.size() == 2)
+                    return true;
+                return false;
+            }};
+    cpu.start();
 
-//     std::vector<CpuData> expected_data;
-//     auto f = [&expected_data](const CpuData &d, const Opcode &op) { expected_data.push_back(d); };
-//     cpu.register_function_callback(f);
-//     cpu.process();
+    ASSERT_EQ(expected_data.size(), 2);
+    ASSERT_EQ(expected_data[0].B(), 0x07);
+    ASSERT_EQ(expected_data[1].B(), 0x1);
+}
 
-//     ASSERT_EQ(expected_data.size(), 2);
-//     ASSERT_EQ(expected_data[0].BC.hi, 0x07);
-//     ASSERT_EQ(expected_data[1].BC.hi, 0x1);
-// }
+// 0x16
+TEST(test_load_8bit, LD_D_n8)
+{
+    std::string assembly{R"(
+         LD D, 0xAA
+         LD D, 0xB
+         LD D, 0x0
+     )"};
+    auto opcodes = translate(assembly);
+    rw_mock mock{opcodes};
+    std::vector<registers> expected_data;
+    cpu cpu{mock, [&expected_data](registers const &regs, opcode const &op, uint8_t wait_cycles) {
+                assert(wait_cycles == 8);
+                expected_data.push_back(regs);
+                if (expected_data.size() == 3)
+                    return true;
+                return false;
+            }};
+    cpu.start();
 
-// // 0x16
-// TEST(test_load_8bit, LD_D_n8)
-// {
-//     std::string assembly{R"(
-//          LD D, 0xAA
-//          LD D, 0xB
-//          LD D, 0x0
-//      )"};
-//     auto opcodes = translate(assembly);
-//     Cpu cpu{opcodes};
+    ASSERT_EQ(expected_data.size(), 3);
+    ASSERT_EQ(expected_data[0].D(), 0xAA);
+    ASSERT_EQ(expected_data[1].D(), 0xB);
+    ASSERT_EQ(expected_data[2].D(), 0x0);
+}
 
-//     std::vector<CpuData> expected_data;
-//     auto f = [&expected_data](const CpuData &d, const Opcode &op) { expected_data.push_back(d); };
-//     cpu.register_function_callback(f);
-//     cpu.process();
+// 0x26
+TEST(test_load_8bit, LD_H_n8)
+{
+    std::string assembly{R"(
+         LD H, 0x12
+         LD H, 0x59
+         LD H, 0x4
+     )"};
+    auto opcodes = translate(assembly);
+    rw_mock mock{opcodes};
+    std::vector<registers> expected_data;
+    cpu cpu{mock, [&expected_data](registers const &regs, opcode const &op, uint8_t wait_cycles) {
+                assert(wait_cycles == 8);
+                expected_data.push_back(regs);
+                if (expected_data.size() == 3)
+                    return true;
+                return false;
+            }};
+    cpu.start();
 
-//     ASSERT_EQ(expected_data.size(), 3);
-//     ASSERT_EQ(expected_data[0].DE.hi, 0xAA);
-//     ASSERT_EQ(expected_data[1].DE.hi, 0xB);
-//     ASSERT_EQ(expected_data[2].DE.hi, 0x0);
-// }
+    ASSERT_EQ(expected_data.size(), 3);
+    ASSERT_EQ(expected_data[0].H(), 0x12);
+    ASSERT_EQ(expected_data[1].H(), 0x59);
+    ASSERT_EQ(expected_data[2].H(), 0x4);
+}
 
-// // 0x26
-// TEST(test_load_8bit, LD_H_n8)
-// {
-//     std::string assembly{R"(
-//          LD H, 0x12
-//          LD H, 0x59
-//          LD H, 0x4
-//      )"};
-//     auto opcodes = translate(assembly);
-//     Cpu cpu{opcodes};
+// 0x36
+TEST(test_load_8bit, LD_IHLI_n8)
+{
+    std::string assembly{R"(
+         LD HL, 0xFF32
+         LD [HL], 0x8
+         LD HL, 0x784E
+         LD [HL], 0xF6
+     )"};
+    auto opcodes = translate(assembly);
+    rw_mock mock{opcodes};
+    cpu cpu{mock, [](registers const &regs, opcode const &op, uint8_t wait_cycles) {
+                static int instruction_cc{};
+                ++instruction_cc;
+                if (get_opcode("LD [HL], n8").m_hex == op.m_hex)
+                {
+                    assert(wait_cycles == 12);
+                }
 
-//     std::vector<CpuData> expected_data;
-//     auto f = [&expected_data](const CpuData &d, const Opcode &op) { expected_data.push_back(d); };
-//     cpu.register_function_callback(f);
-//     cpu.process();
+                if (instruction_cc == 4)
+                    return true;
 
-//     ASSERT_EQ(expected_data.size(), 3);
-//     ASSERT_EQ(expected_data[0].HL.hi, 0x12);
-//     ASSERT_EQ(expected_data[1].HL.hi, 0x59);
-//     ASSERT_EQ(expected_data[2].HL.hi, 0x4);
-// }
+                return false;
+            }};
+    cpu.start();
 
-// // 0x36
-// TEST(test_load_8bit, LD_IHLI_n8)
-// {
-//     std::string assembly{R"(
-//          LD HL, 0xFF32
-//          LD [HL], 0x8
-//          LD HL, 0x784E
-//          LD [HL], 0xF6
-//      )"};
-//     auto opcodes = translate(assembly);
-//     Cpu cpu{opcodes};
+    ASSERT_EQ(mock.m_ram[0xFF32], 0x8);
+    ASSERT_EQ(mock.m_ram[0x784E], 0xF6);
+}
 
-//     CpuData expected_data;
-//     auto f = [&expected_data](const CpuData &d, const Opcode &op) { expected_data = d; };
-//     cpu.register_function_callback(f);
-//     cpu.process();
+// 0x0E
+TEST(test_load_8bit, LD_C_n8)
+{
+    std::string assembly{R"(
+         LD C, 0x1
+         LD C, 0x01
+         LD C, 0xF5
+     )"};
+    auto opcodes = translate(assembly);
+    rw_mock mock{opcodes};
+    std::vector<registers> expected_data;
+    cpu cpu{mock, [&expected_data](registers const &regs, opcode const &op, uint8_t wait_cycles) {
+                assert(wait_cycles == 8);
+                expected_data.push_back(regs);
+                if (expected_data.size() == 3)
+                    return true;
+                return false;
+            }};
+    cpu.start();
 
-//     ASSERT_EQ(expected_data.m_memory[0xFF32], 0x8);
-//     ASSERT_EQ(expected_data.m_memory[0x784E], 0xF6);
-// }
+    ASSERT_EQ(expected_data.size(), 3);
+    ASSERT_EQ(expected_data[0].C(), 0x1);
+    ASSERT_EQ(expected_data[1].C(), 0x01);
+    ASSERT_EQ(expected_data[2].C(), 0xF5);
+}
 
-// // 0x0E
-// TEST(test_load_8bit, LD_C_n8)
-// {
-//     std::string assembly{R"(
-//          LD C, 0x1
-//          LD C, 0x01
-//          LD C, 0xF5
-//      )"};
-//     auto opcodes = translate(assembly);
-//     Cpu cpu{opcodes};
+// 0x1E
+TEST(test_load_8bit, LD_E_n8)
+{
+    std::string assembly{R"(
+         LD E, 0x87
+         LD E, 0xA4
+         LD E, 0x8D
+     )"};
+    auto opcodes = translate(assembly);
+    rw_mock mock{opcodes};
+    std::vector<registers> expected_data;
+    cpu cpu{mock, [&expected_data](registers const &regs, opcode const &op, uint8_t wait_cycles) {
+                assert(wait_cycles == 8);
+                expected_data.push_back(regs);
+                if (expected_data.size() == 3)
+                    return true;
+                return false;
+            }};
+    cpu.start();
 
-//     std::vector<CpuData> expected_data;
-//     auto f = [&expected_data](const CpuData &d, const Opcode &op) { expected_data.push_back(d); };
-//     cpu.register_function_callback(f);
-//     cpu.process();
+    ASSERT_EQ(expected_data.size(), 3);
+    ASSERT_EQ(expected_data[0].E(), 0x87);
+    ASSERT_EQ(expected_data[1].E(), 0xA4);
+    ASSERT_EQ(expected_data[2].E(), 0x8D);
+}
 
-//     ASSERT_EQ(expected_data.size(), 3);
-//     ASSERT_EQ(expected_data[0].BC.lo, 0x1);
-//     ASSERT_EQ(expected_data[1].BC.lo, 0x01);
-//     ASSERT_EQ(expected_data[2].BC.lo, 0xF5);
-// }
+// 0x2E
+TEST(test_load_8bit, LD_L_n8)
+{
+    std::string assembly{R"(
+         LD L, 0x72
+         LD L, 0x71
+         LD L, 0x0F
+     )"};
+    auto opcodes = translate(assembly);
+    rw_mock mock{opcodes};
+    std::vector<registers> expected_data;
+    cpu cpu{mock, [&expected_data](registers const &regs, opcode const &op, uint8_t wait_cycles) {
+                assert(wait_cycles == 8);
+                expected_data.push_back(regs);
+                if (expected_data.size() == 3)
+                    return true;
+                return false;
+            }};
+    cpu.start();
 
-// // 0x1E
-// TEST(test_load_8bit, LD_E_n8)
-// {
-//     std::string assembly{R"(
-//          LD E, 0x87
-//          LD E, 0xA4
-//          LD E, 0x8D
-//      )"};
-//     auto opcodes = translate(assembly);
-//     Cpu cpu{opcodes};
+    ASSERT_EQ(expected_data.size(), 3);
+    ASSERT_EQ(expected_data[0].L(), 0x72);
+    ASSERT_EQ(expected_data[1].L(), 0x71);
+    ASSERT_EQ(expected_data[2].L(), 0x0F);
+}
 
-//     std::vector<CpuData> expected_data;
-//     auto f = [&expected_data](const CpuData &d, const Opcode &op) { expected_data.push_back(d); };
-//     cpu.register_function_callback(f);
-//     cpu.process();
+// 0x3E
+TEST(test_load_8bit, LD_A_n8)
+{
+    std::string assembly{R"(
+         LD A, 0x0
+         LD A, 0x2
+         LD A, 0x3
+     )"};
+    auto opcodes = translate(assembly);
+    rw_mock mock{opcodes};
+    std::vector<registers> expected_data;
+    cpu cpu{mock, [&expected_data](registers const &regs, opcode const &op, uint8_t wait_cycles) {
+                assert(wait_cycles == 8);
+                expected_data.push_back(regs);
+                if (expected_data.size() == 3)
+                    return true;
+                return false;
+            }};
+    cpu.start();
 
-//     ASSERT_EQ(expected_data.size(), 3);
-//     ASSERT_EQ(expected_data[0].DE.lo, 0x87);
-//     ASSERT_EQ(expected_data[1].DE.lo, 0xA4);
-//     ASSERT_EQ(expected_data[2].DE.lo, 0x8D);
-// }
-
-// // 0x2E
-// TEST(test_load_8bit, LD_L_n8)
-// {
-//     std::string assembly{R"(
-//          LD L, 0x72
-//          LD L, 0x71
-//          LD L, 0x0F
-//      )"};
-//     auto opcodes = translate(assembly);
-//     Cpu cpu{opcodes};
-
-//     std::vector<CpuData> expected_data;
-//     auto f = [&expected_data](const CpuData &d, const Opcode &op) { expected_data.push_back(d); };
-//     cpu.register_function_callback(f);
-//     cpu.process();
-
-//     ASSERT_EQ(expected_data.size(), 3);
-//     ASSERT_EQ(expected_data[0].HL.lo, 0x72);
-//     ASSERT_EQ(expected_data[1].HL.lo, 0x71);
-//     ASSERT_EQ(expected_data[2].HL.lo, 0x0F);
-// }
-
-// // 0x3E
-// TEST(test_load_8bit, LD_A_n8)
-// {
-//     std::string assembly{R"(
-//          LD A, 0x0
-//          LD A, 0x2
-//          LD A, 0x3
-//      )"};
-//     auto opcodes = translate(assembly);
-//     Cpu cpu{opcodes};
-
-//     std::vector<CpuData> expected_data;
-//     auto f = [&expected_data](const CpuData &d, const Opcode &op) { expected_data.push_back(d); };
-//     cpu.register_function_callback(f);
-//     cpu.process();
-
-//     ASSERT_EQ(expected_data.size(), 3);
-//     ASSERT_EQ(expected_data[0].AF.hi, 0x0);
-//     ASSERT_EQ(expected_data[1].AF.hi, 0x2);
-//     ASSERT_EQ(expected_data[2].AF.hi, 0x3);
-// }
+    ASSERT_EQ(expected_data.size(), 3);
+    ASSERT_EQ(expected_data[0].A(), 0x0);
+    ASSERT_EQ(expected_data[1].A(), 0x2);
+    ASSERT_EQ(expected_data[2].A(), 0x3);
+}
 
 // // 0x0A
 // TEST(test_load_8bit, LD_A_IBCI)
