@@ -167,6 +167,8 @@ TEST(translator_test, jumps_3B)
 
     auto machine_code = translate(st);
 
+    ASSERT_EQ(machine_code.size(), 30);
+
     ASSERT_EQ(machine_code[0], 0xC2);
     ASSERT_EQ(machine_code[1], 0x76);
     ASSERT_EQ(machine_code[2], 0x00);
@@ -178,4 +180,32 @@ TEST(translator_test, jumps_3B)
     ASSERT_EQ(machine_code[6], 0xC3);
     ASSERT_EQ(machine_code[7], 0x96);
     ASSERT_EQ(machine_code[8], 0x78);
+
+    ASSERT_EQ(machine_code[9], 0xC4);
+    ASSERT_EQ(machine_code[10], 0x1);
+    ASSERT_EQ(machine_code[11], 0x0);
+
+    ASSERT_EQ(machine_code[12], 0xD4);
+    ASSERT_EQ(machine_code[13], 0x20);
+    ASSERT_EQ(machine_code[14], 0x03);
+
+    ASSERT_EQ(machine_code[15], 0xCA);
+    ASSERT_EQ(machine_code[16], 0x0);
+    ASSERT_EQ(machine_code[17], 0x0);
+
+    ASSERT_EQ(machine_code[18], 0xDA);
+    ASSERT_EQ(machine_code[19], 0x3F);
+    ASSERT_EQ(machine_code[20], 0x12);
+
+    ASSERT_EQ(machine_code[21], 0xCC);
+    ASSERT_EQ(machine_code[22], 0xFF);
+    ASSERT_EQ(machine_code[23], 0xFF);
+
+    ASSERT_EQ(machine_code[24], 0xDC);
+    ASSERT_EQ(machine_code[25], 0xFF);
+    ASSERT_EQ(machine_code[26], 0xF);
+
+    ASSERT_EQ(machine_code[27], 0xCD);
+    ASSERT_EQ(machine_code[28], 0xFF);
+    ASSERT_EQ(machine_code[29], 0x0);
 }
