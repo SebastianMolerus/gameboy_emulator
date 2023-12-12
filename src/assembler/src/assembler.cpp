@@ -47,8 +47,6 @@ std::vector<std::string> parse_instructions(std::string_view instructions)
 
 std::vector<uint8_t> transform(std::string_view instructions)
 {
-    load_opcodes();
-
     auto commands = parse_instructions(instructions);
 
     std::vector<uint8_t> result;

@@ -34,11 +34,6 @@ struct opcode
     bool m_immediate;
 };
 
-// Call before any of get_opcode call
-bool load_opcodes() noexcept;
-
-uint8_t get_ld_hex(const char *op1, const char *op2);
-
 opcode &get_opcode(uint8_t opcode_hex) noexcept;
 opcode &get_pref_opcode(uint8_t opcode_hex) noexcept;
 

@@ -13,7 +13,6 @@ cpu::cpu(rw_device &rw_device, cb callback) : m_rw_device{rw_device}, m_callback
 
 void cpu::start()
 {
-    load_opcodes();
     while (1)
     {
         uint8_t const hex = read_byte();

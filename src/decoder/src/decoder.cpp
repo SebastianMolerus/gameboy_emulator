@@ -275,38 +275,24 @@ bool load_opcodes() noexcept
     }
 }
 
-uint8_t get_ld_hex(const char *op1, const char *op2)
-{
-    for (auto &e : OPCODES_CACHE)
-    {
-        if (e.m_bytes != 1)
-            continue;
-
-        if (e.m_mnemonic != MNEMONICS_STR[26])
-            continue;
-
-        if (strcmp(e.m_operands[0].m_name, op1) == 0 && strcmp(e.m_operands[1].m_name, op2) == 0)
-        {
-            if (e.m_bytes == 1 && e.m_operands[0].m_immediate == 1 && e.m_operands[1].m_immediate == 1)
-                return e.m_hex;
-        }
-    }
-    assert(false);
-    return 0;
-}
-
 opcode &get_opcode(uint8_t opcode_hex) noexcept
 {
+    bool result = load_opcodes();
+    assert(result);
     return OPCODES_CACHE[opcode_hex];
 }
 
 opcode &get_pref_opcode(uint8_t opcode_hex) noexcept
 {
+    bool result = load_opcodes();
+    assert(result);
     return PREF_OPCODES_CACHE[opcode_hex];
 }
 
 opcode &get_opcode(std::string_view instruction) noexcept
 {
+    bool res = load_opcodes();
+    assert(res);
     auto result = std::find_if(
         INSTRUCTIONS.begin(), INSTRUCTIONS.end(),
         [&instruction](std::pair<std::string, opcode> &instr_op) { return instr_op.first == instruction; });
