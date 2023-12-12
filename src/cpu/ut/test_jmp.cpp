@@ -111,3 +111,31 @@ TEST(test_jmp, JR_Z_e8)
     ASSERT_EQ(wait_cycles[3], 12);
     ASSERT_EQ(wait_cycles[8], 8);
 }
+
+// 0x38
+TEST(test_jmp, JR_C_e8)
+{
+    std::string assembly{R"(
+        LD A, 0xFF
+        LD B, 0x80
+        ADD A, B
+        JR C, 0x2
+        JR C, 0x2
+        JR C, 0x84
+        LD A, 0x5
+        LD A, 0x5
+        LD B, 0x5
+        ADD A, B
+        JR C, 0x3
+    )"};
+
+    auto [expected_data, wait_cycles] = get_cpu_output(11, assembly);
+
+    ASSERT_TRUE(expected_data[2].is_flag_set(flag::C));
+    ASSERT_EQ(expected_data[3].PC(), 9);
+    ASSERT_EQ(expected_data[4].PC(), 7);
+    ASSERT_EQ(expected_data[5].PC(), 11);
+    ASSERT_EQ(expected_data[6].A(), 0x5);
+    ASSERT_FALSE(expected_data[9].is_flag_set(flag::C));
+    ASSERT_EQ(expected_data[10].PC(), 0x14);
+}
