@@ -68,6 +68,7 @@ class cpu
   private:
     uint8_t jmp();
     uint8_t JR_CC_e8();
+    uint8_t JR_e8();
     uint8_t JP_nn();
 
   private:

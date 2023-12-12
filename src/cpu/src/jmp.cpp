@@ -1,10 +1,11 @@
 #include <cpu.hpp>
-#include <sstream>
 
 uint8_t cpu::jmp()
 {
     switch (m_op.m_hex)
     {
+    case 0x18:
+        return JR_e8();
     case 0x20:
     case 0x30:
     case 0x28:
@@ -35,6 +36,16 @@ uint8_t cpu::JR_CC_e8()
         // no jump
         return m_op.m_cycles[1];
     }
+}
+
+uint8_t cpu::JR_e8()
+{
+    uint8_t e8 = m_op.m_data[0];
+    if (e8 & 0x80)
+        m_reg.PC() -= (e8 & 0x7F);
+    else
+        m_reg.PC() += e8;
+    return m_op.m_cycles[0];
 }
 
 uint8_t cpu::JP_nn()
