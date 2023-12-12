@@ -42,6 +42,10 @@ class cpu
     void reset(flag f);
 
   private:
+    bool is_carry(uint8_t dest, uint8_t src);
+    bool is_half_carry(uint8_t dest, uint8_t src);
+
+  private:
     uint8_t ld();
     uint8_t LD_HL_SP_e8();
     uint8_t LD_REG16_n16();
@@ -57,6 +61,14 @@ class cpu
     uint8_t LD_Ia16I_A();
     uint8_t LD_ICI_A();
     uint8_t LD_IHLI_REG8();
+
+  private:
+    uint8_t jmp();
+    uint8_t JR_NZ_e8();
+
+  private:
+    uint8_t arith();
+    uint8_t ADD_REG8_REG8();
 };
 
 #endif

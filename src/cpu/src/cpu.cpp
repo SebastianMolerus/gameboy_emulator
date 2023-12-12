@@ -3,8 +3,9 @@
 #include <sstream>
 #include <stdexcept>
 
-const std::unordered_map<const char *, cpu::processing_func> cpu::m_mapper{
-    {"LD", &cpu::ld}, {"LDH", &cpu::ld}, {"PUSH", &cpu::ld}, {"POP", &cpu::ld}};
+const std::unordered_map<const char *, cpu::processing_func> cpu::m_mapper{{"LD", &cpu::ld},   {"LDH", &cpu::ld},
+                                                                           {"PUSH", &cpu::ld}, {"POP", &cpu::ld},
+                                                                           {"JR", &cpu::jmp},  {"ADD", &cpu::arith}};
 
 cpu::cpu(rw_device &rw_device, cb callback) : m_rw_device{rw_device}, m_callback{callback}
 {
@@ -54,4 +55,14 @@ void cpu::set(flag f)
 void cpu::reset(flag f)
 {
     m_reg.m_AF.m_lo &= ~f;
+}
+
+bool cpu::is_carry(uint8_t dest, uint8_t src)
+{
+    return (dest + src) & 0x100;
+}
+
+bool cpu::is_half_carry(uint8_t dest, uint8_t src)
+{
+    return ((dest & 0xF) + (src & 0xF)) & 0x10;
 }

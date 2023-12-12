@@ -152,9 +152,10 @@ uint8_t cpu::LD_HL_SP_e8()
         if (half_carry_check & 0x10)
             set(flag::H);
 
-        uint32_t carry_check{SP};
+        uint16_t carry_check{SP};
+        carry_check &= 0xFF;
         carry_check += val;
-        if (carry_check & 0x10000)
+        if (carry_check & 0x100)
             set(flag::C);
 
         SP += val;

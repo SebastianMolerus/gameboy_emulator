@@ -1,4 +1,5 @@
-add_executable(load_tests test_ld_16.cpp test_ld_8.cpp)
+add_executable(load_tests test_ld_16.cpp test_ld_8.cpp test_jmp.cpp
+                          test_arith.cpp)
 
 target_include_directories(load_tests PRIVATE ${CMAKE_CURRENT_LIST_DIR})
 

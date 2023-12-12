@@ -247,9 +247,9 @@ TEST(test_load_16bit, LD_HL_SP_e8_half_carry)
 TEST(test_load_16bit, LD_HL_SP_e8_carry)
 {
     std::string assembly{R"(
-        LD SP, 0xFFFE
+        LD SP, 0x00A1
         LD HL, SP + 0x1
-        LD SP, 0xFFFF
+        LD SP, 0x00FF
         LD HL, SP + 0x1
     )"};
     auto opcodes = translate(assembly);
