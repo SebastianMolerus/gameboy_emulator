@@ -81,3 +81,11 @@ void cpu::no_op_defined()
     ss << __func__ << ": no operation defined for opcode 0x" << std::hex << (int)m_op.m_hex;
     throw std::runtime_error(ss.str());
 }
+
+uint16_t cpu::combined_data()
+{
+    uint16_t addr = m_op.m_data[1];
+    addr <<= 8;
+    addr |= m_op.m_data[0];
+    return addr;
+}

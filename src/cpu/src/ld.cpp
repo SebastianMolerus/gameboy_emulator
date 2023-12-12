@@ -167,9 +167,7 @@ uint8_t cpu::LD_REG16_n16()
 {
     assert(m_op.m_operands[0].m_name);
 
-    uint16_t value = m_op.m_data[1];
-    value <<= 8;
-    value |= m_op.m_data[0];
+    uint16_t value = combined_data();
 
     m_reg.get_word(m_op.m_operands[0].m_name) = value;
 
@@ -178,9 +176,7 @@ uint8_t cpu::LD_REG16_n16()
 
 uint8_t cpu::LD_Ia16I_SP()
 {
-    uint16_t addr = m_op.m_data[1];
-    addr <<= 8;
-    addr |= m_op.m_data[0];
+    uint16_t addr = combined_data();
 
     m_rw_device.write(addr, m_reg.m_SP.m_lo);
     m_rw_device.write(addr + 1, m_reg.m_SP.m_hi);
@@ -225,9 +221,22 @@ uint8_t cpu::pop()
     assert(m_op.m_operands[0].m_name);
     uint16_t &target_REG = m_reg.get_word(m_op.m_operands[0].m_name);
 
-    uint8_t const lo = m_rw_device.read(m_reg.SP());
-    uint8_t const hi = m_rw_device.read(++m_reg.SP());
-    ++m_reg.SP();
+    uint8_t const lo = m_rw_device.read(m_reg.SP()++);
+    uint8_t const hi = m_rw_device.read(m_reg.SP()++);
+
+    // special case, pop AF
+    if (m_op.m_hex == 0xF1)
+    {
+        reset_all_flags();
+        if (lo & flag::Z)
+            set(flag::Z);
+        if (lo & flag::N)
+            set(flag::N);
+        if (lo & flag::H)
+            set(flag::H);
+        if (lo & flag::C)
+            set(flag::C);
+    }
 
     target_REG = hi;
     target_REG <<= 8;
@@ -310,9 +319,7 @@ uint8_t cpu::LD_Ia16I_A()
     assert(m_op.m_operands[0].m_name);
     assert(m_op.m_operands[1].m_name);
 
-    uint16_t addr = m_op.m_data[1];
-    addr <<= 8;
-    addr |= m_op.m_data[0];
+    uint16_t addr = combined_data();
 
     // LD A, [a16]
     if (m_op.m_operands[0].m_immediate == 1)

@@ -160,3 +160,13 @@ TEST(test_jmp, JR_e8)
     ASSERT_EQ(expected_data[3].PC(), 0x6);
     ASSERT_EQ(expected_data[3].A(), 0x3);
 }
+
+// 0xC2
+TEST(test_jmp, JP_NZ_a16)
+{
+    std::string assembly{R"(
+        ADD A, B
+    )"};
+
+    auto [expected_data, wait_cycles] = get_cpu_output(1, assembly);
+}

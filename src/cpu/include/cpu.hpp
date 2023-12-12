@@ -48,6 +48,8 @@ class cpu
 
     void no_op_defined();
 
+    uint16_t combined_data();
+
   private:
     uint8_t ld();
     uint8_t LD_HL_SP_e8();
@@ -70,6 +72,7 @@ class cpu
     uint8_t JR_CC_e8();
     uint8_t JR_e8();
     uint8_t JP_nn();
+    uint8_t JP_CC_a16();
 
   private:
     uint8_t arith();
