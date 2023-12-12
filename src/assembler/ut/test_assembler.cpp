@@ -1,5 +1,5 @@
+#include <assembler.hpp>
 #include <gtest/gtest.h>
-#include <translator.hpp>
 
 TEST(translator_test, translate_instructions_ld_1)
 {
@@ -11,7 +11,7 @@ TEST(translator_test, translate_instructions_ld_1)
         INC BC
     )"};
 
-    auto machine_code = translate(st);
+    auto machine_code = transform(st);
 
     ASSERT_EQ(machine_code.size(), 11);
 
@@ -39,7 +39,7 @@ TEST(translator_test, translate_instructions_ld_2)
         LD HL, SP + 0x81
     )"};
 
-    auto machine_code = translate(st);
+    auto machine_code = transform(st);
 
     ASSERT_EQ(machine_code.size(), 15);
 
@@ -66,7 +66,7 @@ TEST(translator_test, translate_instructions_ld_3)
         LD [0x100], SP
     )"};
 
-    auto machine_code = translate(st);
+    auto machine_code = transform(st);
 
     ASSERT_EQ(machine_code[0], 0x08);
     ASSERT_EQ(machine_code[1], 0x00);
@@ -80,7 +80,7 @@ TEST(translator_test, jumps_2B_p1)
         JR NC, 0x12
     )"};
 
-    auto machine_code = translate(st);
+    auto machine_code = transform(st);
 
     ASSERT_EQ(machine_code.size(), 4);
     ASSERT_EQ(machine_code[0], 0x20);
@@ -97,7 +97,7 @@ TEST(translator_test, jumps_2B_p2)
         JR C, 0x1
     )"};
 
-    auto machine_code = translate(st);
+    auto machine_code = transform(st);
 
     ASSERT_EQ(machine_code.size(), 6);
     ASSERT_EQ(machine_code[0], 0x18);
@@ -130,7 +130,7 @@ TEST(translator_test, jumps_1B)
         RST $38
     )"};
 
-    auto machine_code = translate(st);
+    auto machine_code = transform(st);
 
     ASSERT_EQ(machine_code.size(), 15);
     ASSERT_EQ(machine_code[0], 0xC0);
@@ -165,7 +165,7 @@ TEST(translator_test, jumps_3B)
         CALL 0xFF
     )"};
 
-    auto machine_code = translate(st);
+    auto machine_code = transform(st);
 
     ASSERT_EQ(machine_code.size(), 30);
 

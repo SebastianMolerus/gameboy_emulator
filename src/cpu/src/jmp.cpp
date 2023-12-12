@@ -7,10 +7,10 @@ uint8_t cpu::jmp()
     {
     case 0x20:
         return JR_NZ_e8();
+    case 0xC3:
+        return JP_nn();
     default:
-        std::stringstream ss;
-        ss << __func__ << ": no operation defined for opcode 0x" << std::hex << (int)m_op.m_hex;
-        throw std::runtime_error(ss.str());
+        no_op_defined();
     }
     return 0;
 }
@@ -32,4 +32,14 @@ uint8_t cpu::JR_NZ_e8()
         // no jump
         return m_op.m_cycles[1];
     }
+}
+
+uint8_t cpu::JP_nn()
+{
+    uint16_t addr{m_op.m_data[1]};
+    addr <<= 8;
+    addr |= m_op.m_data[0];
+
+    m_reg.PC() = addr;
+    return m_op.m_cycles[0];
 }

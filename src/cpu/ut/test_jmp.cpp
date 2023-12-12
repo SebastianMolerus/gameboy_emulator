@@ -1,45 +1,42 @@
+#include <assembler.hpp>
 #include <gtest/gtest.h>
-#include <translator.hpp>
 #include <utils.h>
-
-using result_type = std::pair<std::vector<registers>, std::vector<uint8_t>>;
-
-result_type get_cpu_output(int instructions_cc, std::string const &assembly)
-{
-    result_type result;
-    int cc{};
-
-    auto opcodes = translate(assembly);
-    rw_mock mock{opcodes};
-    cpu cpu{mock, [&result, &cc, &instructions_cc](registers const &regs, opcode const &op, uint8_t wait_cycles) {
-                result.first.push_back(regs);
-                result.second.push_back(wait_cycles);
-                ++cc;
-                if (cc == instructions_cc)
-                    return true;
-
-                return false;
-            }};
-    cpu.start();
-
-    return result;
-}
 
 // 0x20
 TEST(test_jmp, JR_NZ_e8)
 {
     std::string assembly{R"(
-        JR NZ, 0x0
+        JR NZ, 0x2
+        JR NZ, 0x2
+        JR NZ, 0x84
+        LD A, 0x5
+        LD A, 0x0
         LD B, 0x0
         ADD A, B
-        JR NZ, 0x15
+        JR NZ, 0x3
     )"};
 
-    auto [registers, wait_cycles] = get_cpu_output(4, assembly);
+    auto [expected_data, wait_cycles] = get_cpu_output(8, assembly);
 
-    ASSERT_EQ(registers[0].PC(), 2);
-    ASSERT_EQ(registers[3].PC(), 7);
+    // first instrution jumps to third
+    ASSERT_EQ(expected_data[0].PC(), 4);
+
+    // third instruction jumps to second
+    // because 0x84 (e8) is treated like -4
+    // so PC is decremented by 4
+    ASSERT_EQ(expected_data[1].PC(), 2);
+
+    // second instruction jumps to fourth
+    ASSERT_EQ(expected_data[2].PC(), 6);
+
+    ASSERT_EQ(expected_data[3].A(), 0x5);
+
+    // No jump in last instruction because
+    // Z flag is set
+    ASSERT_EQ(expected_data[7].PC(), 0xF);
 
     ASSERT_EQ(wait_cycles[0], 12);
-    ASSERT_EQ(wait_cycles[3], 8);
+    ASSERT_EQ(wait_cycles[1], 12);
+    ASSERT_EQ(wait_cycles[2], 12);
+    ASSERT_EQ(wait_cycles[7], 8);
 }

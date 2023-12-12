@@ -45,6 +45,8 @@ class cpu
     bool is_carry(uint8_t dest, uint8_t src);
     bool is_half_carry(uint8_t dest, uint8_t src);
 
+    void no_op_defined();
+
   private:
     uint8_t ld();
     uint8_t LD_HL_SP_e8();
@@ -65,6 +67,7 @@ class cpu
   private:
     uint8_t jmp();
     uint8_t JR_NZ_e8();
+    uint8_t JP_nn();
 
   private:
     uint8_t arith();

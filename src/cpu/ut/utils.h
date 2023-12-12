@@ -29,4 +29,27 @@ struct rw_mock : public rw_device
     }
 };
 
+using result_type = std::pair<std::vector<registers>, std::vector<uint8_t>>;
+
+static result_type get_cpu_output(int instructions_cc, std::string const &assembly)
+{
+    result_type result;
+    int cc{};
+
+    auto opcodes = transform(assembly);
+    rw_mock mock{opcodes};
+    cpu cpu{mock, [&result, &cc, &instructions_cc](registers const &regs, opcode const &op, uint8_t wait_cycles) {
+                result.first.push_back(regs);
+                result.second.push_back(wait_cycles);
+                ++cc;
+                if (cc == instructions_cc)
+                    return true;
+
+                return false;
+            }};
+    cpu.start();
+
+    return result;
+}
+
 #endif

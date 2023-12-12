@@ -1,8 +1,10 @@
-add_executable(load_tests test_ld_16.cpp test_ld_8.cpp test_jmp.cpp
-                          test_arith.cpp)
+set(test_suite_name "cpu_tests")
 
-target_include_directories(load_tests PRIVATE ${CMAKE_CURRENT_LIST_DIR})
+add_executable(${test_suite_name} test_ld_16.cpp test_ld_8.cpp test_jmp.cpp
+                                  test_arith.cpp)
 
-target_link_libraries(load_tests PRIVATE cpu GTest::gtest GTest::gtest_main
-                                         translator)
-gtest_add_tests(TARGET load_tests)
+target_include_directories(${test_suite_name} PRIVATE ${CMAKE_CURRENT_LIST_DIR})
+
+target_link_libraries(${test_suite_name} PRIVATE cpu GTest::gtest
+                                                 GTest::gtest_main assembler)
+gtest_add_tests(TARGET ${test_suite_name})

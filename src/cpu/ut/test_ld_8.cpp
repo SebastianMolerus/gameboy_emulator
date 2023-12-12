@@ -1,7 +1,7 @@
+#include <assembler.hpp>
 #include <gtest/gtest.h>
 #include <iostream>
 #include <sstream>
-#include <translator.hpp>
 #include <utils.h>
 
 // 0x02
@@ -12,7 +12,7 @@ TEST(test_load_8bit, LD_IBCI_A)
         LD A, 0x15
         LD [BC], A
     )"};
-    auto opcodes = translate(assembly);
+    auto opcodes = transform(assembly);
     rw_mock mock{opcodes};
     registers expected_data;
     cpu cpu{mock, [&expected_data](registers const &regs, opcode const &op, uint8_t wait_cycles) {
@@ -37,7 +37,7 @@ TEST(test_load_8bit, LD_IDEI_A)
         LD A, 0xEA
         LD [DE], A
     )"};
-    auto opcodes = translate(assembly);
+    auto opcodes = transform(assembly);
     rw_mock mock{opcodes};
     cpu cpu{mock, [](registers const &regs, opcode const &op, uint8_t wait_cycles) {
                 if (op.m_hex == get_opcode("LD [DE], A").m_hex)
@@ -60,7 +60,7 @@ TEST(test_load_8bit, LD_IHLplusI_A)
         LD A, 0x61
         LD [HL+], A
     )"};
-    auto opcodes = translate(assembly);
+    auto opcodes = transform(assembly);
     rw_mock mock{opcodes};
     registers expected_data;
     cpu cpu{mock, [&expected_data](registers const &regs, opcode const &op, uint8_t wait_cycles) {
@@ -86,7 +86,7 @@ TEST(test_load_8bit, LD_IHLminusI_A)
         LD A, 0x51
         LD [HL-], A
     )"};
-    auto opcodes = translate(assembly);
+    auto opcodes = transform(assembly);
     rw_mock mock{opcodes};
     registers expected_data;
     cpu cpu{mock, [&expected_data](registers const &regs, opcode const &op, uint8_t wait_cycles) {
@@ -111,7 +111,7 @@ TEST(test_load_8bit, LDH_Ia8I_A)
         LD A, 0x99
         LDH [0x15], A
     )"};
-    auto opcodes = translate(assembly);
+    auto opcodes = transform(assembly);
     rw_mock mock{opcodes};
     cpu cpu{mock, [](registers const &regs, opcode const &op, uint8_t wait_cycles) {
                 if (op.m_hex == get_opcode("LDH [a8], A").m_hex)
@@ -134,7 +134,7 @@ TEST(test_load_8bit, LDH_A_Ia8I)
         LD [0xFF87], SP
         LDH A, [0x87]
     )"};
-    auto opcodes = translate(assembly);
+    auto opcodes = transform(assembly);
     rw_mock mock{opcodes};
     registers expected_data;
     cpu cpu{mock, [&expected_data](registers const &regs, opcode const &op, uint8_t wait_cycles) {
@@ -158,7 +158,7 @@ TEST(test_load_8bit, LD_B_n8)
          LD B, 0x07
          LD B, 0x1
      )"};
-    auto opcodes = translate(assembly);
+    auto opcodes = transform(assembly);
     rw_mock mock{opcodes};
     std::vector<registers> expected_data;
     cpu cpu{mock, [&expected_data](registers const &regs, opcode const &op, uint8_t wait_cycles) {
@@ -183,7 +183,7 @@ TEST(test_load_8bit, LD_D_n8)
          LD D, 0xB
          LD D, 0x0
      )"};
-    auto opcodes = translate(assembly);
+    auto opcodes = transform(assembly);
     rw_mock mock{opcodes};
     std::vector<registers> expected_data;
     cpu cpu{mock, [&expected_data](registers const &regs, opcode const &op, uint8_t wait_cycles) {
@@ -209,7 +209,7 @@ TEST(test_load_8bit, LD_H_n8)
          LD H, 0x59
          LD H, 0x4
      )"};
-    auto opcodes = translate(assembly);
+    auto opcodes = transform(assembly);
     rw_mock mock{opcodes};
     std::vector<registers> expected_data;
     cpu cpu{mock, [&expected_data](registers const &regs, opcode const &op, uint8_t wait_cycles) {
@@ -236,7 +236,7 @@ TEST(test_load_8bit, LD_IHLI_n8)
          LD HL, 0x784E
          LD [HL], 0xF6
      )"};
-    auto opcodes = translate(assembly);
+    auto opcodes = transform(assembly);
     rw_mock mock{opcodes};
     cpu cpu{mock, [](registers const &regs, opcode const &op, uint8_t wait_cycles) {
                 static int instruction_cc{};
@@ -265,7 +265,7 @@ TEST(test_load_8bit, LD_C_n8)
          LD C, 0x01
          LD C, 0xF5
      )"};
-    auto opcodes = translate(assembly);
+    auto opcodes = transform(assembly);
     rw_mock mock{opcodes};
     std::vector<registers> expected_data;
     cpu cpu{mock, [&expected_data](registers const &regs, opcode const &op, uint8_t wait_cycles) {
@@ -291,7 +291,7 @@ TEST(test_load_8bit, LD_E_n8)
          LD E, 0xA4
          LD E, 0x8D
      )"};
-    auto opcodes = translate(assembly);
+    auto opcodes = transform(assembly);
     rw_mock mock{opcodes};
     std::vector<registers> expected_data;
     cpu cpu{mock, [&expected_data](registers const &regs, opcode const &op, uint8_t wait_cycles) {
@@ -317,7 +317,7 @@ TEST(test_load_8bit, LD_L_n8)
          LD L, 0x71
          LD L, 0x0F
      )"};
-    auto opcodes = translate(assembly);
+    auto opcodes = transform(assembly);
     rw_mock mock{opcodes};
     std::vector<registers> expected_data;
     cpu cpu{mock, [&expected_data](registers const &regs, opcode const &op, uint8_t wait_cycles) {
@@ -343,7 +343,7 @@ TEST(test_load_8bit, LD_A_n8)
          LD A, 0x2
          LD A, 0x3
      )"};
-    auto opcodes = translate(assembly);
+    auto opcodes = transform(assembly);
     rw_mock mock{opcodes};
     std::vector<registers> expected_data;
     cpu cpu{mock, [&expected_data](registers const &regs, opcode const &op, uint8_t wait_cycles) {
@@ -370,7 +370,7 @@ TEST(test_load_8bit, LD_A_IBCI)
          LD BC, 0x667
          LD A, [BC]
      )"};
-    auto opcodes = translate(assembly);
+    auto opcodes = transform(assembly);
     rw_mock mock{opcodes};
     registers expected_data;
     cpu cpu{mock, [&expected_data](registers const &regs, opcode const &op, uint8_t wait_cycles) {
@@ -398,7 +398,7 @@ TEST(test_load_8bit, LD_A_IDEI)
          LD DE, 0x0099
          LD A, [DE]
      )"};
-    auto opcodes = translate(assembly);
+    auto opcodes = transform(assembly);
     rw_mock mock{opcodes};
     registers expected_data;
     cpu cpu{mock, [&expected_data](registers const &regs, opcode const &op, uint8_t wait_cycles) {
@@ -426,7 +426,7 @@ TEST(test_load_8bit, LD_A_IHLplusI)
          LD HL, 0xFF01
          LD A, [HL+]
      )"};
-    auto opcodes = translate(assembly);
+    auto opcodes = transform(assembly);
     rw_mock mock{opcodes};
     registers expected_data;
     cpu cpu{mock, [&expected_data](registers const &regs, opcode const &op, uint8_t wait_cycles) {
@@ -456,7 +456,7 @@ TEST(test_load_8bit, LD_A_IHLminusI)
          LD A, [HL+]
          LD A, [HL-]
      )"};
-    auto opcodes = translate(assembly);
+    auto opcodes = transform(assembly);
     rw_mock mock{opcodes};
     registers expected_data;
     cpu cpu{mock, [&expected_data](registers const &regs, opcode const &op, uint8_t wait_cycles) {
@@ -483,7 +483,7 @@ TEST(test_load_8bit, LD_Ia16I_A)
          LD A, 0xAC
          LD [0xDEC5], A
      )"};
-    auto opcodes = translate(assembly);
+    auto opcodes = transform(assembly);
     rw_mock mock{opcodes};
     cpu cpu{mock, [](registers const &regs, opcode const &op, uint8_t wait_cycles) {
                 if (get_opcode("LD [a16], A").m_hex == op.m_hex)
@@ -504,7 +504,7 @@ TEST(test_load_8bit, LD_A_Ia16I)
     std::string assembly{R"(
          LD A, [0xAB43]
      )"};
-    auto opcodes = translate(assembly);
+    auto opcodes = transform(assembly);
     rw_mock mock{opcodes};
     mock.m_ram[0xAB43] = 0x67;
     registers expected_data;
@@ -526,7 +526,7 @@ TEST(test_load_8bit, LD_ICI_A)
          LD C, 0x39
          LD [C], A
      )"};
-    auto opcodes = translate(assembly);
+    auto opcodes = transform(assembly);
     rw_mock mock{opcodes};
     cpu cpu{mock, [](registers const &regs, opcode const &op, uint8_t wait_cycles) {
                 if (get_opcode("LD [C], A").m_hex == op.m_hex)
@@ -548,7 +548,7 @@ TEST(test_load_8bit, LD_A_ICI)
          LD C, 0xEB
          LD A, [C]
      )"};
-    auto opcodes = translate(assembly);
+    auto opcodes = transform(assembly);
     rw_mock mock{opcodes};
     mock.m_ram[0xFFEB] = 0x8E;
     registers expected_data;
@@ -582,7 +582,7 @@ TEST(test_load_8bit, LD_IHLI_reg8)
         LD [HL], E
         LD [HL], A
      )"};
-    auto opcodes = translate(assembly);
+    auto opcodes = transform(assembly);
     rw_mock mock{opcodes};
     std::vector<uint8_t> expected_data;
     cpu cpu{mock, [&expected_data, &mock](registers const &regs, opcode const &op, uint8_t wait_cycles) {
@@ -615,7 +615,7 @@ TEST(test_load_8bit, LD_IHLI_H_or_L)
         LD HL, 0x659D
         LD [HL], H
      )"};
-    auto opcodes = translate(assembly);
+    auto opcodes = transform(assembly);
     rw_mock mock{opcodes};
     std::vector<uint8_t> expected_data;
     cpu cpu{mock, [&expected_data, &mock](registers const &regs, opcode const &op, uint8_t wait_cycles) {
@@ -650,7 +650,7 @@ TEST(test_load_8bit, LD_REG8_IHLI_)
         LD L, [HL]
         LD A, [HL]
      )"};
-    auto opcodes = translate(assembly);
+    auto opcodes = transform(assembly);
     rw_mock mock{opcodes};
     mock.m_ram[0x1234] = 0x5F;
     mock.m_ram[0x5F34] = 0x66;
@@ -743,7 +743,7 @@ TEST(test_load_8bit, LD_REG8_REG8)
             cmd += ", ";
             cmd += source;
 
-            auto opcodes = translate(cmd);
+            auto opcodes = transform(cmd);
             ASSERT_EQ(opcodes.size(), 3);
 
             auto dest_value = test(opcodes, source_value);

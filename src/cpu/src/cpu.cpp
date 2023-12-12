@@ -3,9 +3,9 @@
 #include <sstream>
 #include <stdexcept>
 
-const std::unordered_map<const char *, cpu::processing_func> cpu::m_mapper{{"LD", &cpu::ld},   {"LDH", &cpu::ld},
-                                                                           {"PUSH", &cpu::ld}, {"POP", &cpu::ld},
-                                                                           {"JR", &cpu::jmp},  {"ADD", &cpu::arith}};
+const std::unordered_map<const char *, cpu::processing_func> cpu::m_mapper{
+    {"LD", &cpu::ld},  {"LDH", &cpu::ld}, {"PUSH", &cpu::ld},  {"POP", &cpu::ld},
+    {"JP", &cpu::jmp}, {"JR", &cpu::jmp}, {"ADD", &cpu::arith}};
 
 cpu::cpu(rw_device &rw_device, cb callback) : m_rw_device{rw_device}, m_callback{callback}
 {
@@ -65,4 +65,11 @@ bool cpu::is_carry(uint8_t dest, uint8_t src)
 bool cpu::is_half_carry(uint8_t dest, uint8_t src)
 {
     return ((dest & 0xF) + (src & 0xF)) & 0x10;
+}
+
+void cpu::no_op_defined()
+{
+    std::stringstream ss;
+    ss << __func__ << ": no operation defined for opcode 0x" << std::hex << (int)m_op.m_hex;
+    throw std::runtime_error(ss.str());
 }

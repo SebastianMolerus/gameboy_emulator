@@ -1,4 +1,4 @@
-#include "translator.hpp"
+#include <assembler.hpp>
 #include <cassert>
 #include <cctype>
 #include <cstring>
@@ -45,7 +45,7 @@ std::vector<std::string> parse_instructions(std::string_view instructions)
 }
 } // namespace
 
-std::vector<uint8_t> translate(std::string_view instructions)
+std::vector<uint8_t> transform(std::string_view instructions)
 {
     load_opcodes();
 

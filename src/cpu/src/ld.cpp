@@ -121,9 +121,7 @@ uint8_t cpu::ld()
     case 0x7F:
         return LD_REG8_REG8();
     default:
-        std::stringstream ss;
-        ss << __func__ << ": no operation defined for opcode 0x" << std::hex << (int)m_op.m_hex;
-        throw std::runtime_error(ss.str());
+        no_op_defined();
     }
 
     static uint8_t ret{0xFF};
