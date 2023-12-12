@@ -182,4 +182,9 @@ TEST(test_jmp, JP_NZ_a16)
 
     // No jump because Z flag is set
     ASSERT_EQ(expected_data[3].PC(), 0xE);
+    ASSERT_EQ(expected_data[3].D(), 0x0);
+
+    ASSERT_EQ(wait_cycles[0], 16);
+    ASSERT_EQ(wait_cycles[1], 16);
+    ASSERT_EQ(wait_cycles[3], 12);
 }
