@@ -165,8 +165,21 @@ TEST(test_jmp, JR_e8)
 TEST(test_jmp, JP_NZ_a16)
 {
     std::string assembly{R"(
+        JP NZ, 0x5
+        LD B, 0x5
+        JP NZ, 0xA
+        LD D, 0xFF
         ADD A, B
+        JP NZ, 0xFFFF
     )"};
 
-    auto [expected_data, wait_cycles] = get_cpu_output(1, assembly);
+    auto [expected_data, wait_cycles] = get_cpu_output(4, assembly);
+
+    ASSERT_EQ(expected_data[1].B(), 0x0);
+    ASSERT_EQ(expected_data[1].D(), 0x0);
+
+    ASSERT_TRUE(expected_data[2].is_flag_set(flag::Z));
+
+    // No jump because Z flag is set
+    ASSERT_EQ(expected_data[3].PC(), 0xE);
 }
