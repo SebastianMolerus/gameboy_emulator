@@ -40,6 +40,7 @@ class cpu
 
     void set(flag f);
     void reset(flag f);
+    void reset_all_flags();
 
   private:
     bool is_carry(uint8_t dest, uint8_t src);
@@ -66,8 +67,7 @@ class cpu
 
   private:
     uint8_t jmp();
-    uint8_t JR_NZ_e8();
-    uint8_t JR_NC_e8();
+    uint8_t JR_CC_e8();
     uint8_t JP_nn();
 
   private:

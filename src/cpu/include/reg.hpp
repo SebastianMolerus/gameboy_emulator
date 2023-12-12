@@ -4,6 +4,7 @@
 #include <cassert>
 #include <cstdint>
 #include <cstring>
+#include <string_view>
 
 typedef union {
     uint16_t m_u16;
@@ -155,6 +156,21 @@ struct registers
     bool is_flag_set(flag flag)
     {
         return (0 != (m_AF.m_lo & flag));
+    }
+
+    bool check_condition(std::string_view cond)
+    {
+        if (cond == "NZ")
+            return !is_flag_set(flag::Z);
+        else if (cond == "Z")
+            return is_flag_set(flag::Z);
+        else if (cond == "NC")
+            return !is_flag_set(flag::C);
+        else if (cond == "C")
+            return is_flag_set(flag::C);
+
+        assert(false);
+        return false;
     }
 };
 

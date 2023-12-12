@@ -14,7 +14,7 @@ uint8_t cpu::arith()
 
 uint8_t cpu::ADD_REG8_REG8()
 {
-    reset(flag::N);
+    reset_all_flags();
 
     assert(m_op.m_operands[0].m_name);
     assert(m_op.m_operands[1].m_name);

@@ -62,3 +62,15 @@ TEST(test_arith, ADD_A_B_v3)
     ASSERT_EQ(expected_data.B(), 0x81);
     ASSERT_EQ(expected_data.A(), 0x01);
 }
+
+// 0x80
+TEST(test_arith, ADD_A_B_v4)
+{
+    std::string assembly{R"(
+        ADD A, B
+    )"};
+    auto [expected_data, wait_cycles] = get_cpu_output(1, assembly);
+
+    ASSERT_EQ(expected_data[0].A(), 0x0);
+    ASSERT_EQ(expected_data[0].B(), 0x0);
+}

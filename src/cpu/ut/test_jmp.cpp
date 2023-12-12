@@ -75,3 +75,39 @@ TEST(test_jmp, JR_NC_e8)
     ASSERT_EQ(wait_cycles[2], 12);
     ASSERT_EQ(wait_cycles[7], 8);
 }
+
+// 0x28
+TEST(test_jmp, JR_Z_e8)
+{
+    std::string assembly{R"(
+        ADD A, B
+        JR Z, 0x2
+        JR Z, 0x2
+        JR Z, 0x84
+        LD A, 0x5
+        LD A, 0x0
+        LD B, 0x5
+        ADD A, B
+        JR Z, 0x3
+    )"};
+
+    auto [expected_data, wait_cycles] = get_cpu_output(9, assembly);
+
+    ASSERT_EQ(expected_data[0].A(), 0x0);
+
+    ASSERT_EQ(expected_data[1].PC(), 5);
+    ASSERT_EQ(expected_data[2].PC(), 3);
+    ASSERT_EQ(expected_data[3].PC(), 7);
+    ASSERT_EQ(expected_data[4].A(), 0x5);
+
+    ASSERT_FALSE(expected_data[7].is_flag_set(flag::Z));
+
+    // No jump in last instruction because
+    // Z flag is NOT set
+    ASSERT_EQ(expected_data[8].PC(), 0x10);
+
+    ASSERT_EQ(wait_cycles[1], 12);
+    ASSERT_EQ(wait_cycles[2], 12);
+    ASSERT_EQ(wait_cycles[3], 12);
+    ASSERT_EQ(wait_cycles[8], 8);
+}

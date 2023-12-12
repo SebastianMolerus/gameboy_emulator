@@ -6,9 +6,10 @@ uint8_t cpu::jmp()
     switch (m_op.m_hex)
     {
     case 0x20:
-        return JR_NZ_e8();
     case 0x30:
-        return JR_NC_e8();
+    case 0x28:
+    case 0x38:
+        return JR_CC_e8();
     case 0xC3:
         return JP_nn();
     default:
@@ -17,9 +18,9 @@ uint8_t cpu::jmp()
     return 0;
 }
 
-uint8_t cpu::JR_NZ_e8()
+uint8_t cpu::JR_CC_e8()
 {
-    if (!m_reg.is_flag_set(flag::Z))
+    if (m_reg.check_condition(m_op.m_operands[0].m_name))
     {
         // jump
         uint8_t e8 = m_op.m_data[0];
@@ -44,23 +45,4 @@ uint8_t cpu::JP_nn()
 
     m_reg.PC() = addr;
     return m_op.m_cycles[0];
-}
-
-uint8_t cpu::JR_NC_e8()
-{
-    if (!m_reg.is_flag_set(flag::C))
-    {
-        // jump
-        uint8_t e8 = m_op.m_data[0];
-        if (e8 & 0x80)
-            m_reg.PC() -= (e8 & 0x7F);
-        else
-            m_reg.PC() += e8;
-        return m_op.m_cycles[0];
-    }
-    else
-    {
-        // no jump
-        return m_op.m_cycles[1];
-    }
 }

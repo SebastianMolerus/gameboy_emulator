@@ -57,6 +57,14 @@ void cpu::reset(flag f)
     m_reg.m_AF.m_lo &= ~f;
 }
 
+void cpu::reset_all_flags()
+{
+    reset(flag::N);
+    reset(flag::C);
+    reset(flag::H);
+    reset(flag::Z);
+}
+
 bool cpu::is_carry(uint8_t dest, uint8_t src)
 {
     return (dest + src) & 0x100;
