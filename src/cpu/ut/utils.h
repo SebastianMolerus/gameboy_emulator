@@ -28,6 +28,7 @@ struct rw_mock : public rw_device
             m_ram[i] = opcodes[i];
     }
 
+    // put some opcodes at ram[addr]
     void add_instruction_at(uint16_t addr, std::string const &instruction)
     {
         auto opcodes = transform(instruction);

@@ -282,3 +282,31 @@ TEST(test_jmp, JP_C_a16)
     ASSERT_EQ(wait_cycles[4], 16);
     ASSERT_EQ(wait_cycles[6], 16);
 }
+
+// 0xC3
+TEST(test_jmp, JP_a16)
+{
+    std::string assembly{R"(
+        JP 0x72a4   ; 0 
+        JP 0x72a7   ; 2
+    )"};
+
+    rw_mock mock(assembly);
+
+    mock.add_instruction_at(0x72a4, R"(
+        JP 0x3      ; 1
+        JP 0x6      ; 3
+    )");
+
+    auto [expected_data, wait_cycles] = mock.get_cpu_output();
+
+    ASSERT_EQ(expected_data[0].PC(), 0x72a4);
+    ASSERT_EQ(expected_data[1].PC(), 0x3);
+    ASSERT_EQ(expected_data[2].PC(), 0x72a7);
+    ASSERT_EQ(expected_data[3].PC(), 0x6);
+
+    ASSERT_EQ(wait_cycles[0], 16);
+    ASSERT_EQ(wait_cycles[1], 16);
+    ASSERT_EQ(wait_cycles[2], 16);
+    ASSERT_EQ(wait_cycles[3], 16);
+}
