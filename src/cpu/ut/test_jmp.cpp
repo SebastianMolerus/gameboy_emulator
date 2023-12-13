@@ -244,4 +244,41 @@ TEST(test_jmp, JP_Z_a16)
     ASSERT_FALSE(expected_data[4].is_flag_set(flag::Z));
     ASSERT_EQ(expected_data[4].PC(), 0x5);
     ASSERT_EQ(expected_data[6].D(), 0x4f);
+
+    ASSERT_EQ(wait_cycles[1], 16);
+    ASSERT_EQ(wait_cycles[3], 16);
+    ASSERT_EQ(wait_cycles[5], 12);
+}
+
+// 0xDA
+TEST(test_jmp, JP_C_a16)
+{
+    std::string assembly{R"(
+        LD A, 0x80      ; 0. 
+        JP C, 0x5def    ; 1. no jump
+        LD B, 0x80      ; 2.
+        ADD A, B        ; 3. C is Set
+        JP C, 0x38a     ; 4. 
+        LD E, 0xf3      ; 7.
+    )"};
+
+    rw_mock mock(assembly);
+
+    mock.add_instruction_at(0x38a, R"(
+        LD H, 0x35      ; 5
+        JP C, 0xb       ; 6
+    )");
+
+    auto [expected_data, wait_cycles] = mock.get_cpu_output();
+
+    ASSERT_EQ(expected_data[1].PC(), 0x5);
+    ASSERT_TRUE(expected_data[3].is_flag_set(flag::C));
+    ASSERT_EQ(expected_data[4].PC(), 0x38a);
+    ASSERT_EQ(expected_data[5].H(), 0x35);
+    ASSERT_EQ(expected_data[6].PC(), 0xb);
+    ASSERT_EQ(expected_data[7].E(), 0xf3);
+
+    ASSERT_EQ(wait_cycles[1], 12);
+    ASSERT_EQ(wait_cycles[4], 16);
+    ASSERT_EQ(wait_cycles[6], 16);
 }
