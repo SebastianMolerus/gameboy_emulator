@@ -310,3 +310,40 @@ TEST(test_jmp, JP_a16)
     ASSERT_EQ(wait_cycles[2], 16);
     ASSERT_EQ(wait_cycles[3], 16);
 }
+
+// 0xCD
+TEST(test_jmp, CALL_a16)
+{
+    std::string assembly{R"(
+        LD SP, 0x8514 ; 0. 
+        LD A, 0x5     ; 1.
+        CALL 0x9443   ; 2. Address of next instruction is 0x8, push it into stack, jump to [3]
+        LD A, 0x9     ;    This instruction is avoided
+        LD B, 0x15    ; 5.
+        JP 0x9448     ; 6. jump to [7]
+        NOP           ; 8.
+    )"};
+
+    rw_mock mock(assembly);
+
+    mock.add_instruction_at(0x9443, R"(
+       LD A, 0x10     ; 3.
+       JP 0xA         ; 4. jump to [5]  
+       CALL 0xF       ; 7. jump to [8]
+    )");
+
+    auto [expected_data, wait_cycles] = mock.get_cpu_output();
+
+    ASSERT_EQ(expected_data[0].SP(), 0x8514);
+    ASSERT_EQ(expected_data[2].SP(), 0x8512);
+    ASSERT_EQ(expected_data[5].A(), 0x10);
+    ASSERT_EQ(expected_data[5].B(), 0x15);
+
+    ASSERT_EQ(expected_data[7].SP(), 0x8510);
+    ASSERT_EQ(expected_data[7].B(), 0x15);
+
+    ASSERT_EQ(mock.m_ram[0x8512], 0x8);
+    ASSERT_EQ(mock.m_ram[0x8513], 0x0);
+    ASSERT_EQ(mock.m_ram[0x8510], 0x4B);
+    ASSERT_EQ(mock.m_ram[0x8511], 0x94);
+}

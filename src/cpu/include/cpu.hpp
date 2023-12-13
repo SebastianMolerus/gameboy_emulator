@@ -42,13 +42,14 @@ class cpu
     void reset(flag f);
     void reset_all_flags();
 
-  private:
     bool is_carry(uint8_t dest, uint8_t src);
     bool is_half_carry(uint8_t dest, uint8_t src);
 
     void no_op_defined();
 
     uint16_t combined_data();
+
+    void push_PC();
 
   private:
     uint8_t ld();
@@ -73,6 +74,8 @@ class cpu
     uint8_t JR_e8();
     uint8_t JP_nn();
     uint8_t JP_CC_a16();
+    uint8_t CALL_CC_a16();
+    uint8_t CALL_a16();
 
   private:
     uint8_t arith();

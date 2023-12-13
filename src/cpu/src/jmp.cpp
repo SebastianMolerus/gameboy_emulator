@@ -16,6 +16,13 @@ uint8_t cpu::jmp()
     case 0xCA:
     case 0xDA:
         return JP_CC_a16();
+    case 0xC4:
+    case 0xD4:
+    case 0xCC:
+    case 0xDC:
+        return CALL_CC_a16();
+    case 0xCD:
+        return CALL_a16();
     case 0xC3:
         return JP_nn();
     default:
@@ -72,4 +79,16 @@ uint8_t cpu::JP_CC_a16()
         // no jump
         return m_op.m_cycles[1];
     }
+}
+
+uint8_t cpu::CALL_CC_a16()
+{
+    return 0;
+}
+
+uint8_t cpu::CALL_a16()
+{
+    push_PC();
+    m_reg.PC() = combined_data();
+    return m_op.m_cycles[0];
 }
