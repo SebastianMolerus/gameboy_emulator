@@ -444,3 +444,35 @@ TEST(test_jmp, CALL_C_a16)
     ASSERT_EQ(wait_cycles[1], 12);
     ASSERT_EQ(wait_cycles[5], 24);
 }
+
+// 0xD4
+// CALL NC, a16
+TEST(test_jmp, CALL_NC_a16)
+{
+    std::string assembly{R"(
+        LD SP, 0xb8e1           ; 0. [3B]
+        LD A, 0x80              ; 1. [2B]
+        LD B, 0x80              ; 2. [2B]
+        ADD A, B                ; 3. [1B], C is set
+        CALL NC, 0x1669         ; 4. [3B], no jump
+        LD A, 0x0               ; 5. [2B]
+        ADD A, B                ; 6. [1B], C is reset
+        CALL NC, 0x1669         ; 7. [3B], jump
+    )"};
+
+    rw_mock mock(assembly);
+
+    auto [expected_data, wait_cycles] = mock.get_cpu_output();
+
+    ASSERT_EQ(expected_data[0].SP(), 0xb8e1);
+    ASSERT_TRUE(expected_data[3].is_flag_set(flag::C));
+    ASSERT_EQ(expected_data[4].PC(), 0xB);
+    ASSERT_EQ(expected_data[4].SP(), 0xb8e1);
+    ASSERT_FALSE(expected_data[6].is_flag_set(flag::C));
+
+    ASSERT_EQ(expected_data[7].PC(), 0x1669);
+    ASSERT_EQ(expected_data[7].SP(), 0xb8dF);
+
+    ASSERT_EQ(mock.m_ram[0xb8e0], 0x0);
+    ASSERT_EQ(mock.m_ram[0xb8dF], 0x11);
+}
