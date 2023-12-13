@@ -36,20 +36,9 @@ uint8_t cpu::jmp()
 uint8_t cpu::JR_CC_e8()
 {
     if (m_reg.check_condition(m_op.m_operands[0].m_name))
-    {
-        // jump
-        uint8_t e8 = m_op.m_data[0];
-        if (e8 & 0x80)
-            m_reg.PC() -= (e8 & 0x7F);
-        else
-            m_reg.PC() += e8;
-        return m_op.m_cycles[0];
-    }
+        return JR_e8(); // jump
     else
-    {
-        // no jump
-        return m_op.m_cycles[1];
-    }
+        return m_op.m_cycles[1]; // no jump
 }
 
 uint8_t cpu::JR_e8()
@@ -68,41 +57,26 @@ uint8_t cpu::JP_nn()
     return m_op.m_cycles[0];
 }
 
-uint8_t cpu::JP_CC_a16()
-{
-    if (m_reg.check_condition(m_op.m_operands[0].m_name))
-    {
-        // jump
-        m_reg.PC() = combined_data();
-        return m_op.m_cycles[0];
-    }
-    else
-    {
-        // no jump
-        return m_op.m_cycles[1];
-    }
-}
-
 uint8_t cpu::JP_HL()
 {
     m_reg.PC() = m_reg.HL();
     return m_op.m_cycles[0];
 }
 
+uint8_t cpu::JP_CC_a16()
+{
+    if (m_reg.check_condition(m_op.m_operands[0].m_name))
+        return JP_nn(); // jump
+    else
+        return m_op.m_cycles[1]; // no jump
+}
+
 uint8_t cpu::CALL_CC_a16()
 {
     if (m_reg.check_condition(m_op.m_operands[0].m_name))
-    {
-        // call
-        push_PC();
-        m_reg.PC() = combined_data();
-        return m_op.m_cycles[0];
-    }
+        return CALL_a16(); // call
     else
-    {
-        // no call
-        return m_op.m_cycles[1];
-    }
+        return m_op.m_cycles[1]; // no call
 }
 
 uint8_t cpu::CALL_a16()
