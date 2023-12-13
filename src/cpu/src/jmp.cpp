@@ -82,6 +82,5 @@ uint8_t cpu::CALL_CC_a16()
 uint8_t cpu::CALL_a16()
 {
     push_PC();
-    m_reg.PC() = combined_data();
-    return m_op.m_cycles[0];
+    return JP_nn();
 }

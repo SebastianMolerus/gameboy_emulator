@@ -168,19 +168,15 @@ uint8_t cpu::LD_REG16_n16()
     assert(m_op.m_operands[0].m_name);
 
     uint16_t value = combined_data();
-
     m_reg.get_word(m_op.m_operands[0].m_name) = value;
-
     return m_op.m_cycles[0];
 }
 
 uint8_t cpu::LD_Ia16I_SP()
 {
     uint16_t addr = combined_data();
-
     m_rw_device.write(addr, m_reg.m_SP.m_lo);
     m_rw_device.write(addr + 1, m_reg.m_SP.m_hi);
-
     return m_op.m_cycles[0];
 }
 
