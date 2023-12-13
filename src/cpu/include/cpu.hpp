@@ -77,6 +77,10 @@ class cpu
   private:
     uint8_t arith();
     uint8_t ADD_REG8_REG8();
+
+  private:
+    uint8_t misc();
+    uint8_t NOP();
 };
 
 #endif

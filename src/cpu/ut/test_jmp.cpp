@@ -6,35 +6,28 @@
 TEST(test_jmp, JR_NZ_e8)
 {
     std::string assembly{R"(
-        JR NZ, 0x2
-        JR NZ, 0x2
-        JR NZ, 0x84
-        LD A, 0x5
+        JR NZ, 0x2  ;  1. jump to [3]
+        JR NZ, 0x2  ;  2. jump to [4]
+        JR NZ, 0x84 ;  3. jump to [2] because 0x84 == (-4) 
+        LD A, 0x5   ;  4. 
         LD A, 0x0
         LD B, 0x0
-        ADD A, B
-        JR NZ, 0x3
+        ADD A, B    ;  Z flag is set after ADD A, B
+        JR NZ, 0x3  ;  no jump
     )"};
 
     auto [expected_data, wait_cycles] = get_cpu_output(8, assembly);
 
-    // first instrution jumps to third
     ASSERT_EQ(expected_data[0].PC(), 4);
 
-    // third instruction jumps to second
-    // because 0x84 (e8) is treated like -4
-    // so PC is decremented by 4
     ASSERT_EQ(expected_data[1].PC(), 2);
 
-    // second instruction jumps to fourth
     ASSERT_EQ(expected_data[2].PC(), 6);
 
     ASSERT_EQ(expected_data[3].A(), 0x5);
 
     ASSERT_TRUE(expected_data[6].is_flag_set(flag::Z));
 
-    // No jump in last instruction because
-    // Z flag is set
     ASSERT_EQ(expected_data[7].PC(), 0xF);
 
     ASSERT_EQ(wait_cycles[0], 12);
@@ -187,4 +180,16 @@ TEST(test_jmp, JP_NZ_a16)
     ASSERT_EQ(wait_cycles[0], 16);
     ASSERT_EQ(wait_cycles[1], 16);
     ASSERT_EQ(wait_cycles[3], 12);
+}
+
+// 0xD2
+TEST(test_jmp, JP_NC_a16)
+{
+    std::string assembly{R"(
+        JP NC, 0xFAFA ; PC should have 0xFAFA value
+    )"};
+
+    auto [expected_data, wait_cycles] = get_cpu_output(1, assembly);
+
+    ASSERT_EQ(expected_data[0].PC(), 0xFAFA);
 }

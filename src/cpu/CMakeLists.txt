@@ -1,4 +1,5 @@
-add_library(cpu STATIC src/cpu.cpp src/ld.cpp src/jmp.cpp src/arith.cpp)
+add_library(cpu STATIC src/cpu.cpp src/ld.cpp src/jmp.cpp src/arith.cpp
+                       src/misc.cpp)
 
 target_include_directories(cpu PUBLIC ${CMAKE_CURRENT_LIST_DIR}/include)
 
