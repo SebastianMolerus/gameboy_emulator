@@ -398,10 +398,6 @@ TEST(test_jmp, CALL_Z_a16)
 
     rw_mock mock(assembly);
 
-    mock.add_instruction_at(0xa43f, R"(
-        
-    )");
-
     auto [expected_data, wait_cycles] = mock.get_cpu_output();
 
     ASSERT_EQ(expected_data[0].SP(), 0xFFFF);
@@ -416,4 +412,35 @@ TEST(test_jmp, CALL_Z_a16)
 
     ASSERT_EQ(wait_cycles[1], 12);
     ASSERT_EQ(wait_cycles[3], 24);
+}
+
+// 0xDC
+// CALL C, a16
+TEST(test_jmp, CALL_C_a16)
+{
+    std::string assembly{R"(
+        LD SP, 0xFFFF           ; 0. [3B]
+        CALL C, 0xc271          ; 1. [3B] no jump
+        LD A, 0x80              ; 2. [2B]
+        LD B, 0x80              ; 3. [2B]
+        ADD A, B                ; 4. [1B] C is set
+        CALL C, 0xc271          ; 5. [3B] jump
+    )"};
+
+    rw_mock mock(assembly);
+
+    auto [expected_data, wait_cycles] = mock.get_cpu_output();
+
+    ASSERT_EQ(expected_data[0].SP(), 0xFFFF);
+    ASSERT_EQ(expected_data[1].PC(), 0x6);
+    ASSERT_EQ(expected_data[1].SP(), 0xFFFF);
+    ASSERT_TRUE(expected_data[4].is_flag_set(flag::C));
+    ASSERT_EQ(expected_data[5].PC(), 0xc271);
+    ASSERT_EQ(expected_data[5].SP(), 0xFFFD);
+
+    ASSERT_EQ(mock.m_ram[0xFFFD], 0xE);
+    ASSERT_EQ(mock.m_ram[0xFFFE], 0x0);
+
+    ASSERT_EQ(wait_cycles[1], 12);
+    ASSERT_EQ(wait_cycles[5], 24);
 }
