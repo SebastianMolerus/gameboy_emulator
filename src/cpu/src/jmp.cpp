@@ -83,7 +83,18 @@ uint8_t cpu::JP_CC_a16()
 
 uint8_t cpu::CALL_CC_a16()
 {
-    return 0;
+    if (m_reg.check_condition(m_op.m_operands[0].m_name))
+    {
+        // call
+        push_PC();
+        m_reg.PC() = combined_data();
+        return m_op.m_cycles[0];
+    }
+    else
+    {
+        // no call
+        return m_op.m_cycles[1];
+    }
 }
 
 uint8_t cpu::CALL_a16()

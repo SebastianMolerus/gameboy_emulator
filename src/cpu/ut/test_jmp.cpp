@@ -346,4 +346,7 @@ TEST(test_jmp, CALL_a16)
     ASSERT_EQ(mock.m_ram[0x8513], 0x0);
     ASSERT_EQ(mock.m_ram[0x8510], 0x4B);
     ASSERT_EQ(mock.m_ram[0x8511], 0x94);
+
+    ASSERT_EQ(wait_cycles[2], 24);
+    ASSERT_EQ(wait_cycles[7], 24);
 }
