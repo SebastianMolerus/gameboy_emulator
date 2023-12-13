@@ -4,8 +4,8 @@
 #include <stdexcept>
 
 const std::unordered_map<const char *, cpu::processing_func> cpu::m_mapper{
-    {"LD", &cpu::ld},  {"LDH", &cpu::ld}, {"PUSH", &cpu::ld},  {"POP", &cpu::ld},
-    {"JP", &cpu::jmp}, {"JR", &cpu::jmp}, {"ADD", &cpu::arith}};
+    {"LD", &cpu::ld},  {"LDH", &cpu::ld}, {"PUSH", &cpu::ld},   {"POP", &cpu::ld},
+    {"JP", &cpu::jmp}, {"JR", &cpu::jmp}, {"ADD", &cpu::arith}, {"NOP", &cpu::misc}};
 
 cpu::cpu(rw_device &rw_device, cb callback) : m_rw_device{rw_device}, m_callback{callback}
 {
