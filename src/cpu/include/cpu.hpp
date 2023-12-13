@@ -74,6 +74,7 @@ class cpu
     uint8_t JR_e8();
     uint8_t JP_nn();
     uint8_t JP_CC_a16();
+    uint8_t JP_HL();
     uint8_t CALL_CC_a16();
     uint8_t CALL_a16();
 

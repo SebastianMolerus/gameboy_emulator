@@ -25,6 +25,8 @@ uint8_t cpu::jmp()
         return CALL_a16();
     case 0xC3:
         return JP_nn();
+    case 0xE9:
+        return JP_HL();
     default:
         no_op_defined();
     }
@@ -79,6 +81,12 @@ uint8_t cpu::JP_CC_a16()
         // no jump
         return m_op.m_cycles[1];
     }
+}
+
+uint8_t cpu::JP_HL()
+{
+    m_reg.PC() = m_reg.HL();
+    return m_op.m_cycles[0];
 }
 
 uint8_t cpu::CALL_CC_a16()

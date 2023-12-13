@@ -476,3 +476,21 @@ TEST(test_jmp, CALL_NC_a16)
     ASSERT_EQ(mock.m_ram[0xb8e0], 0x0);
     ASSERT_EQ(mock.m_ram[0xb8dF], 0x11);
 }
+
+// 0xE9
+// JP HL
+TEST(test_jmp, JP_HL)
+{
+    std::string assembly{R"(
+        LD HL, 0xe386       ; 0. [3B]
+        JP HL               ; 1. [1B]
+    )"};
+
+    rw_mock mock(assembly);
+
+    auto [expected_data, wait_cycles] = mock.get_cpu_output();
+
+    ASSERT_EQ(expected_data[0].PC(), 0x3);
+    ASSERT_EQ(expected_data[1].PC(), 0xe386);
+    ASSERT_EQ(wait_cycles[1], 0x4);
+}
