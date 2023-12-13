@@ -1,7 +1,7 @@
 #include <assembler.hpp>
 #include <gtest/gtest.h>
 
-TEST(translator_test, translate_instructions_ld_1)
+TEST(assembler_test, translate_instructions_ld_1)
 {
     std::string st{R"(
         LD D, 0x74
@@ -28,7 +28,7 @@ TEST(translator_test, translate_instructions_ld_1)
     ASSERT_EQ(machine_code[10], 0x03);
 }
 
-TEST(translator_test, translate_instructions_ld_2)
+TEST(assembler_test, translate_instructions_ld_2)
 {
     std::string st{R"(
         LD SP, 0x3E
@@ -60,7 +60,7 @@ TEST(translator_test, translate_instructions_ld_2)
     ASSERT_EQ(machine_code[14], 0x81);
 }
 
-TEST(translator_test, translate_instructions_ld_3)
+TEST(assembler_test, translate_instructions_ld_3)
 {
     std::string st{R"(
         LD [0x100], SP
@@ -73,7 +73,7 @@ TEST(translator_test, translate_instructions_ld_3)
     ASSERT_EQ(machine_code[2], 0x01);
 }
 
-TEST(translator_test, jumps_2B_p1)
+TEST(assembler_test, jumps_2B_p1)
 {
     std::string st{R"(
         JR NZ, 0xAB
@@ -89,7 +89,7 @@ TEST(translator_test, jumps_2B_p1)
     ASSERT_EQ(machine_code[3], 0x12);
 }
 
-TEST(translator_test, jumps_2B_p2)
+TEST(assembler_test, jumps_2B_p2)
 {
     std::string st{R"(
         JR 0x78
@@ -110,7 +110,7 @@ TEST(translator_test, jumps_2B_p2)
     ASSERT_EQ(machine_code[5], 0x1);
 }
 
-TEST(translator_test, jumps_1B)
+TEST(assembler_test, jumps_1B)
 {
     std::string st{R"(
         RET NZ
@@ -150,7 +150,7 @@ TEST(translator_test, jumps_1B)
     ASSERT_EQ(machine_code[14], 0xFF);
 }
 
-TEST(translator_test, jumps_3B)
+TEST(assembler_test, jumps_3B)
 {
     std::string st{R"(
         JP NZ, 0x76

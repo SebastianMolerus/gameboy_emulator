@@ -1,4 +1,6 @@
+#include <algorithm>
 #include <assembler.hpp>
+#include <boost/algorithm/string/trim.hpp>
 #include <cassert>
 #include <cctype>
 #include <cstring>
@@ -7,39 +9,36 @@
 
 namespace
 {
+
+constexpr char COMMENT_MARK = ';';
+
 std::vector<std::string> parse_instructions(std::string_view instructions)
 {
     std::vector<std::string> result;
 
-    auto first_char = instructions.find_first_not_of(" \n");
-    auto last_char = instructions.find_last_not_of(" \n");
-
-    auto const s = instructions.size();
-
-    instructions.remove_prefix(first_char);
-    instructions.remove_suffix(s - 1 - last_char);
-
-    std::string str;
-    for (auto iter = instructions.begin(); iter != instructions.end();)
+    std::string line;
+    for (auto &cc : instructions)
     {
-        if (*iter != '\n')
-        {
-            str += *iter;
-            ++iter;
-            continue;
-        }
+        if (cc != '\n')
+            line.push_back(cc);
         else
         {
-            result.push_back(str);
-            str.clear();
+            if (line.size())
+            {
+                // Remove comments after ';'
+                auto iter = find(line.begin(), line.end(), COMMENT_MARK);
+                if (iter != line.end())
+                    line.erase(iter, line.end());
 
-            while (std::isspace(static_cast<int>(*iter)))
-                ++iter;
+                boost::algorithm::trim(line);
+                result.push_back(line);
+                line.clear();
+            }
         }
     }
-
-    if (!str.empty())
-        result.push_back(str);
+    boost::algorithm::trim(line);
+    if (line.size())
+        result.push_back(line);
 
     return result;
 }

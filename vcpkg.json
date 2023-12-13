@@ -1,6 +1,7 @@
 {
     "dependencies": [
         "gtest",
-        "json-spirit"
+        "json-spirit",
+        "boost-algorithm"
     ]
 }
