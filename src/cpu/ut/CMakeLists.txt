@@ -1,8 +1,7 @@
 set(test_suite_name "cpu_tests")
 
-add_executable(${test_suite_name} test_arith.cpp test_jmp.cpp)
-
-# test_ld_16.cpp test_ld_8.cpp test_jmp.cpp
+add_executable(${test_suite_name} test_arith.cpp test_jmp.cpp test_ld_16.cpp
+                                  test_ld_8.cpp)
 
 target_include_directories(${test_suite_name} PRIVATE ${CMAKE_CURRENT_LIST_DIR})
 

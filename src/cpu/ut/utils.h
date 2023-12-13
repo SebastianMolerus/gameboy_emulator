@@ -7,9 +7,10 @@
 #include <span>
 #include <vector>
 
+using result_type = std::pair<std::vector<registers>, std::vector<uint8_t>>;
+
 struct rw_mock : public rw_device
 {
-    using result_type = std::pair<std::vector<registers>, std::vector<uint8_t>>;
     std::vector<uint8_t> m_ram;
 
     // First opcodes are directly mapped to ram
@@ -17,6 +18,12 @@ struct rw_mock : public rw_device
     rw_mock(std::string const &assembly) : m_ram(0x10000, 0x00)
     {
         auto opcodes = transform(assembly);
+        for (auto i = 0; i < opcodes.size(); ++i)
+            m_ram[i] = opcodes[i];
+    }
+
+    rw_mock(std::span<uint8_t> opcodes) : m_ram(0x10000, 0x00)
+    {
         for (auto i = 0; i < opcodes.size(); ++i)
             m_ram[i] = opcodes[i];
     }
@@ -58,5 +65,24 @@ struct rw_mock : public rw_device
         m_ram[addr] = data;
     }
 };
+
+static result_type get_cpu_output(int instructions_cc, std::string const &assembly)
+{
+    result_type result;
+    int cc{};
+
+    rw_mock mock{assembly};
+    cpu cpu{mock, [&result, &cc, &instructions_cc](registers const &regs, opcode const &op, uint8_t wait_cycles) {
+                result.first.push_back(regs);
+                result.second.push_back(wait_cycles);
+                ++cc;
+                if (cc == instructions_cc)
+                    return true;
+                return false;
+            }};
+    cpu.start();
+
+    return result;
+}
 
 #endif
