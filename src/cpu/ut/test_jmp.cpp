@@ -494,3 +494,34 @@ TEST(test_jmp, JP_HL)
     ASSERT_EQ(expected_data[1].PC(), 0xe386);
     ASSERT_EQ(wait_cycles[1], 0x4);
 }
+
+// 0xC9
+// RET
+TEST(test_jmp, RET)
+{
+    std::string assembly{R"(
+        LD A, 0x4           ; [2B]  0.
+        LD B, 0x5           ; [2B]  1.
+        LD SP, 0xFF61       ; [3B]  2.
+        CALL 0x6a32         ; [3B]  3.
+        LD A, 0x98          ; [2B]  5. 
+        LD B, 0x61          ; [2B]  6. 
+    )"};
+
+    rw_mock mock(assembly);
+
+    mock.add_instruction_at(0x6a32, R"(
+        RET ;     4.
+    )");
+
+    auto [expected_data, wait_cycles] = mock.get_cpu_output();
+
+    ASSERT_EQ(expected_data[2].SP(), 0xFF61);
+    ASSERT_EQ(expected_data[3].PC(), 0x6a32);
+    ASSERT_EQ(expected_data[3].SP(), 0xFF5F);
+    ASSERT_EQ(expected_data[4].PC(), 0xA);
+    ASSERT_EQ(expected_data[5].A(), 0x98);
+    ASSERT_EQ(expected_data[6].B(), 0x61);
+
+    ASSERT_EQ(wait_cycles[4], 16);
+};

@@ -25,6 +25,8 @@ uint8_t cpu::jmp()
         return CALL_a16();
     case 0xC3:
         return JP_nn();
+    case 0xC9:
+        return RET();
     case 0xE9:
         return JP_HL();
     default:
@@ -36,7 +38,7 @@ uint8_t cpu::jmp()
 uint8_t cpu::JR_CC_e8()
 {
     if (m_reg.check_condition(m_op.m_operands[0].m_name))
-        return JR_e8(); // jump
+        return JR_e8();          // jump
     else
         return m_op.m_cycles[1]; // no jump
 }
@@ -66,7 +68,7 @@ uint8_t cpu::JP_HL()
 uint8_t cpu::JP_CC_a16()
 {
     if (m_reg.check_condition(m_op.m_operands[0].m_name))
-        return JP_nn(); // jump
+        return JP_nn();          // jump
     else
         return m_op.m_cycles[1]; // no jump
 }
@@ -74,7 +76,7 @@ uint8_t cpu::JP_CC_a16()
 uint8_t cpu::CALL_CC_a16()
 {
     if (m_reg.check_condition(m_op.m_operands[0].m_name))
-        return CALL_a16(); // call
+        return CALL_a16();       // call
     else
         return m_op.m_cycles[1]; // no call
 }
@@ -83,4 +85,10 @@ uint8_t cpu::CALL_a16()
 {
     push_PC();
     return JP_nn();
+}
+
+uint8_t cpu::RET()
+{
+    pop_PC();
+    return m_op.m_cycles[0];
 }

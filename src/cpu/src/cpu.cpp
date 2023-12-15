@@ -4,8 +4,8 @@
 #include <stdexcept>
 
 const std::unordered_map<const char *, cpu::processing_func> cpu::m_mapper{
-    {"LD", &cpu::ld},  {"LDH", &cpu::ld},    {"PUSH", &cpu::ld},  {"POP", &cpu::ld},  {"JP", &cpu::jmp},
-    {"JR", &cpu::jmp}, {"ADD", &cpu::arith}, {"NOP", &cpu::misc}, {"CALL", &cpu::jmp}};
+    {"LD", &cpu::ld},  {"LDH", &cpu::ld},    {"PUSH", &cpu::ld},  {"POP", &cpu::ld},   {"JP", &cpu::jmp},
+    {"JR", &cpu::jmp}, {"ADD", &cpu::arith}, {"NOP", &cpu::misc}, {"CALL", &cpu::jmp}, {"RET", &cpu::jmp}};
 
 cpu::cpu(rw_device &rw_device, cb callback) : m_rw_device{rw_device}, m_callback{callback}
 {
@@ -94,4 +94,11 @@ void cpu::push_PC()
     assert(m_reg.SP() > 0x1);
     m_rw_device.write(--m_reg.SP(), m_reg.PC() >> 8);
     m_rw_device.write(--m_reg.SP(), m_reg.PC());
+}
+
+void cpu::pop_PC()
+{
+    assert(m_reg.SP() < 0xFFFE);
+    m_reg.m_PC.m_lo = m_rw_device.read(m_reg.SP()++);
+    m_reg.m_PC.m_hi = m_rw_device.read(m_reg.SP()++);
 }

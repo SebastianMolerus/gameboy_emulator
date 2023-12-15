@@ -50,6 +50,7 @@ class cpu
     uint16_t combined_data();
 
     void push_PC();
+    void pop_PC();
 
   private:
     uint8_t ld();
@@ -77,6 +78,7 @@ class cpu
     uint8_t JP_HL();
     uint8_t CALL_CC_a16();
     uint8_t CALL_a16();
+    uint8_t RET();
 
   private:
     uint8_t arith();
