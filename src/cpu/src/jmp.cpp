@@ -27,6 +27,11 @@ uint8_t cpu::jmp()
         return JP_nn();
     case 0xC9:
         return RET();
+    case 0xC0:
+    case 0xC8:
+    case 0xD0:
+    case 0xD8:
+        return RET_CC();
     case 0xE9:
         return JP_HL();
     default:
@@ -91,4 +96,14 @@ uint8_t cpu::RET()
 {
     pop_PC();
     return m_op.m_cycles[0];
+}
+
+uint8_t cpu::RET_CC()
+{
+    assert(m_op.m_operands[0].m_name);
+    if (m_reg.check_condition(m_op.m_operands[0].m_name))
+    {
+        return RET();
+    }
+    return m_op.m_cycles[1];
 }

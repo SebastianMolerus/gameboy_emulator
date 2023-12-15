@@ -525,3 +525,36 @@ TEST(test_jmp, RET)
 
     ASSERT_EQ(wait_cycles[4], 16);
 };
+
+// 0xC0
+// RET NZ
+TEST(test_jmp, RET_NZ)
+{
+    std::string assembly{R"(
+        LD SP, 0xef3b       ; [3B]  0.
+        CALL 0x10ad         ; [3B]  1. 
+        ADD A, B            ; [1B]  3. Z Flag is set
+        CALL 0x10ae         ; [3B]  4. 
+    )"};
+
+    rw_mock mock(assembly);
+
+    mock.add_instruction_at(0x10ad, R"(
+        RET NZ          ;  2. [1B] 
+        LD A, 0x5       ;  5. [2B]
+        RET NZ          ;  6. [1B] Z is set, no jump
+        LD A, 0x6       ;  7.
+    )");
+
+    auto [expected_data, wait_cycles] = mock.get_cpu_output();
+
+    ASSERT_EQ(expected_data[1].PC(), 0x10ad);
+    ASSERT_FALSE(expected_data[1].is_flag_set(flag::Z));
+    ASSERT_EQ(expected_data[2].PC(), 0x6);
+    ASSERT_TRUE(expected_data[3].is_flag_set(flag::Z));
+    ASSERT_EQ(expected_data[4].PC(), 0x10ae);
+    ASSERT_EQ(expected_data[6].PC(), 0x10b1);
+
+    ASSERT_EQ(wait_cycles[2], 20);
+    ASSERT_EQ(wait_cycles[6], 8);
+};

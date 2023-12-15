@@ -79,6 +79,7 @@ class cpu
     uint8_t CALL_CC_a16();
     uint8_t CALL_a16();
     uint8_t RET();
+    uint8_t RET_CC();
 
   private:
     uint8_t arith();
