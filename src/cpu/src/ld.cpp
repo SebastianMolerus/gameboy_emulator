@@ -144,16 +144,10 @@ uint8_t cpu::LD_HL_SP_e8()
         SP -= val;
     else
     {
-        uint8_t half_carry_check{static_cast<uint8_t>(SP)};
-        half_carry_check &= 0xF;
-        half_carry_check += (val & 0xF);
-        if (half_carry_check & 0x10)
+        if (is_half_carry(SP, val))
             set(flag::H);
 
-        uint16_t carry_check{SP};
-        carry_check &= 0xFF;
-        carry_check += val;
-        if (carry_check & 0x100)
+        if (is_carry(SP, val))
             set(flag::C);
 
         SP += val;
