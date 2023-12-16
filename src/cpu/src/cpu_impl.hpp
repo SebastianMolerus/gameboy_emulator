@@ -16,10 +16,10 @@ struct cpu::cpu_impl
 
     void start();
 
-  private:
     registers m_reg;
     rw_device &m_rw_device;
     opcode m_op;
+    bool m_IME{}; // Interrupt master enable;
 
     cb m_callback;
 
@@ -39,7 +39,6 @@ struct cpu::cpu_impl
     void push_PC();
     void pop_PC();
 
-  private:
     uint8_t ld();
     uint8_t LD_HL_SP_e8();
     uint8_t LD_REG16_n16();
@@ -56,7 +55,6 @@ struct cpu::cpu_impl
     uint8_t LD_ICI_A();
     uint8_t LD_IHLI_REG8();
 
-  private:
     uint8_t jmp();
     uint8_t JR_CC_e8();
     uint8_t JR_e8();
@@ -67,12 +65,12 @@ struct cpu::cpu_impl
     uint8_t CALL_a16();
     uint8_t RET();
     uint8_t RET_CC();
+    uint8_t RETI();
+    uint8_t RST_nn();
 
-  private:
     uint8_t arith();
     uint8_t ADD_REG8_REG8();
 
-  private:
     uint8_t misc();
     uint8_t NOP();
 };

@@ -650,3 +650,70 @@ TEST(test_jmp, RET_C)
     ASSERT_EQ(wait_cycles[2], 8);
     ASSERT_EQ(wait_cycles[6], 20);
 };
+
+// C7 CF D7 DF E7 EF F7 FF
+TEST(test_jmp, RST_nn)
+{
+    std::string assembly{R"(
+        JP Z, 0xABCD        ; 0. first and last instuction
+        LD SP, 0xFFFF       ; 1.
+        RST $10             ; 2. 
+    )"};
+
+    rw_mock mock(assembly);
+
+    mock.add_instruction_at(0x10, R"(
+        RST $20     ; 3.
+    )");
+
+    mock.add_instruction_at(0x20, R"(
+        RST $30     ; 4. 
+    )");
+
+    mock.add_instruction_at(0x30, R"(
+        RST $08     ; 5. 
+    )");
+
+    mock.add_instruction_at(0x08, R"(
+        RST $18     ; 6. 
+    )");
+
+    mock.add_instruction_at(0x18, R"(
+        RST $28     ; 7. 
+    )");
+
+    mock.add_instruction_at(0x28, R"(
+        RST $38     ; 8. 
+    )");
+
+    mock.add_instruction_at(0x38, R"(
+        ADD A, B  ; 9. set Z flag here to block reentry in 0.
+        RST $00   ; 10.
+    )");
+
+    auto [expected_data, wait_cycles] = mock.get_cpu_output();
+
+    ASSERT_EQ(expected_data[2].PC(), 0x10);
+    ASSERT_EQ(expected_data[2].SP(), 0xFFFF - 2);
+
+    ASSERT_EQ(expected_data[3].PC(), 0x20);
+    ASSERT_EQ(expected_data[3].SP(), 0xFFFF - 4);
+
+    ASSERT_EQ(expected_data[4].PC(), 0x30);
+    ASSERT_EQ(expected_data[4].SP(), 0xFFFF - 6);
+
+    ASSERT_EQ(expected_data[5].PC(), 0x08);
+    ASSERT_EQ(expected_data[5].SP(), 0xFFFF - 8);
+
+    ASSERT_EQ(expected_data[6].PC(), 0x18);
+    ASSERT_EQ(expected_data[6].SP(), 0xFFFF - 10);
+
+    ASSERT_EQ(expected_data[7].PC(), 0x28);
+    ASSERT_EQ(expected_data[7].SP(), 0xFFFF - 12);
+
+    ASSERT_EQ(expected_data[8].PC(), 0x38);
+    ASSERT_EQ(expected_data[8].SP(), 0xFFFF - 14);
+
+    ASSERT_EQ(expected_data[10].PC(), 0x00);
+    ASSERT_EQ(expected_data[10].SP(), 0xFFFF - 16);
+}

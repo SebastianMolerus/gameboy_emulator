@@ -1,4 +1,5 @@
 #include "cpu_impl.hpp"
+#include <string>
 
 uint8_t cpu::cpu_impl::jmp()
 {
@@ -32,6 +33,17 @@ uint8_t cpu::cpu_impl::jmp()
     case 0xD0:
     case 0xD8:
         return RET_CC();
+    case 0xC7:
+    case 0xCF:
+    case 0xD7:
+    case 0xDF:
+    case 0xE7:
+    case 0xEF:
+    case 0xF7:
+    case 0xFF:
+        return RST_nn();
+    case 0xD9:
+        return RETI();
     case 0xE9:
         return JP_HL();
     default:
@@ -43,7 +55,7 @@ uint8_t cpu::cpu_impl::jmp()
 uint8_t cpu::cpu_impl::JR_CC_e8()
 {
     if (m_reg.check_condition(m_op.m_operands[0].m_name))
-        return JR_e8();          // jump
+        return JR_e8(); // jump
     else
         return m_op.m_cycles[1]; // no jump
 }
@@ -73,7 +85,7 @@ uint8_t cpu::cpu_impl::JP_HL()
 uint8_t cpu::cpu_impl::JP_CC_a16()
 {
     if (m_reg.check_condition(m_op.m_operands[0].m_name))
-        return JP_nn();          // jump
+        return JP_nn(); // jump
     else
         return m_op.m_cycles[1]; // no jump
 }
@@ -81,7 +93,7 @@ uint8_t cpu::cpu_impl::JP_CC_a16()
 uint8_t cpu::cpu_impl::CALL_CC_a16()
 {
     if (m_reg.check_condition(m_op.m_operands[0].m_name))
-        return CALL_a16();       // call
+        return CALL_a16(); // call
     else
         return m_op.m_cycles[1]; // no call
 }
@@ -104,4 +116,18 @@ uint8_t cpu::cpu_impl::RET_CC()
     if (m_reg.check_condition(m_op.m_operands[0].m_name))
         return RET();
     return m_op.m_cycles[1];
+}
+
+uint8_t cpu::cpu_impl::RETI()
+{
+    m_IME = true;
+    return RET();
+}
+
+uint8_t cpu::cpu_impl::RST_nn()
+{
+    assert(m_op.m_operands[0].m_name);
+    push_PC();
+    m_reg.PC() = std::stoi({m_op.m_operands[0].m_name + 1}, nullptr, 16);
+    return m_op.m_cycles[0];
 }
