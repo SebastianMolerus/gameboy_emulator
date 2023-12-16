@@ -3,7 +3,9 @@
 
 #include <cpu.hpp>
 #include <cstdint>
+#include <decoder.hpp>
 #include <memory>
+#include <reg.hpp>
 #include <span>
 #include <vector>
 

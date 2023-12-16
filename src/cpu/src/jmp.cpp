@@ -1,6 +1,6 @@
-#include <cpu.hpp>
+#include "cpu_impl.hpp"
 
-uint8_t cpu::jmp()
+uint8_t cpu::cpu_impl::jmp()
 {
     switch (m_op.m_hex)
     {
@@ -40,7 +40,7 @@ uint8_t cpu::jmp()
     return 0;
 }
 
-uint8_t cpu::JR_CC_e8()
+uint8_t cpu::cpu_impl::JR_CC_e8()
 {
     if (m_reg.check_condition(m_op.m_operands[0].m_name))
         return JR_e8();          // jump
@@ -48,7 +48,7 @@ uint8_t cpu::JR_CC_e8()
         return m_op.m_cycles[1]; // no jump
 }
 
-uint8_t cpu::JR_e8()
+uint8_t cpu::cpu_impl::JR_e8()
 {
     uint8_t e8 = m_op.m_data[0];
     if (e8 & 0x80)
@@ -58,19 +58,19 @@ uint8_t cpu::JR_e8()
     return m_op.m_cycles[0];
 }
 
-uint8_t cpu::JP_nn()
+uint8_t cpu::cpu_impl::JP_nn()
 {
     m_reg.PC() = combined_data();
     return m_op.m_cycles[0];
 }
 
-uint8_t cpu::JP_HL()
+uint8_t cpu::cpu_impl::JP_HL()
 {
     m_reg.PC() = m_reg.HL();
     return m_op.m_cycles[0];
 }
 
-uint8_t cpu::JP_CC_a16()
+uint8_t cpu::cpu_impl::JP_CC_a16()
 {
     if (m_reg.check_condition(m_op.m_operands[0].m_name))
         return JP_nn();          // jump
@@ -78,7 +78,7 @@ uint8_t cpu::JP_CC_a16()
         return m_op.m_cycles[1]; // no jump
 }
 
-uint8_t cpu::CALL_CC_a16()
+uint8_t cpu::cpu_impl::CALL_CC_a16()
 {
     if (m_reg.check_condition(m_op.m_operands[0].m_name))
         return CALL_a16();       // call
@@ -86,19 +86,19 @@ uint8_t cpu::CALL_CC_a16()
         return m_op.m_cycles[1]; // no call
 }
 
-uint8_t cpu::CALL_a16()
+uint8_t cpu::cpu_impl::CALL_a16()
 {
     push_PC();
     return JP_nn();
 }
 
-uint8_t cpu::RET()
+uint8_t cpu::cpu_impl::RET()
 {
     pop_PC();
     return m_op.m_cycles[0];
 }
 
-uint8_t cpu::RET_CC()
+uint8_t cpu::cpu_impl::RET_CC()
 {
     assert(m_op.m_operands[0].m_name);
     if (m_reg.check_condition(m_op.m_operands[0].m_name))

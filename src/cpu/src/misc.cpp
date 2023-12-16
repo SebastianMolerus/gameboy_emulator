@@ -1,6 +1,6 @@
-#include <cpu.hpp>
+#include "cpu_impl.hpp"
 
-uint8_t cpu::misc()
+uint8_t cpu::cpu_impl::misc()
 {
     switch (m_op.m_hex)
     {
@@ -12,7 +12,7 @@ uint8_t cpu::misc()
     return 0;
 }
 
-uint8_t cpu::NOP()
+uint8_t cpu::cpu_impl::NOP()
 {
     return 4;
 }

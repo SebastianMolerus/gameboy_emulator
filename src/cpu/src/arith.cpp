@@ -1,6 +1,6 @@
-#include <cpu.hpp>
+#include "cpu_impl.hpp"
 
-uint8_t cpu::arith()
+uint8_t cpu::cpu_impl::arith()
 {
     switch (m_op.m_hex)
     {
@@ -12,7 +12,7 @@ uint8_t cpu::arith()
     return 0;
 }
 
-uint8_t cpu::ADD_REG8_REG8()
+uint8_t cpu::cpu_impl::ADD_REG8_REG8()
 {
     reset_all_flags();
 

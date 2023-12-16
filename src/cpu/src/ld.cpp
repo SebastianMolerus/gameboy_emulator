@@ -1,8 +1,7 @@
+#include "cpu_impl.hpp"
 #include <cassert>
-#include <cpu.hpp>
-#include <sstream>
 
-uint8_t cpu::ld()
+uint8_t cpu::cpu_impl::ld()
 {
     switch (m_op.m_hex)
     {
@@ -129,7 +128,7 @@ uint8_t cpu::ld()
 }
 
 // // 0xF8 : Put SP + n effective address into HL
-uint8_t cpu::LD_HL_SP_e8()
+uint8_t cpu::cpu_impl::LD_HL_SP_e8()
 {
     reset(flag::Z);
     reset(flag::N);
@@ -157,7 +156,7 @@ uint8_t cpu::LD_HL_SP_e8()
     return m_op.m_cycles[0];
 }
 
-uint8_t cpu::LD_REG16_n16()
+uint8_t cpu::cpu_impl::LD_REG16_n16()
 {
     assert(m_op.m_operands[0].m_name);
 
@@ -166,7 +165,7 @@ uint8_t cpu::LD_REG16_n16()
     return m_op.m_cycles[0];
 }
 
-uint8_t cpu::LD_Ia16I_SP()
+uint8_t cpu::cpu_impl::LD_Ia16I_SP()
 {
     uint16_t addr = combined_data();
     m_rw_device.write(addr, m_reg.m_SP.m_lo);
@@ -174,13 +173,13 @@ uint8_t cpu::LD_Ia16I_SP()
     return m_op.m_cycles[0];
 }
 
-uint8_t cpu::LD_SP_HL()
+uint8_t cpu::cpu_impl::LD_SP_HL()
 {
     m_reg.get_word("SP") = m_reg.get_word("HL");
     return m_op.m_cycles[0];
 }
 
-uint8_t cpu::push()
+uint8_t cpu::cpu_impl::push()
 {
     assert(m_op.m_operands[0].m_name);
 
@@ -198,7 +197,7 @@ uint8_t cpu::push()
     return m_op.m_cycles[0];
 }
 
-uint8_t cpu::LD_REG8_REG8()
+uint8_t cpu::cpu_impl::LD_REG8_REG8()
 {
     assert(m_op.m_operands[0].m_name);
     assert(m_op.m_operands[1].m_name);
@@ -206,7 +205,7 @@ uint8_t cpu::LD_REG8_REG8()
     return m_op.m_cycles[0];
 }
 
-uint8_t cpu::pop()
+uint8_t cpu::cpu_impl::pop()
 {
     assert(m_op.m_operands[0].m_name);
     uint16_t &target_REG = m_reg.get_word(m_op.m_operands[0].m_name);
@@ -235,7 +234,7 @@ uint8_t cpu::pop()
     return m_op.m_cycles[0];
 }
 
-uint8_t cpu::LD_IREG16I_A()
+uint8_t cpu::cpu_impl::LD_IREG16I_A()
 {
     assert(m_op.m_operands[0].m_name);
     assert(m_op.m_operands[1].m_name);
@@ -252,7 +251,7 @@ uint8_t cpu::LD_IREG16I_A()
     return m_op.m_cycles[0];
 }
 
-uint8_t cpu::LD_REG_n8()
+uint8_t cpu::cpu_impl::LD_REG_n8()
 {
     assert(m_op.m_operands[0].m_name);
     uint8_t const value = m_op.m_data[0];
@@ -270,7 +269,7 @@ uint8_t cpu::LD_REG_n8()
     return m_op.m_cycles[0];
 }
 
-uint8_t cpu::LDH()
+uint8_t cpu::cpu_impl::LDH()
 {
     // LDH [a8], A -> LDH [a8 + 0xFF00], A
     if (m_op.m_hex == 0xE0)
@@ -287,7 +286,7 @@ uint8_t cpu::LDH()
     return m_op.m_cycles[0];
 }
 
-uint8_t cpu::LD_REG8_IREG16I()
+uint8_t cpu::cpu_impl::LD_REG8_IREG16I()
 {
     assert(m_op.m_operands[0].m_name);
     assert(m_op.m_operands[1].m_name);
@@ -304,7 +303,7 @@ uint8_t cpu::LD_REG8_IREG16I()
     return m_op.m_cycles[0];
 }
 
-uint8_t cpu::LD_Ia16I_A()
+uint8_t cpu::cpu_impl::LD_Ia16I_A()
 {
     assert(m_op.m_operands[0].m_name);
     assert(m_op.m_operands[1].m_name);
@@ -326,7 +325,7 @@ uint8_t cpu::LD_Ia16I_A()
     return m_op.m_cycles[0];
 }
 
-uint8_t cpu::LD_ICI_A()
+uint8_t cpu::cpu_impl::LD_ICI_A()
 {
     assert(m_op.m_operands[0].m_name);
     assert(m_op.m_operands[1].m_name);
@@ -346,7 +345,7 @@ uint8_t cpu::LD_ICI_A()
     return m_op.m_cycles[0];
 }
 
-uint8_t cpu::LD_IHLI_REG8()
+uint8_t cpu::cpu_impl::LD_IHLI_REG8()
 {
     assert(m_op.m_operands[1].m_name);
     m_rw_device.write(m_reg.HL(), m_reg.get_byte(m_op.m_operands[1].m_name));
