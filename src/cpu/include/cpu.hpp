@@ -1,6 +1,7 @@
 #ifndef CPU_HPP
 #define CPU_HPP
 
+#include <cstdint>
 #include <functional>
 #include <memory>
 #include <unordered_map>
@@ -22,6 +23,7 @@ class cpu
   public:
     // Callback is called after each instruction
     // registers, opcode and wait time for instruction can be viewed
+    // cpu working loop ends if callback returns true
     cpu(rw_device &rw_device, cb callback = nullptr);
 
     ~cpu();

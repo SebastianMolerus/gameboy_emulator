@@ -1,10 +1,17 @@
 #include "cpu_impl.hpp"
+#include <sstream>
+#include <stdexcept>
+#include <unordered_map>
+
+const std::unordered_map<const char *, cpu::cpu_impl::processing_func> cpu::cpu_impl::m_mapper{
+    {"LD", &cpu::cpu_impl::ld},     {"LDH", &cpu::cpu_impl::ld},   {"PUSH", &cpu::cpu_impl::ld},
+    {"POP", &cpu::cpu_impl::ld},    {"JP", &cpu::cpu_impl::jmp},   {"JR", &cpu::cpu_impl::jmp},
+    {"ADD", &cpu::cpu_impl::arith}, {"NOP", &cpu::cpu_impl::misc}, {"CALL", &cpu::cpu_impl::jmp},
+    {"RET", &cpu::cpu_impl::jmp}};
 
 cpu::cpu_impl::cpu_impl(rw_device &rw_device, cb callback) : m_rw_device{rw_device}, m_callback{callback}
 {
 }
-
-cpu::cpu_impl::~cpu_impl() = default;
 
 void cpu::cpu_impl::start()
 {
@@ -98,6 +105,9 @@ void cpu::cpu_impl::pop_PC()
     m_reg.m_PC.m_hi = m_rw_device.read(m_reg.SP()++);
 }
 
+// ******************************************
+//                  CPU PART
+// ******************************************
 cpu::cpu(rw_device &rw_device, cb callback) : m_pimpl{std::make_unique<cpu_impl>(rw_device, callback)}
 {
 }
@@ -106,5 +116,6 @@ cpu::~cpu() = default;
 
 void cpu::start()
 {
+    assert(m_pimpl);
     m_pimpl->start();
 }

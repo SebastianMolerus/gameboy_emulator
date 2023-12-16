@@ -1,5 +1,4 @@
 #include "cpu_impl.hpp"
-#include <cassert>
 
 uint8_t cpu::cpu_impl::ld()
 {

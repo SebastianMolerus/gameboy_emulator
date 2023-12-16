@@ -4,22 +4,15 @@
 #include <cpu.hpp>
 #include <cstdint>
 #include <decoder.hpp>
-#include <functional>
 #include <reg.hpp>
-#include <sstream>
-#include <stdexcept>
-#include <unordered_map>
 
 struct cpu::cpu_impl
 {
     using processing_func = uint8_t (cpu::cpu_impl::*)();
     cpu_impl(rw_device &rw_device, cb callback = nullptr);
+    ~cpu_impl() = default;
 
-    const std::unordered_map<const char *, processing_func> m_mapper{
-        {"LD", &cpu::cpu_impl::ld},     {"LDH", &cpu::cpu_impl::ld},   {"PUSH", &cpu::cpu_impl::ld},
-        {"POP", &cpu::cpu_impl::ld},    {"JP", &cpu::cpu_impl::jmp},   {"JR", &cpu::cpu_impl::jmp},
-        {"ADD", &cpu::cpu_impl::arith}, {"NOP", &cpu::cpu_impl::misc}, {"CALL", &cpu::cpu_impl::jmp},
-        {"RET", &cpu::cpu_impl::jmp}};
+    static const std::unordered_map<const char *, processing_func> m_mapper;
 
     void start();
 
