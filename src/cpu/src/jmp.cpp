@@ -102,8 +102,6 @@ uint8_t cpu::RET_CC()
 {
     assert(m_op.m_operands[0].m_name);
     if (m_reg.check_condition(m_op.m_operands[0].m_name))
-    {
         return RET();
-    }
     return m_op.m_cycles[1];
 }
