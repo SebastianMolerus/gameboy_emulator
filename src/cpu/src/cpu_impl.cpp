@@ -3,6 +3,9 @@
 #include <stdexcept>
 #include <unordered_map>
 
+// ******************************************
+//               CPU_IMPL PART
+// ******************************************
 const std::unordered_map<const char *, cpu::cpu_impl::processing_func> cpu::cpu_impl::m_mapper{
     {"LD", &cpu::cpu_impl::ld},     {"LDH", &cpu::cpu_impl::ld},   {"PUSH", &cpu::cpu_impl::ld},
     {"POP", &cpu::cpu_impl::ld},    {"JP", &cpu::cpu_impl::jmp},   {"JR", &cpu::cpu_impl::jmp},

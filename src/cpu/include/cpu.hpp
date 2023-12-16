@@ -28,6 +28,7 @@ class cpu
 
     ~cpu();
 
+    // Start working loop
     void start();
 
   private:
