@@ -695,25 +695,41 @@ TEST(test_jmp, RST_nn)
 
     ASSERT_EQ(expected_data[2].PC(), 0x10);
     ASSERT_EQ(expected_data[2].SP(), 0xFFFF - 2);
+    ASSERT_EQ(mock.m_ram[0xFFFF - 1], 0x0);
+    ASSERT_EQ(mock.m_ram[0xFFFF - 2], 0x7);
 
     ASSERT_EQ(expected_data[3].PC(), 0x20);
     ASSERT_EQ(expected_data[3].SP(), 0xFFFF - 4);
+    ASSERT_EQ(mock.m_ram[0xFFFF - 3], 0x0);
+    ASSERT_EQ(mock.m_ram[0xFFFF - 4], 0x11);
 
     ASSERT_EQ(expected_data[4].PC(), 0x30);
     ASSERT_EQ(expected_data[4].SP(), 0xFFFF - 6);
+    ASSERT_EQ(mock.m_ram[0xFFFF - 5], 0x0);
+    ASSERT_EQ(mock.m_ram[0xFFFF - 6], 0x21);
 
     ASSERT_EQ(expected_data[5].PC(), 0x08);
     ASSERT_EQ(expected_data[5].SP(), 0xFFFF - 8);
+    ASSERT_EQ(mock.m_ram[0xFFFF - 7], 0x0);
+    ASSERT_EQ(mock.m_ram[0xFFFF - 8], 0x31);
 
     ASSERT_EQ(expected_data[6].PC(), 0x18);
     ASSERT_EQ(expected_data[6].SP(), 0xFFFF - 10);
+    ASSERT_EQ(mock.m_ram[0xFFFF - 9], 0x0);
+    ASSERT_EQ(mock.m_ram[0xFFFF - 10], 0x9);
 
     ASSERT_EQ(expected_data[7].PC(), 0x28);
     ASSERT_EQ(expected_data[7].SP(), 0xFFFF - 12);
+    ASSERT_EQ(mock.m_ram[0xFFFF - 11], 0x0);
+    ASSERT_EQ(mock.m_ram[0xFFFF - 12], 0x19);
 
     ASSERT_EQ(expected_data[8].PC(), 0x38);
     ASSERT_EQ(expected_data[8].SP(), 0xFFFF - 14);
+    ASSERT_EQ(mock.m_ram[0xFFFF - 13], 0x0);
+    ASSERT_EQ(mock.m_ram[0xFFFF - 14], 0x29);
 
     ASSERT_EQ(expected_data[10].PC(), 0x00);
     ASSERT_EQ(expected_data[10].SP(), 0xFFFF - 16);
+    ASSERT_EQ(mock.m_ram[0xFFFF - 15], 0x0);
+    ASSERT_EQ(mock.m_ram[0xFFFF - 16], 0x3A);
 }
