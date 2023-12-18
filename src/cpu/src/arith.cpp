@@ -20,50 +20,32 @@ uint8_t cpu::cpu_impl::arith()
     return 0;
 }
 
-uint8_t cpu::cpu_impl::ADD_A_REG8()
+// Add src to dst, save to src and set proper flags
+void cpu::cpu_impl::arith_op(uint8_t &dst, uint8_t src)
 {
     reset_all_flags();
 
-    assert(m_op.m_operands[0].m_name);
-    assert(m_op.m_operands[1].m_name);
-
-    uint8_t &dest = m_reg.get_byte(m_op.m_operands[0].m_name);
-    uint8_t src = m_reg.get_byte(m_op.m_operands[1].m_name);
-
-    if (is_carry(dest, src))
+    if (is_carry(dst, src))
         set(flag::C);
 
-    if (is_half_carry(dest, src))
+    if (is_half_carry(dst, src))
         set(flag::H);
 
-    dest += src;
+    dst += src;
 
     if (m_reg.get_byte(m_op.m_operands[0].m_name) == 0)
         set(flag::Z);
+}
 
+uint8_t cpu::cpu_impl::ADD_A_REG8()
+{
+    assert(m_op.m_operands[1].m_name);
+    arith_op(m_reg.A(), m_reg.get_byte(m_op.m_operands[1].m_name));
     return m_op.m_cycles[0];
 }
 
 uint8_t cpu::cpu_impl::ADD_A_IHLI()
 {
-    reset_all_flags();
-
-    assert(m_op.m_operands[0].m_name);
-    assert(m_op.m_operands[1].m_name);
-
-    uint8_t &dest = m_reg.get_byte(m_op.m_operands[0].m_name);
-    uint8_t src = m_rw_device.read(m_reg.HL());
-
-    if (is_carry(dest, src))
-        set(flag::C);
-
-    if (is_half_carry(dest, src))
-        set(flag::H);
-
-    dest += src;
-
-    if (m_reg.get_byte(m_op.m_operands[0].m_name) == 0)
-        set(flag::Z);
-
+    arith_op(m_reg.A(), m_rw_device.read(m_reg.HL()));
     return m_op.m_cycles[0];
 }
