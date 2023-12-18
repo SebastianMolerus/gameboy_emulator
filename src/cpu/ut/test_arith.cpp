@@ -2,66 +2,132 @@
 #include <gtest/gtest.h>
 #include <utils.h>
 
-// 0x80
-TEST(test_arith, ADD_A_B)
+namespace
 {
-    std::string assembly{R"(
-        LD B, 0x0
-        ADD A, B
-    )"};
 
-    rw_mock mock(assembly);
+std::string build_ADD_A_REG8(std::string reg)
+{
+    std::string result;
+    result += "LD A, 0x0\n";
+    result += "LD " + reg + ", 0x0\n";
+    result += "ADD A, " + reg + "\n"; // 2. Zero flag is set
+
+    result += "LD A, 0x5\n";
+    result += "ADD A, " + reg + "\n"; // 4. Zero flag is reset
+
+    result += "LD A, 0x8\n";
+    result += "LD " + reg + ", 0x9\n";
+    result += "ADD A, " + reg + "\n"; // 7. HC is set
+
+    result += "LD A, 0x8\n";
+    result += "LD " + reg + ", 0x7\n";
+    result += "ADD A, " + reg + "\n"; // 10. HC is reset
+
+    result += "LD A, 0xFF\n";
+    result += "LD " + reg + ", 0x2\n";
+    result += "ADD A, " + reg + "\n"; // 13. C is set
+
+    result += "LD A, 0x80\n";
+    result += "LD " + reg + ", 0x7F\n";
+    result += "ADD A, " + reg + "\n"; // 16. C is reset
+
+    return result;
+}
+
+} // namespace
+
+// 0x80 81 82 83 84 85
+TEST(test_arith, ADD_A_REG8)
+{
+    // Zero
+    // Not zero
+    // Half C
+    // no half C
+    // C
+    // no C
+    for (auto const reg8 : {"B", "C", "D", "E", "H", "L"})
+    {
+        rw_mock mock(build_ADD_A_REG8(reg8));
+        auto [expected_data, wait_cycles] = mock.get_cpu_output();
+
+        ASSERT_TRUE(expected_data[2].is_flag_set(flag::Z));
+        ASSERT_FALSE(expected_data[2].is_flag_set(flag::N));
+        ASSERT_EQ(expected_data[2].A(), 0);
+        ASSERT_EQ(wait_cycles[2], 4);
+
+        ASSERT_FALSE(expected_data[4].is_flag_set(flag::Z));
+        ASSERT_FALSE(expected_data[4].is_flag_set(flag::N));
+        ASSERT_NE(expected_data[4].A(), 0);
+        ASSERT_EQ(wait_cycles[4], 4);
+
+        ASSERT_TRUE(expected_data[7].is_flag_set(flag::H));
+        ASSERT_FALSE(expected_data[7].is_flag_set(flag::N));
+        ASSERT_EQ(expected_data[7].A(), 0x8 + 0x9);
+        ASSERT_EQ(wait_cycles[7], 4);
+
+        ASSERT_FALSE(expected_data[10].is_flag_set(flag::H));
+        ASSERT_FALSE(expected_data[10].is_flag_set(flag::N));
+        ASSERT_EQ(expected_data[10].A(), 0x8 + 0x7);
+        ASSERT_EQ(wait_cycles[10], 4);
+
+        ASSERT_TRUE(expected_data[13].is_flag_set(flag::C));
+        ASSERT_FALSE(expected_data[13].is_flag_set(flag::N));
+        ASSERT_EQ(expected_data[13].A(), 0x1);
+        ASSERT_EQ(wait_cycles[13], 4);
+
+        ASSERT_FALSE(expected_data[16].is_flag_set(flag::C));
+        ASSERT_FALSE(expected_data[16].is_flag_set(flag::N));
+        ASSERT_EQ(expected_data[16].A(), 0x80 + 0x7F);
+        ASSERT_EQ(wait_cycles[16], 4);
+    }
+}
+
+// 0x87
+TEST(test_arith, ADD_A_A)
+{
+    // Zero
+    // Not zero
+    // Half C
+    // no half C
+    // C
+    // no C
+    rw_mock mock(R"(
+        LD A, 0x0
+        ADD A, A     ; 1. Z
+        LD A, 0x4
+        ADD A, A     ; 3. NZ
+        LD A, 0x8
+        ADD A, A     ; 5. HC
+        LD A, 0x7     
+        ADD A, A     ; 7. NHC
+        LD A, 0x80
+        ADD A, A     ; 9. C
+        LD A, 0x67
+        ADD A, A     ; 11. NC
+    )");
     auto [expected_data, wait_cycles] = mock.get_cpu_output();
 
     ASSERT_TRUE(expected_data[1].is_flag_set(flag::Z));
-    ASSERT_EQ(expected_data[1].A(), 0x0);
-    ASSERT_EQ(expected_data[1].B(), 0x0);
-}
+    ASSERT_EQ(expected_data[1].A(), 0);
+    ASSERT_EQ(wait_cycles[1], 4);
 
-// 0x80
-TEST(test_arith, ADD_A_B_v2)
-{
-    std::string assembly{R"(
-        LD B, 0x1
-        LD A, 0xF
-        ADD A, B
-    )"};
-    rw_mock mock(assembly);
-    auto [expected_data, wait_cycles] = mock.get_cpu_output();
+    ASSERT_FALSE(expected_data[3].is_flag_set(flag::Z));
+    ASSERT_NE(expected_data[3].A(), 0);
+    ASSERT_EQ(wait_cycles[3], 4);
 
-    ASSERT_FALSE(expected_data[2].is_flag_set(flag::Z));
-    ASSERT_TRUE(expected_data[2].is_flag_set(flag::H));
-    ASSERT_EQ(expected_data[2].A(), 0x10);
-    ASSERT_EQ(expected_data[2].B(), 0x1);
-    ASSERT_EQ(wait_cycles[2], 4);
-}
+    ASSERT_TRUE(expected_data[5].is_flag_set(flag::H));
+    ASSERT_EQ(expected_data[5].A(), 0x10);
+    ASSERT_EQ(wait_cycles[5], 4);
 
-// 0x80
-TEST(test_arith, ADD_A_B_v3)
-{
-    std::string assembly{R"(
-        LD B, 0x81
-        LD A, 0x80
-        ADD A, B
-    )"};
-    rw_mock mock(assembly);
-    auto [expected_data, wait_cycles] = mock.get_cpu_output();
+    ASSERT_FALSE(expected_data[7].is_flag_set(flag::H));
+    ASSERT_EQ(expected_data[7].A(), 0xE);
+    ASSERT_EQ(wait_cycles[7], 4);
 
-    ASSERT_FALSE(expected_data[2].is_flag_set(flag::H));
-    ASSERT_TRUE(expected_data[2].is_flag_set(flag::C));
-    ASSERT_EQ(expected_data[2].B(), 0x81);
-    ASSERT_EQ(expected_data[2].A(), 0x01);
-}
+    ASSERT_TRUE(expected_data[9].is_flag_set(flag::C));
+    ASSERT_EQ(expected_data[9].A(), 0x0);
+    ASSERT_EQ(wait_cycles[9], 4);
 
-// 0x80
-TEST(test_arith, ADD_A_B_v4)
-{
-    std::string assembly{R"(
-        ADD A, B
-    )"};
-    rw_mock mock(assembly);
-    auto [expected_data, wait_cycles] = mock.get_cpu_output();
-
-    ASSERT_EQ(expected_data[0].A(), 0x0);
-    ASSERT_EQ(expected_data[0].B(), 0x0);
+    ASSERT_FALSE(expected_data[11].is_flag_set(flag::C));
+    ASSERT_EQ(expected_data[11].A(), 0xCE);
+    ASSERT_EQ(wait_cycles[11], 4);
 }

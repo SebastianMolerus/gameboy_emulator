@@ -5,14 +5,20 @@ uint8_t cpu::cpu_impl::arith()
     switch (m_op.m_hex)
     {
     case 0x80:
-        return ADD_REG8_REG8();
+    case 0x81:
+    case 0x82:
+    case 0x83:
+    case 0x84:
+    case 0x85:
+    case 0x87:
+        return ADD_A_REG8();
     default:
         no_op_defined();
     }
     return 0;
 }
 
-uint8_t cpu::cpu_impl::ADD_REG8_REG8()
+uint8_t cpu::cpu_impl::ADD_A_REG8()
 {
     reset_all_flags();
 
