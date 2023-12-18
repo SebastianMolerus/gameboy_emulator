@@ -204,3 +204,56 @@ TEST(test_arith, ADD_A_IHLI)
     ASSERT_EQ(wait_cycles[12], 8);
     ASSERT_EQ(wait_cycles[14], 8);
 }
+
+// 0xC6
+TEST(test_arith, ADD_A_n8)
+{
+    // Zero
+    // Not zero
+    // Half C
+    // no half C
+    // C
+    // no C
+    rw_mock mock(R"(
+        LD A, 0x0
+        ADD A, 0x0  ; 1. Z
+        ADD A, 0x7E ; 2. NZ
+        ADD A, 0x2  ; 3. H
+        ADD A, 0xF  ; 4. NH
+        ADD A, 0x71  ; 5. C
+        ADD A, 0xFF  ; 6. NC
+    )");
+    auto [expected_data, wait_cycles] = mock.get_cpu_output();
+
+    ASSERT_TRUE(expected_data[1].is_flag_set(flag::Z));
+    ASSERT_EQ(expected_data[1].A(), 0x0);
+
+    ASSERT_FALSE(expected_data[2].is_flag_set(flag::Z));
+    ASSERT_NE(expected_data[2].A(), 0x0);
+
+    ASSERT_TRUE(expected_data[3].is_flag_set(flag::H));
+    ASSERT_EQ(expected_data[3].A(), 0x80);
+
+    ASSERT_FALSE(expected_data[4].is_flag_set(flag::H));
+    ASSERT_EQ(expected_data[4].A(), 0x8F);
+
+    ASSERT_TRUE(expected_data[5].is_flag_set(flag::C));
+    ASSERT_EQ(expected_data[5].A(), 0x0);
+
+    ASSERT_FALSE(expected_data[6].is_flag_set(flag::C));
+    ASSERT_EQ(expected_data[6].A(), 0xFF);
+
+    ASSERT_FALSE(expected_data[1].is_flag_set(flag::N));
+    ASSERT_FALSE(expected_data[2].is_flag_set(flag::N));
+    ASSERT_FALSE(expected_data[3].is_flag_set(flag::N));
+    ASSERT_FALSE(expected_data[4].is_flag_set(flag::N));
+    ASSERT_FALSE(expected_data[5].is_flag_set(flag::N));
+    ASSERT_FALSE(expected_data[6].is_flag_set(flag::N));
+
+    ASSERT_EQ(wait_cycles[1], 8);
+    ASSERT_EQ(wait_cycles[2], 8);
+    ASSERT_EQ(wait_cycles[3], 8);
+    ASSERT_EQ(wait_cycles[4], 8);
+    ASSERT_EQ(wait_cycles[5], 8);
+    ASSERT_EQ(wait_cycles[6], 8);
+}

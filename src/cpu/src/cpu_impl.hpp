@@ -69,9 +69,10 @@ struct cpu::cpu_impl
     uint8_t RST_nn();
 
     uint8_t arith();
-    void arith_op(uint8_t &dst, uint8_t src);
+    void add(uint8_t &dst, uint8_t src);
     uint8_t ADD_A_REG8();
     uint8_t ADD_A_IHLI();
+    uint8_t ADD_A_n8();
 
     uint8_t misc();
     uint8_t NOP();
