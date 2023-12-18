@@ -187,8 +187,8 @@ TEST(test_arith, ADD_A_IHLI)
     ASSERT_TRUE(expected_data[12].is_flag_set(flag::C));
     ASSERT_EQ(expected_data[12].A(), 0x0);
 
-    ASSERT_FALSE(expected_data[12].is_flag_set(flag::C));
-    ASSERT_EQ(expected_data[12].A(), 0xFF);
+    ASSERT_FALSE(expected_data[14].is_flag_set(flag::C));
+    ASSERT_EQ(expected_data[14].A(), 0xFF);
 
     ASSERT_FALSE(expected_data[1].is_flag_set(flag::N));
     ASSERT_FALSE(expected_data[3].is_flag_set(flag::N));
