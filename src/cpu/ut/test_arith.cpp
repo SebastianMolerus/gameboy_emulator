@@ -108,26 +108,99 @@ TEST(test_arith, ADD_A_A)
     auto [expected_data, wait_cycles] = mock.get_cpu_output();
 
     ASSERT_TRUE(expected_data[1].is_flag_set(flag::Z));
+    ASSERT_FALSE(expected_data[1].is_flag_set(flag::N));
     ASSERT_EQ(expected_data[1].A(), 0);
     ASSERT_EQ(wait_cycles[1], 4);
 
     ASSERT_FALSE(expected_data[3].is_flag_set(flag::Z));
+    ASSERT_FALSE(expected_data[3].is_flag_set(flag::N));
     ASSERT_NE(expected_data[3].A(), 0);
     ASSERT_EQ(wait_cycles[3], 4);
 
     ASSERT_TRUE(expected_data[5].is_flag_set(flag::H));
+    ASSERT_FALSE(expected_data[5].is_flag_set(flag::N));
     ASSERT_EQ(expected_data[5].A(), 0x10);
     ASSERT_EQ(wait_cycles[5], 4);
 
     ASSERT_FALSE(expected_data[7].is_flag_set(flag::H));
+    ASSERT_FALSE(expected_data[5].is_flag_set(flag::N));
     ASSERT_EQ(expected_data[7].A(), 0xE);
     ASSERT_EQ(wait_cycles[7], 4);
 
     ASSERT_TRUE(expected_data[9].is_flag_set(flag::C));
+    ASSERT_FALSE(expected_data[9].is_flag_set(flag::N));
     ASSERT_EQ(expected_data[9].A(), 0x0);
     ASSERT_EQ(wait_cycles[9], 4);
 
     ASSERT_FALSE(expected_data[11].is_flag_set(flag::C));
+    ASSERT_FALSE(expected_data[11].is_flag_set(flag::N));
     ASSERT_EQ(expected_data[11].A(), 0xCE);
     ASSERT_EQ(wait_cycles[11], 4);
+}
+
+// 0x86
+TEST(test_arith, ADD_A_IHLI)
+{
+    // Zero
+    // Not zero
+    // Half C
+    // no half C
+    // C
+    // no C
+    rw_mock mock(R"(
+        LD HL, 0xFEFE
+        ADD A, [HL]     ; 1. Z 
+        LD HL, 0xFEF0  
+        ADD A, [HL]     ; 3. NZ
+        LD A, 0x8 
+        LD HL, 0x123
+        ADD A, [HL]     ; 6. HC, A = 16
+        LD A, 0x1
+        LD HL, 0x123
+        ADD A, [HL]     ; 9. NHC, A = 9
+        LD A, 0x80
+        LD HL, 0xF123
+        ADD A, [HL]     ; 12. C, A = 0 
+        LD A, 0x7F
+        ADD A, [HL]     ; 14. NC, A = 255
+    )");
+
+    mock.m_ram[0xFEFE] = 0x0;
+    mock.m_ram[0xFEF0] = 0x48;
+    mock.m_ram[0x123] = 0x8;
+    mock.m_ram[0xF123] = 0x80;
+
+    auto [expected_data, wait_cycles] = mock.get_cpu_output();
+
+    ASSERT_TRUE(expected_data[1].is_flag_set(flag::Z));
+    ASSERT_EQ(expected_data[1].A(), 0x0);
+
+    ASSERT_FALSE(expected_data[3].is_flag_set(flag::Z));
+    ASSERT_NE(expected_data[3].A(), 0x0);
+
+    ASSERT_TRUE(expected_data[6].is_flag_set(flag::H));
+    ASSERT_EQ(expected_data[6].A(), 0x10);
+
+    ASSERT_FALSE(expected_data[9].is_flag_set(flag::H));
+    ASSERT_EQ(expected_data[9].A(), 0x9);
+
+    ASSERT_TRUE(expected_data[12].is_flag_set(flag::C));
+    ASSERT_EQ(expected_data[12].A(), 0x0);
+
+    ASSERT_FALSE(expected_data[12].is_flag_set(flag::C));
+    ASSERT_EQ(expected_data[12].A(), 0xFF);
+
+    ASSERT_FALSE(expected_data[1].is_flag_set(flag::N));
+    ASSERT_FALSE(expected_data[3].is_flag_set(flag::N));
+    ASSERT_FALSE(expected_data[6].is_flag_set(flag::N));
+    ASSERT_FALSE(expected_data[9].is_flag_set(flag::N));
+    ASSERT_FALSE(expected_data[12].is_flag_set(flag::N));
+    ASSERT_FALSE(expected_data[14].is_flag_set(flag::N));
+
+    ASSERT_EQ(wait_cycles[1], 8);
+    ASSERT_EQ(wait_cycles[3], 8);
+    ASSERT_EQ(wait_cycles[6], 8);
+    ASSERT_EQ(wait_cycles[9], 8);
+    ASSERT_EQ(wait_cycles[12], 8);
+    ASSERT_EQ(wait_cycles[14], 8);
 }
