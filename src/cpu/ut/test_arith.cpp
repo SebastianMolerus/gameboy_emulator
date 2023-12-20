@@ -259,7 +259,7 @@ TEST(test_arith, ADD_A_n8)
 }
 
 // 0xCE
-TEST(test_arith, ADD_n8)
+TEST(test_arith, ADC_n8)
 {
     // Zero
     // Not zero
@@ -269,20 +269,28 @@ TEST(test_arith, ADD_n8)
     // no C
     rw_mock mock(R"(
         LD A, 0x80
-        ADD A, 0x80  ; 1. C , A == 0
+        ADC A, 0x80  ; 1. C , A == 0
         LD A, 0x80
         ADC A, 0x7F  ; 3. C , A == 0
-        LD A, 0xFF
-        ADC A, 0xFF  ; 5. C , A == 1
+        LD A, 0x80
+        ADC A, 0x80  ; 5. C  , A == 1
+        ADC A, 0xE   ; 6, hC , na starcie A == 1, 
     )");
     auto [expected_data, wait_cycles] = mock.get_cpu_output();
 
     ASSERT_EQ(expected_data[1].A(), 0x0);
     ASSERT_TRUE(expected_data[1].is_flag_set(flag::C));
+    ASSERT_TRUE(expected_data[1].is_flag_set(flag::Z));
 
     ASSERT_EQ(expected_data[3].A(), 0x0);
     ASSERT_TRUE(expected_data[3].is_flag_set(flag::C));
+    ASSERT_TRUE(expected_data[3].is_flag_set(flag::Z));
 
     ASSERT_EQ(expected_data[5].A(), 0x1);
     ASSERT_TRUE(expected_data[5].is_flag_set(flag::C));
+    ASSERT_FALSE(expected_data[5].is_flag_set(flag::Z));
+
+    ASSERT_EQ(expected_data[6].A(), 0x10);
+    ASSERT_FALSE(expected_data[6].is_flag_set(flag::Z));
+    ASSERT_TRUE(expected_data[6].is_flag_set(flag::H));
 }
