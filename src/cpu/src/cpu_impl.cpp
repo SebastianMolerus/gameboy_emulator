@@ -7,10 +7,11 @@
 //               CPU_IMPL PART
 // ******************************************
 const std::unordered_map<const char *, cpu::cpu_impl::processing_func> cpu::cpu_impl::m_mapper{
-    {"LD", &cpu::cpu_impl::ld},     {"LDH", &cpu::cpu_impl::ld},   {"PUSH", &cpu::cpu_impl::ld},
-    {"POP", &cpu::cpu_impl::ld},    {"JP", &cpu::cpu_impl::jmp},   {"JR", &cpu::cpu_impl::jmp},
-    {"ADD", &cpu::cpu_impl::arith}, {"NOP", &cpu::cpu_impl::misc}, {"CALL", &cpu::cpu_impl::jmp},
-    {"RET", &cpu::cpu_impl::jmp},   {"RETI", &cpu::cpu_impl::jmp}, {"RST", &cpu::cpu_impl::jmp}};
+    {"LD", &cpu::cpu_impl::ld},     {"LDH", &cpu::cpu_impl::ld},    {"PUSH", &cpu::cpu_impl::ld},
+    {"POP", &cpu::cpu_impl::ld},    {"JP", &cpu::cpu_impl::jmp},    {"JR", &cpu::cpu_impl::jmp},
+    {"ADC", &cpu::cpu_impl::arith}, {"ADD", &cpu::cpu_impl::arith}, {"NOP", &cpu::cpu_impl::misc},
+    {"CALL", &cpu::cpu_impl::jmp},  {"RET", &cpu::cpu_impl::jmp},   {"RETI", &cpu::cpu_impl::jmp},
+    {"RST", &cpu::cpu_impl::jmp}};
 
 cpu::cpu_impl::cpu_impl(rw_device &rw_device, cb callback) : m_rw_device{rw_device}, m_callback{callback}
 {

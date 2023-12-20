@@ -16,6 +16,8 @@ uint8_t cpu::cpu_impl::arith()
         return ADD_A_IHLI();
     case 0xC6:
         return ADD_A_n8();
+    case 0xCE:
+        return ADC_n8();
     default:
         no_op_defined();
     }
@@ -23,7 +25,7 @@ uint8_t cpu::cpu_impl::arith()
 }
 
 // Add src to dst, save to src and set proper flags
-void cpu::cpu_impl::add(uint8_t &dst, uint8_t src)
+void cpu::cpu_impl::add(uint8_t &dst, uint16_t src)
 {
     reset_all_flags();
 
@@ -35,6 +37,7 @@ void cpu::cpu_impl::add(uint8_t &dst, uint8_t src)
 
     dst += src;
 
+    assert(m_op.m_operands[0].m_name);
     if (m_reg.get_byte(m_op.m_operands[0].m_name) == 0)
         set(flag::Z);
 }
@@ -56,4 +59,11 @@ uint8_t cpu::cpu_impl::ADD_A_n8()
 {
     add(m_reg.A(), m_op.m_data[0]);
     return m_op.m_cycles[0];
+}
+
+uint8_t cpu::cpu_impl::ADC_n8()
+{
+    uint16_t const val = m_reg.AF() & flag::C ? 1 : 0;
+    add(m_reg.A(), static_cast<uint16_t>(m_op.m_data[0] + val));
+    return 0;
 }

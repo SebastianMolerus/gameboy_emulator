@@ -257,3 +257,32 @@ TEST(test_arith, ADD_A_n8)
     ASSERT_EQ(wait_cycles[5], 8);
     ASSERT_EQ(wait_cycles[6], 8);
 }
+
+// 0xCE
+TEST(test_arith, ADD_n8)
+{
+    // Zero
+    // Not zero
+    // Half C
+    // no half C
+    // C
+    // no C
+    rw_mock mock(R"(
+        LD A, 0x80
+        ADD A, 0x80  ; 1. C , A == 0
+        LD A, 0x80
+        ADC A, 0x7F  ; 3. C , A == 0
+        LD A, 0xFF
+        ADC A, 0xFF  ; 5. C , A == 1
+    )");
+    auto [expected_data, wait_cycles] = mock.get_cpu_output();
+
+    ASSERT_EQ(expected_data[1].A(), 0x0);
+    ASSERT_TRUE(expected_data[1].is_flag_set(flag::C));
+
+    ASSERT_EQ(expected_data[3].A(), 0x0);
+    ASSERT_TRUE(expected_data[3].is_flag_set(flag::C));
+
+    ASSERT_EQ(expected_data[5].A(), 0x1);
+    ASSERT_TRUE(expected_data[5].is_flag_set(flag::C));
+}
