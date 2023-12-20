@@ -70,7 +70,7 @@ void cpu::cpu_impl::reset_all_flags()
     reset(flag::Z);
 }
 
-bool cpu::cpu_impl::is_carry(uint8_t dest, uint8_t src)
+bool cpu::cpu_impl::is_carry(uint8_t dest, uint16_t src)
 {
     return (dest + src) & 0x100;
 }

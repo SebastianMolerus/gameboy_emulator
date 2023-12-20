@@ -15,6 +15,10 @@ struct rw_mock : public rw_device
 {
     std::vector<uint8_t> m_ram;
 
+    rw_mock() : rw_mock(std::span<uint8_t>{})
+    {
+    }
+
     // First opcodes are directly mapped to ram
     // to Avoid problems write/read to higher ram values
     rw_mock(std::string const &assembly) : m_ram(0x10000, 0x00)
@@ -53,6 +57,31 @@ struct rw_mock : public rw_device
                 if (nop_cc == 0)
                     return true;
                 return false;
+            });
+        cpu_ptr->start();
+        return result;
+    }
+
+    std::pair<registers, uint8_t> reset_get_result_from(std::string_view assembly)
+    {
+        auto opcodes = transform(assembly);
+        int i{};
+        for (; i < opcodes.size(); ++i)
+            m_ram[i] = opcodes[i];
+        for (; i < m_ram.size(); ++i)
+            m_ram[i] = 0;
+
+        std::pair<registers, uint8_t> result;
+        auto cpu_ptr =
+            std::make_unique<cpu>(*this, [&result](registers const &regs, opcode const &op, uint8_t wait_cycles) {
+                if (op.m_hex == 0x0)
+                    return true;
+                else
+                {
+                    result.first = regs;
+                    result.second = wait_cycles;
+                    return false;
+                }
             });
         cpu_ptr->start();
         return result;
