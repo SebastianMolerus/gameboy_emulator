@@ -1,5 +1,68 @@
 #include "cpu_impl.hpp"
 
+namespace
+{
+
+uint8_t sub(cpu::cpu_impl &cpu, uint8_t data)
+{
+    cpu.reset_all_flags();
+    cpu.set(flag::N);
+
+    if (data > cpu.m_reg.A())
+        cpu.set(flag::C);
+
+    if ((data & 0xf) > (cpu.m_reg.A() & 0xf))
+        cpu.set(flag::H);
+
+    cpu.m_reg.A() -= data;
+
+    if (cpu.m_reg.A() == 0)
+        cpu.set(flag::Z);
+    return cpu.m_op.m_cycles[0];
+}
+
+void adc(cpu::cpu_impl &cpu, uint8_t &dst, uint8_t src)
+{
+    if (cpu.is_carry(dst, src))
+        cpu.set(flag::C);
+    if (cpu.is_half_carry(dst, src))
+        cpu.set(flag::H);
+    dst += src;
+}
+
+uint8_t adc_op(cpu::cpu_impl &cpu, uint8_t source, uint8_t carry_value)
+{
+    cpu.reset_all_flags();
+
+    adc(cpu, source, carry_value);
+    adc(cpu, cpu.m_reg.A(), source);
+
+    if (cpu.m_reg.A() == 0)
+        cpu.set(flag::Z);
+    return cpu.m_op.m_cycles[0];
+}
+
+uint8_t add(cpu::cpu_impl &cpu, uint8_t &dst, uint16_t src)
+{
+    cpu.reset_all_flags();
+
+    if (cpu.is_carry(dst, src))
+        cpu.set(flag::C);
+
+    if (cpu.is_half_carry(dst, src))
+        cpu.set(flag::H);
+
+    dst += src;
+
+    assert(m_op.m_operands[0].m_name);
+    if (cpu.m_reg.get_byte(cpu.m_op.m_operands[0].m_name) == 0)
+        cpu.set(flag::Z);
+
+    return cpu.m_op.m_cycles[0];
+}
+
+} // namespace
+
 uint8_t cpu::cpu_impl::alu()
 {
     switch (m_op.m_hex)
@@ -46,154 +109,62 @@ uint8_t cpu::cpu_impl::alu()
     return 0;
 }
 
-// Add src to dst, save to src and set proper flags
-void cpu::cpu_impl::add(uint8_t &dst, uint16_t src)
-{
-    reset_all_flags();
-
-    if (is_carry(dst, src))
-        set(flag::C);
-
-    if (is_half_carry(dst, src))
-        set(flag::H);
-
-    dst += src;
-
-    assert(m_op.m_operands[0].m_name);
-    if (m_reg.get_byte(m_op.m_operands[0].m_name) == 0)
-        set(flag::Z);
-}
-
-void cpu::cpu_impl::adc(uint8_t &dst, uint8_t src)
-{
-    if (is_carry(dst, src))
-        set(flag::C);
-    if (is_half_carry(dst, src))
-        set(flag::H);
-    dst += src;
-}
-
 uint8_t cpu::cpu_impl::ADD_A_REG8()
 {
     assert(m_op.m_operands[1].m_name);
-    add(m_reg.A(), m_reg.get_byte(m_op.m_operands[1].m_name));
+    add(*this, m_reg.A(), m_reg.get_byte(m_op.m_operands[1].m_name));
     return m_op.m_cycles[0];
 }
 
 uint8_t cpu::cpu_impl::ADD_A_IHLI()
 {
-    add(m_reg.A(), m_rw_device.read(m_reg.HL()));
+    add(*this, m_reg.A(), m_rw_device.read(m_reg.HL()));
     return m_op.m_cycles[0];
 }
 
 uint8_t cpu::cpu_impl::ADD_A_n8()
 {
-    add(m_reg.A(), m_op.m_data[0]);
+    add(*this, m_reg.A(), m_op.m_data[0]);
     return m_op.m_cycles[0];
 }
 
 uint8_t cpu::cpu_impl::ADC_n8()
 {
     uint8_t const val = m_reg.F() & flag::C ? 1 : 0;
-    uint8_t n8 = m_op.m_data[0];
-
-    reset_all_flags();
-
-    adc(n8, val);
-    adc(m_reg.A(), n8);
-
-    if (m_reg.A() == 0)
-        set(flag::Z);
-    return m_op.m_cycles[0];
+    uint8_t const n8 = m_op.m_data[0];
+    return adc_op(*this, n8, val);
 }
 
 uint8_t cpu::cpu_impl::ADC_A_REG8()
 {
     uint8_t const val = m_reg.F() & flag::C ? 1 : 0;
     assert(m_op.m_operands[1].m_name);
-    uint8_t reg8 = m_reg.get_byte(m_op.m_operands[1].m_name);
-
-    reset_all_flags();
-
-    adc(reg8, val);
-    adc(m_reg.A(), reg8);
-
-    if (m_reg.A() == 0)
-        set(flag::Z);
-    return m_op.m_cycles[0];
+    uint8_t const reg8 = m_reg.get_byte(m_op.m_operands[1].m_name);
+    return adc_op(*this, reg8, val);
 }
 
 uint8_t cpu::cpu_impl::ADC_A_IHLI()
 {
     uint8_t const val = m_reg.F() & flag::C ? 1 : 0;
-    uint8_t reg8 = m_rw_device.read(m_reg.HL());
-
-    reset_all_flags();
-
-    adc(reg8, val);
-    adc(m_reg.A(), reg8);
-
-    if (m_reg.A() == 0)
-        set(flag::Z);
-    return m_op.m_cycles[0];
+    uint8_t const reg8 = m_rw_device.read(m_reg.HL());
+    return adc_op(*this, reg8, val);
 }
 
 uint8_t cpu::cpu_impl::SUB_A_REG8()
 {
-    reset_all_flags();
-    set(flag::N);
-
     assert(m_op.m_operands[1].m_name);
-    uint8_t reg8 = m_reg.get_byte(m_op.m_operands[1].m_name);
-    if (reg8 > m_reg.A())
-        set(flag::C);
-
-    if ((reg8 & 0xf) > (m_reg.A() & 0xf))
-        set(flag::H);
-
-    m_reg.A() -= reg8;
-
-    if (m_reg.A() == 0)
-        set(flag::Z);
-    return m_op.m_cycles[0];
+    uint8_t const reg8 = m_reg.get_byte(m_op.m_operands[1].m_name);
+    return sub(*this, reg8);
 }
 
 uint8_t cpu::cpu_impl::SUB_A_IHLI()
 {
-    reset_all_flags();
-    set(flag::N);
-
-    uint8_t n8 = m_rw_device.read(m_reg.HL());
-
-    if (n8 > m_reg.A())
-        set(flag::C);
-
-    if ((n8 & 0xf) > (m_reg.A() & 0xf))
-        set(flag::H);
-
-    m_reg.A() -= n8;
-
-    if (m_reg.A() == 0)
-        set(flag::Z);
-    return m_op.m_cycles[0];
+    uint8_t const n8 = m_rw_device.read(m_reg.HL());
+    return sub(*this, n8);
 }
 
 uint8_t cpu::cpu_impl::SUB_A_n8()
 {
-    reset_all_flags();
-    set(flag::N);
-
-    uint8_t n8 = m_op.m_data[0];
-
-    if (n8 > m_reg.A())
-        set(flag::C);
-
-    if ((n8 & 0xf) > (m_reg.A() & 0xf))
-        set(flag::H);
-
-    m_reg.A() -= n8;
-
-    if (m_reg.A() == 0)
-        set(flag::Z);
-    return m_op.m_cycles[0];
+    uint8_t const n8 = m_op.m_data[0];
+    return sub(*this, n8);
 }

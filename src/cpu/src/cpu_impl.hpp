@@ -9,36 +9,46 @@
 struct cpu::cpu_impl
 {
     using processing_func = uint8_t (cpu::cpu_impl::*)();
+
     cpu_impl(rw_device &rw_device, cb callback = nullptr);
     ~cpu_impl() = default;
 
     static const std::unordered_map<const char *, processing_func> m_mapper;
 
-    void start();
-
     registers m_reg;
     rw_device &m_rw_device;
     opcode m_op;
     bool m_IME{}; // Interrupt master enable;
-
     cb m_callback;
 
+    // working loop entry
+    void start();
+
+    // read byte from memory pointed by PC
+    // increment PC
     uint8_t read_byte();
 
+    // flags operations
     void set(flag f);
     void reset(flag f);
     void reset_all_flags();
 
+    // is carry during addition dest += src
     bool is_carry(uint8_t dest, uint8_t src);
+
+    // is half-carry during addition dest += src
     bool is_half_carry(uint8_t dest, uint8_t src);
 
+    // throws runtime error with current opcode hex
     void no_op_defined();
 
+    // combine Word from data
     uint16_t combined_data();
 
     void push_PC();
     void pop_PC();
 
+    // Main entry for Loads
     uint8_t ld();
     uint8_t LD_HL_SP_e8();
     uint8_t LD_REG16_n16();
@@ -55,6 +65,7 @@ struct cpu::cpu_impl
     uint8_t LD_ICI_A();
     uint8_t LD_IHLI_REG8();
 
+    // Main entry for jumps
     uint8_t jmp();
     uint8_t JR_CC_e8();
     uint8_t JR_e8();
@@ -68,9 +79,8 @@ struct cpu::cpu_impl
     uint8_t RETI();
     uint8_t RST_nn();
 
+    // Main entry for ALU
     uint8_t alu();
-    void add(uint8_t &dst, uint16_t src);
-    void adc(uint8_t &dst, uint8_t src);
     uint8_t ADD_A_REG8();
     uint8_t ADD_A_IHLI();
     uint8_t ADD_A_n8();
@@ -81,6 +91,7 @@ struct cpu::cpu_impl
     uint8_t SUB_A_IHLI();
     uint8_t SUB_A_n8();
 
+    // Main entry for misc
     uint8_t misc();
     uint8_t NOP();
 };

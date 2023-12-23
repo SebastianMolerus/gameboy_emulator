@@ -32,8 +32,9 @@ class cpu
     // Start working loop
     void start();
 
-  private:
     struct cpu_impl;
+
+  private:
     std::unique_ptr<cpu_impl> m_pimpl;
 };
 
