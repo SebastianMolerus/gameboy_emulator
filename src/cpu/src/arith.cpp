@@ -20,6 +20,8 @@ uint8_t cpu::cpu_impl::arith()
     case 0x8D:
     case 0x8F:
         return ADC_A_REG8();
+    case 0x8E:
+        return ADC_A_IHLI();
     case 0x86:
         return ADD_A_IHLI();
     case 0xC6:
@@ -98,6 +100,21 @@ uint8_t cpu::cpu_impl::ADC_A_REG8()
     uint8_t const val = m_reg.F() & flag::C ? 1 : 0;
     assert(m_op.m_operands[1].m_name);
     uint8_t reg8 = m_reg.get_byte(m_op.m_operands[1].m_name);
+
+    reset_all_flags();
+
+    adc(reg8, val);
+    adc(m_reg.A(), reg8);
+
+    if (m_reg.get_byte(m_op.m_operands[0].m_name) == 0)
+        set(flag::Z);
+    return m_op.m_cycles[0];
+}
+
+uint8_t cpu::cpu_impl::ADC_A_IHLI()
+{
+    uint8_t const val = m_reg.F() & flag::C ? 1 : 0;
+    uint8_t reg8 = m_rw_device.read(m_reg.HL());
 
     reset_all_flags();
 

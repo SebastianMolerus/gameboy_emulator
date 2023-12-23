@@ -175,6 +175,23 @@ TEST(test_arith_BIG, adc_8_bit)
             ASSERT_EQ(r.A(), data.result.value) << diagnostic_message.str();
             ASSERT_EQ(r.F(), data.result.flags) << diagnostic_message.str();
         }
+
+        {
+            // 0x8E, ADC A, [HL]
+            registers startup;
+            startup.A() = data.x;
+            startup.HL() = 0x9;
+            startup.F() = data.flags;
+
+            std::array<uint8_t, 1> opcodes{0x8E};
+            bus b{opcodes, startup};
+            b.m_ram[0x9] = data.y;
+            b.go();
+
+            DIAGNOSTIC
+            ASSERT_EQ(r.A(), data.result.value) << diagnostic_message.str();
+            ASSERT_EQ(r.F(), data.result.flags) << diagnostic_message.str();
+        }
     }
 }
 
@@ -275,6 +292,23 @@ TEST(test_arith_BIG, add_8_bit)
 
             std::array<uint8_t, 1> opcodes{0x85};
             bus b{opcodes, startup};
+            b.go();
+
+            DIAGNOSTIC
+            ASSERT_EQ(r.A(), data.result.value) << diagnostic_message.str();
+            ASSERT_EQ(r.F(), data.result.flags) << diagnostic_message.str();
+        }
+
+        {
+            // 0x86, ADD A, [HL]
+            registers startup;
+            startup.A() = data.x;
+            startup.HL() = 0x9;
+            startup.F() = data.flags;
+
+            std::array<uint8_t, 1> opcodes{0x86};
+            bus b{opcodes, startup};
+            b.m_ram[0x9] = data.y;
             b.go();
 
             DIAGNOSTIC
