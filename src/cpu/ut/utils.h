@@ -15,7 +15,7 @@ struct rw_mock : public rw_device
 {
     std::vector<uint8_t> m_ram;
 
-    rw_mock() : rw_mock(std::span<uint8_t>{})
+    rw_mock() : m_ram(0x10000, 0x00)
     {
     }
 

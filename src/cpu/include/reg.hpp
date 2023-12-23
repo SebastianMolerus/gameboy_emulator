@@ -17,10 +17,10 @@ typedef union {
 
 enum flag : uint8_t
 {
-    C = (1 << 3),
-    H = (1 << 4),
-    N = (1 << 5),
-    Z = (1 << 6)
+    C = (1 << 4),
+    H = (1 << 5),
+    N = (1 << 6),
+    Z = (1 << 7)
 };
 
 struct registers
@@ -39,6 +39,10 @@ struct registers
     uint8_t &A()
     {
         return m_AF.m_hi;
+    }
+    uint8_t &F()
+    {
+        return m_AF.m_lo;
     }
     uint16_t &BC()
     {

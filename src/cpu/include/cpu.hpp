@@ -4,7 +4,7 @@
 #include <cstdint>
 #include <functional>
 #include <memory>
-#include <unordered_map>
+#include <reg.hpp>
 
 struct rw_device
 {
@@ -21,12 +21,15 @@ class cpu
     using cb = std::function<bool(registers const &, opcode const &op, uint8_t)>;
 
   public:
-    // Callback is called after each instruction
-    // registers, opcode and wait time for instruction can be viewed
-    // cpu working loop ends if callback returns true
-    cpu(rw_device &rw_device, cb callback = nullptr);
+    // 1. Callback is called after each instruction
+    //      registers, opcode and wait time for instruction can be viewed
+    // 2. Cpu working loop ends if callback returns true
+    // 3. Start_values are used as registers state before run
+    cpu(rw_device &rw_device, cb callback = nullptr, registers start_values = {});
 
     ~cpu();
+
+    void set_flags(uint8_t flags);
 
     // Start working loop
     void start();

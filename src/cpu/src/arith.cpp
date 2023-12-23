@@ -63,7 +63,31 @@ uint8_t cpu::cpu_impl::ADD_A_n8()
 
 uint8_t cpu::cpu_impl::ADC_n8()
 {
-    uint16_t const val = m_reg.AF() & flag::C ? 1 : 0;
-    add(m_reg.A(), static_cast<uint16_t>(m_op.m_data[0] + val));
+    uint8_t const val = m_reg.F() & flag::C ? 1 : 0;
+    add(m_reg.A(), m_op.m_data[0] + val);
+    return m_op.m_cycles[0];
+
+    // uint8_t &dest = m_reg.A();
+    // uint8_t src = m_op.m_data[0];
+
+    // if (0x10 & (src & 0xF + val))
+    //     set(flag::H);
+
+    // if (0x100 & (src + val))
+    //     set(flag::C);
+
+    // src += val;
+
+    // if (is_carry(dest, src))
+    //     set(flag::C);
+
+    // if (is_half_carry(dest, src))
+    //     set(flag::H);
+
+    // dest += src;
+
+    // assert(m_op.m_operands[0].m_name);
+    // if (m_reg.get_byte(m_op.m_operands[0].m_name) == 0)
+    //     set(flag::Z);
     return 0;
 }

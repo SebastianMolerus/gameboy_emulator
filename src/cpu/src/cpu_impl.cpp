@@ -1,4 +1,5 @@
 #include "cpu_impl.hpp"
+#include "cpu.hpp"
 #include <sstream>
 #include <stdexcept>
 #include <unordered_map>
@@ -72,12 +73,15 @@ void cpu::cpu_impl::reset_all_flags()
 
 bool cpu::cpu_impl::is_carry(uint8_t dest, uint16_t src)
 {
-    return (dest + src) & 0x100;
+    uint16_t temp = dest + src;
+    return temp & 0x100;
 }
 
 bool cpu::cpu_impl::is_half_carry(uint8_t dest, uint8_t src)
 {
-    return ((dest & 0xF) + (src & 0xF)) & 0x10;
+    uint8_t temp = (dest & 0xF);
+    temp += (src & 0xF);
+    return temp & 0x10;
 }
 
 void cpu::cpu_impl::no_op_defined()
@@ -112,11 +116,25 @@ void cpu::cpu_impl::pop_PC()
 // ******************************************
 //                  CPU PART
 // ******************************************
-cpu::cpu(rw_device &rw_device, cb callback) : m_pimpl{std::make_unique<cpu_impl>(rw_device, callback)}
+cpu::cpu(rw_device &rw_device, cb callback, registers start_values)
+    : m_pimpl{std::make_unique<cpu_impl>(rw_device, callback)}
 {
+    m_pimpl->m_reg = start_values;
 }
 
 cpu::~cpu() = default;
+
+void cpu::set_flags(uint8_t flags)
+{
+    if (flags & flag::C)
+        m_pimpl->set(flag::C);
+    if (flags & flag::N)
+        m_pimpl->set(flag::N);
+    if (flags & flag::H)
+        m_pimpl->set(flag::H);
+    if (flags & flag::Z)
+        m_pimpl->set(flag::Z);
+}
 
 void cpu::start()
 {

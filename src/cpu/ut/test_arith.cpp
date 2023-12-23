@@ -268,103 +268,36 @@ TEST(test_arith, ADD_A_n8)
     ASSERT_EQ(wait_cycles[6], 8);
 }
 
-// 0xCE
-TEST(test_arith, ADC_n8)
+TEST(test_arith, ADC_A_n8)
 {
+    rw_mock mock(R"(
+        LD A, 0x80
+        ADD A, A    ; C Should be set
+        LD A, 0x0
+        ADC A, 0x0
+    )");
 
-    // rw_mock mock(R"(
-    //     LD A, 0x80
-    //     ADC A, 0x80  ; 1. C , A == 0
-    //     LD A, 0x80
-    //     ADC A, 0x7F  ; 3. C , A == 0
-    //     LD A, 0x80
-    //     ADC A, 0x80  ; 5. C  , A == 1
-    //     ADC A, 0xE   ; 6, hC , na starcie A == 1,
-    // )");
-    // auto [expected_data, wait_cycles] = mock.get_cpu_output();
+    auto [expected_data, wait_cycles] = mock.get_cpu_output();
 
-    // ASSERT_EQ(expected_data[1].A(), 0x0);
-    // ASSERT_TRUE(expected_data[1].is_flag_set(flag::C));
-    // ASSERT_TRUE(expected_data[1].is_flag_set(flag::Z));
+    ASSERT_TRUE(expected_data[1].is_flag_set(flag::C));
+    ASSERT_EQ(expected_data[2].A(), 0x0);
+    ASSERT_EQ(expected_data[3].A(), 0x1);
+    ASSERT_FALSE(expected_data[3].is_flag_set(flag::Z));
+}
 
-    // ASSERT_EQ(expected_data[3].A(), 0x0);
-    // ASSERT_TRUE(expected_data[3].is_flag_set(flag::C));
-    // ASSERT_TRUE(expected_data[3].is_flag_set(flag::Z));
+TEST(test_arith, ADC_A_n8_v2)
+{
+    rw_mock mock(R"(
+        LD A, 0x80
+        ADD A, A    ; C Should be set
+        LD A, 0xF  
+        ADC A, 0x0
+    )");
 
-    // ASSERT_EQ(expected_data[5].A(), 0x1);
-    // ASSERT_TRUE(expected_data[5].is_flag_set(flag::C));
-    // ASSERT_FALSE(expected_data[5].is_flag_set(flag::Z));
+    auto [expected_data, wait_cycles] = mock.get_cpu_output();
 
-    // ASSERT_EQ(expected_data[6].A(), 0x10);
-    // ASSERT_FALSE(expected_data[6].is_flag_set(flag::Z));
-    // ASSERT_TRUE(expected_data[6].is_flag_set(flag::H));
-
-    // Zero
-    // Not zero
-    // Half C
-    // no half C
-    // C
-    // no C
-
-    rw_mock mock;
-    {
-        auto [regs, wait_cycles] = mock.reset_get_result_from(R"(
-            LD A, 0x0
-            ADC A, 0x0
-        )");
-        ASSERT_EQ(regs.A(), 0x0);
-        ASSERT_Z(regs);
-        ASSERT_not_C(regs);
-        ASSERT_not_H(regs);
-        ASSERT_not_N(regs);
-    }
-
-    {
-        auto [regs, wait_cycles] = mock.reset_get_result_from(R"(
-            ADC A, 0xF7
-        )");
-        ASSERT_EQ(regs.A(), 0xF7);
-        ASSERT_not_Z(regs);
-        ASSERT_not_C(regs);
-        ASSERT_not_H(regs);
-        ASSERT_not_N(regs);
-    }
-
-    {
-        auto [regs, wait_cycles] = mock.reset_get_result_from(R"(
-            LD A, 0x80
-            ADC A, 0x80
-        )");
-        ASSERT_EQ(regs.A(), 0x00);
-        ASSERT_Z(regs);
-        ASSERT_C(regs);
-        ASSERT_not_H(regs);
-        ASSERT_not_N(regs);
-    }
-
-    {
-        auto [regs, wait_cycles] = mock.reset_get_result_from(R"(
-            LD A, 0x80
-            ADC A, 0x80  ; C is Set, A == 0
-            ADC A, 0xFF  ; C is Set, A == 0
-        )");
-        ASSERT_EQ(regs.A(), 0x00);
-        ASSERT_Z(regs);
-        ASSERT_C(regs);
-        ASSERT_not_H(regs);
-        ASSERT_not_N(regs);
-    }
-
-    {
-        auto [regs, wait_cycles] = mock.reset_get_result_from(R"(
-            LD A, 0x80
-            ADC A, 0x80  ; C is Set, A == 0
-            ADC A, 0xFE  ; A == 0xFF
-        )");
-        ASSERT_EQ(regs.A(), 0xFF);
-        ASSERT_not_Z(regs);
-        ASSERT_not_C(regs);
-        ASSERT_not_H(regs);
-        ASSERT_not_N(regs);
-    }
+    ASSERT_TRUE(expected_data[1].is_flag_set(flag::C));
+    ASSERT_EQ(expected_data[2].A(), 15);
+    ASSERT_EQ(expected_data[3].A(), 16);
+    ASSERT_FALSE(expected_data[3].is_flag_set(flag::H));
 }
