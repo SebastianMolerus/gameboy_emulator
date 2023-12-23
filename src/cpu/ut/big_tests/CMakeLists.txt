@@ -1,13 +1,22 @@
-set(test_suite_name "big_tests_alu")
+function(create_suite suite_name executable_path)
 
-add_executable(${test_suite_name} alu/test_alu.cpp)
+  set(test_suite_name ${suite_name})
 
-target_link_libraries(${test_suite_name} PRIVATE cpu GTest::gtest
-                                                 GTest::gtest_main assembler)
-gtest_add_tests(TARGET ${test_suite_name})
+  add_executable(${test_suite_name} ${executable_path})
 
-target_compile_definitions(
-  ${test_suite_name}
-  PRIVATE ALU_TEST_PATH="${CMAKE_CURRENT_LIST_DIR}/sm83-test-data/alu_tests/v1")
+  target_link_libraries(${test_suite_name} PRIVATE cpu GTest::gtest
+                                                   GTest::gtest_main assembler)
+  gtest_add_tests(TARGET ${test_suite_name})
 
-target_link_libraries(${test_suite_name} PRIVATE json_spirit cpu)
+  target_link_libraries(${test_suite_name} PRIVATE json_spirit cpu)
+
+  target_compile_definitions(
+    ${test_suite_name}
+    PRIVATE
+      ALU_TEST_PATH="${CMAKE_CURRENT_LIST_DIR}/sm83-test-data/alu_tests/v1")
+
+endfunction()
+
+create_suite(big_tests_adc alu/test_adc.cpp)
+create_suite(big_tests_add alu/test_add.cpp)
+create_suite(big_tests_sub alu/test_sub.cpp)

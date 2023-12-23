@@ -1,6 +1,6 @@
 #include "cpu_impl.hpp"
 
-uint8_t cpu::cpu_impl::arith()
+uint8_t cpu::cpu_impl::alu()
 {
     switch (m_op.m_hex)
     {
@@ -20,6 +20,18 @@ uint8_t cpu::cpu_impl::arith()
     case 0x8D:
     case 0x8F:
         return ADC_A_REG8();
+    case 0x90:
+    case 0x91:
+    case 0x92:
+    case 0x93:
+    case 0x94:
+    case 0x95:
+    case 0x97:
+        return SUB_A_REG8();
+    case 0x96:
+        return SUB_A_IHLI();
+    case 0xD6:
+        return SUB_A_n8();
     case 0x8E:
         return ADC_A_IHLI();
     case 0x86:
@@ -90,7 +102,7 @@ uint8_t cpu::cpu_impl::ADC_n8()
     adc(n8, val);
     adc(m_reg.A(), n8);
 
-    if (m_reg.get_byte(m_op.m_operands[0].m_name) == 0)
+    if (m_reg.A() == 0)
         set(flag::Z);
     return m_op.m_cycles[0];
 }
@@ -106,7 +118,7 @@ uint8_t cpu::cpu_impl::ADC_A_REG8()
     adc(reg8, val);
     adc(m_reg.A(), reg8);
 
-    if (m_reg.get_byte(m_op.m_operands[0].m_name) == 0)
+    if (m_reg.A() == 0)
         set(flag::Z);
     return m_op.m_cycles[0];
 }
@@ -121,7 +133,67 @@ uint8_t cpu::cpu_impl::ADC_A_IHLI()
     adc(reg8, val);
     adc(m_reg.A(), reg8);
 
-    if (m_reg.get_byte(m_op.m_operands[0].m_name) == 0)
+    if (m_reg.A() == 0)
+        set(flag::Z);
+    return m_op.m_cycles[0];
+}
+
+uint8_t cpu::cpu_impl::SUB_A_REG8()
+{
+    reset_all_flags();
+    set(flag::N);
+
+    assert(m_op.m_operands[1].m_name);
+    uint8_t reg8 = m_reg.get_byte(m_op.m_operands[1].m_name);
+    if (reg8 > m_reg.A())
+        set(flag::C);
+
+    if ((reg8 & 0xf) > (m_reg.A() & 0xf))
+        set(flag::H);
+
+    m_reg.A() -= reg8;
+
+    if (m_reg.A() == 0)
+        set(flag::Z);
+    return m_op.m_cycles[0];
+}
+
+uint8_t cpu::cpu_impl::SUB_A_IHLI()
+{
+    reset_all_flags();
+    set(flag::N);
+
+    uint8_t n8 = m_rw_device.read(m_reg.HL());
+
+    if (n8 > m_reg.A())
+        set(flag::C);
+
+    if ((n8 & 0xf) > (m_reg.A() & 0xf))
+        set(flag::H);
+
+    m_reg.A() -= n8;
+
+    if (m_reg.A() == 0)
+        set(flag::Z);
+    return m_op.m_cycles[0];
+}
+
+uint8_t cpu::cpu_impl::SUB_A_n8()
+{
+    reset_all_flags();
+    set(flag::N);
+
+    uint8_t n8 = m_op.m_data[0];
+
+    if (n8 > m_reg.A())
+        set(flag::C);
+
+    if ((n8 & 0xf) > (m_reg.A() & 0xf))
+        set(flag::H);
+
+    m_reg.A() -= n8;
+
+    if (m_reg.A() == 0)
         set(flag::Z);
     return m_op.m_cycles[0];
 }

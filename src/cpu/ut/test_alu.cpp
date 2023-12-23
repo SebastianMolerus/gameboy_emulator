@@ -47,7 +47,7 @@ std::string build_ADD_A_REG8(std::string reg)
 } // namespace
 
 // 0x80 81 82 83 84 85
-TEST(test_arith, ADD_A_REG8)
+TEST(test_alu, ADD_A_REG8)
 {
     // Zero
     // Not zero
@@ -93,7 +93,7 @@ TEST(test_arith, ADD_A_REG8)
 }
 
 // 0x87
-TEST(test_arith, ADD_A_A)
+TEST(test_alu, ADD_A_A)
 {
     // Zero
     // Not zero
@@ -149,7 +149,7 @@ TEST(test_arith, ADD_A_A)
 }
 
 // 0x86
-TEST(test_arith, ADD_A_IHLI)
+TEST(test_alu, ADD_A_IHLI)
 {
     // Zero
     // Not zero
@@ -216,7 +216,7 @@ TEST(test_arith, ADD_A_IHLI)
 }
 
 // 0xC6
-TEST(test_arith, ADD_A_n8)
+TEST(test_alu, ADD_A_n8)
 {
     // Zero
     // Not zero
@@ -268,7 +268,8 @@ TEST(test_arith, ADD_A_n8)
     ASSERT_EQ(wait_cycles[6], 8);
 }
 
-TEST(test_arith, ADC_A_n8)
+// 0xCE
+TEST(test_alu, ADC_A_n8)
 {
     rw_mock mock(R"(
         LD A, 0x80
@@ -285,7 +286,8 @@ TEST(test_arith, ADC_A_n8)
     ASSERT_FALSE(expected_data[3].is_flag_set(flag::Z));
 }
 
-TEST(test_arith, ADC_A_n8_v2)
+// 0xCE
+TEST(test_alu, ADC_A_n8_v2)
 {
     rw_mock mock(R"(
         LD A, 0x80
@@ -300,4 +302,30 @@ TEST(test_arith, ADC_A_n8_v2)
     ASSERT_EQ(expected_data[2].A(), 15);
     ASSERT_EQ(expected_data[3].A(), 16);
     ASSERT_TRUE(expected_data[3].is_flag_set(flag::H));
+}
+
+// 0x97
+TEST(test_alu, SUB_A_A)
+{
+    rw_mock mock(R"(
+        LD A, 0x80
+        ADD A, A  ; C is set
+        SUB A, A
+        LD A, 0x0
+        SUB A, A
+    )");
+
+    auto [expected_data, wait_cycles] = mock.get_cpu_output();
+
+    ASSERT_EQ(expected_data[2].A(), 0x0);
+    ASSERT_TRUE(expected_data[2].is_flag_set(flag::Z));
+    ASSERT_TRUE(expected_data[2].is_flag_set(flag::N));
+    ASSERT_FALSE(expected_data[2].is_flag_set(flag::C));
+    ASSERT_FALSE(expected_data[2].is_flag_set(flag::H));
+
+    ASSERT_EQ(expected_data[4].A(), 0x0);
+    ASSERT_TRUE(expected_data[4].is_flag_set(flag::Z));
+    ASSERT_TRUE(expected_data[4].is_flag_set(flag::N));
+    ASSERT_FALSE(expected_data[4].is_flag_set(flag::C));
+    ASSERT_FALSE(expected_data[4].is_flag_set(flag::H));
 }

@@ -68,7 +68,7 @@ struct cpu::cpu_impl
     uint8_t RETI();
     uint8_t RST_nn();
 
-    uint8_t arith();
+    uint8_t alu();
     void add(uint8_t &dst, uint16_t src);
     void adc(uint8_t &dst, uint8_t src);
     uint8_t ADD_A_REG8();
@@ -77,6 +77,9 @@ struct cpu::cpu_impl
     uint8_t ADC_n8();
     uint8_t ADC_A_REG8();
     uint8_t ADC_A_IHLI();
+    uint8_t SUB_A_REG8();
+    uint8_t SUB_A_IHLI();
+    uint8_t SUB_A_n8();
 
     uint8_t misc();
     uint8_t NOP();

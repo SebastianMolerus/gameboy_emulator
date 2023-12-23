@@ -2,15 +2,20 @@
 #define BIG_TESTS_UTILS_HPP
 
 #include <cassert>
+#include <cpu.hpp>
 #include <cstdint>
+#include <decoder.hpp>
 #include <filesystem>
 #include <fstream>
 #include <json_spirit/json_spirit.h>
+#include <reg.hpp>
+#include <span>
 #include <sstream>
 #include <vector>
 
-namespace big_tests
+namespace
 {
+
 struct data
 {
     uint8_t x;
@@ -53,6 +58,53 @@ std::vector<data> read_big_data(std::filesystem::path file)
     return result;
 }
 
-} // namespace big_tests
+#define DIAGNOSTIC                                                                                                     \
+    std::stringstream diagnostic_message;                                                                              \
+    diagnostic_message << "Diagnostic:"                                                                                \
+                       << "\n"                                                                                         \
+                       << "Start values: " << (int)data.x << " " << (int)data.y << " " << (int)data.flags << "\n";     \
+    diagnostic_message << "Expected values: " << (int)data.result.value << " " << (int)data.result.flags << "\n";      \
+    diagnostic_message << "Current values: " << (int)r.A() << " " << (int)r.F() << "\n";
+
+std::filesystem::path const alu_test_data{ALU_TEST_PATH};
+registers r;
+opcode opc;
+
+bool cb(registers const &reg, opcode const &op, uint8_t)
+{
+    if (op.m_hex == 0)
+        return true;
+    r = reg;
+    opc = op;
+    return false;
+}
+
+struct bus : public rw_device
+{
+    std::array<uint8_t, 10> m_ram{};
+    cpu m_cpu;
+
+    bus(std::span<uint8_t> opcodes, registers startup_values) : m_cpu{*this, cb, startup_values}
+    {
+        for (auto i = 0; i < opcodes.size(); ++i)
+            m_ram[i] = opcodes[i];
+    }
+
+    virtual uint8_t read(uint16_t addr)
+    {
+        return m_ram[addr];
+    }
+    virtual void write(uint16_t addr, uint8_t data)
+    {
+        m_ram[addr] = data;
+    }
+
+    void go()
+    {
+        m_cpu.start();
+    }
+};
+
+} // namespace
 
 #endif
