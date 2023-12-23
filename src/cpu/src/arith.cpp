@@ -1,10 +1,5 @@
 #include "cpu_impl.hpp"
 
-namespace
-{
-
-}
-
 uint8_t cpu::cpu_impl::arith()
 {
     switch (m_op.m_hex)
@@ -55,6 +50,15 @@ void cpu::cpu_impl::add(uint8_t &dst, uint16_t src)
         set(flag::Z);
 }
 
+void cpu::cpu_impl::adc(uint8_t &dst, uint8_t src)
+{
+    if (is_carry(dst, src))
+        set(flag::C);
+    if (is_half_carry(dst, src))
+        set(flag::H);
+    dst += src;
+}
+
 uint8_t cpu::cpu_impl::ADD_A_REG8()
 {
     assert(m_op.m_operands[1].m_name);
@@ -81,18 +85,8 @@ uint8_t cpu::cpu_impl::ADC_n8()
 
     reset_all_flags();
 
-    if (is_carry(n8, val))
-        set(flag::C);
-    if (is_half_carry(n8, val))
-        set(flag::H);
-    n8 += val;
-
-    uint8_t &dest = m_reg.A();
-    if (is_carry(dest, n8))
-        set(flag::C);
-    if (is_half_carry(dest, n8))
-        set(flag::H);
-    dest += n8;
+    adc(n8, val);
+    adc(m_reg.A(), n8);
 
     if (m_reg.get_byte(m_op.m_operands[0].m_name) == 0)
         set(flag::Z);
@@ -107,18 +101,8 @@ uint8_t cpu::cpu_impl::ADC_A_REG8()
 
     reset_all_flags();
 
-    if (is_carry(reg8, val))
-        set(flag::C);
-    if (is_half_carry(reg8, val))
-        set(flag::H);
-    reg8 += val;
-
-    uint8_t &dest = m_reg.A();
-    if (is_carry(dest, reg8))
-        set(flag::C);
-    if (is_half_carry(dest, reg8))
-        set(flag::H);
-    dest += reg8;
+    adc(reg8, val);
+    adc(m_reg.A(), reg8);
 
     if (m_reg.get_byte(m_op.m_operands[0].m_name) == 0)
         set(flag::Z);
