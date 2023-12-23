@@ -29,7 +29,7 @@ struct cpu::cpu_impl
     void reset(flag f);
     void reset_all_flags();
 
-    bool is_carry(uint8_t dest, uint16_t src);
+    bool is_carry(uint8_t dest, uint8_t src);
     bool is_half_carry(uint8_t dest, uint8_t src);
 
     void no_op_defined();
@@ -70,10 +70,12 @@ struct cpu::cpu_impl
 
     uint8_t arith();
     void add(uint8_t &dst, uint16_t src);
+    void adc(uint8_t &dst, uint8_t src);
     uint8_t ADD_A_REG8();
     uint8_t ADD_A_IHLI();
     uint8_t ADD_A_n8();
     uint8_t ADC_n8();
+    uint8_t ADC_A_REG8();
 
     uint8_t misc();
     uint8_t NOP();

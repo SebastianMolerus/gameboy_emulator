@@ -299,5 +299,5 @@ TEST(test_arith, ADC_A_n8_v2)
     ASSERT_TRUE(expected_data[1].is_flag_set(flag::C));
     ASSERT_EQ(expected_data[2].A(), 15);
     ASSERT_EQ(expected_data[3].A(), 16);
-    ASSERT_FALSE(expected_data[3].is_flag_set(flag::H));
+    ASSERT_TRUE(expected_data[3].is_flag_set(flag::H));
 }

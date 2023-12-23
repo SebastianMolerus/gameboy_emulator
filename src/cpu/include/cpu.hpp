@@ -29,8 +29,6 @@ class cpu
 
     ~cpu();
 
-    void set_flags(uint8_t flags);
-
     // Start working loop
     void start();
 
