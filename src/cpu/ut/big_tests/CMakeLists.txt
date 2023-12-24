@@ -12,11 +12,12 @@ function(create_suite suite_name executable_path)
 
   target_compile_definitions(
     ${test_suite_name}
-    PRIVATE
-      ALU_TEST_PATH="${CMAKE_CURRENT_LIST_DIR}/sm83-test-data/alu_tests/v1")
+    PRIVATE BIG_TEST_DATA_DIR="${CMAKE_CURRENT_LIST_DIR}/sm83-test-data/")
 
 endfunction()
 
 create_suite(big_tests_adc alu/test_adc.cpp)
 create_suite(big_tests_add alu/test_add.cpp)
 create_suite(big_tests_sub alu/test_sub.cpp)
+
+create_suite(big_tests_e8 cpu/test_e8.cpp)

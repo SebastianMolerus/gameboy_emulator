@@ -54,7 +54,7 @@ uint8_t add(cpu::cpu_impl &cpu, uint8_t &dst, uint16_t src)
 
     dst += src;
 
-    assert(m_op.m_operands[0].m_name);
+    assert(cpu.m_op.m_operands[0].m_name);
     if (cpu.m_reg.get_byte(cpu.m_op.m_operands[0].m_name) == 0)
         cpu.set(flag::Z);
 

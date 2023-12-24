@@ -1,11 +1,17 @@
 #include "../big_tests_utils.h"
 #include <gtest/gtest.h>
 
+namespace
+{
+const std::filesystem::path sub_tests_path{test_data_dir / "alu_tests" / "v1" / "sub.json"};
+}
+
 TEST(test_alu_BIG, sub_8_bit)
 {
-    ASSERT_TRUE(std::filesystem::exists(alu_test_data));
 
-    auto const result = read_big_data(alu_test_data / "sub.json");
+    ASSERT_TRUE(std::filesystem::exists(sub_tests_path));
+
+    auto const result = read_alu_data(sub_tests_path);
 
     for (auto const &data : result)
     {
