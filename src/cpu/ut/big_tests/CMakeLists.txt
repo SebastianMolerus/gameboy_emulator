@@ -20,4 +20,4 @@ create_suite(big_tests_adc alu/test_adc.cpp)
 create_suite(big_tests_add alu/test_add.cpp)
 create_suite(big_tests_sub alu/test_sub.cpp)
 
-create_suite(big_tests_e8 cpu/test_e8.cpp)
+create_suite(big_tests_f8 cpu/test_f8.cpp)

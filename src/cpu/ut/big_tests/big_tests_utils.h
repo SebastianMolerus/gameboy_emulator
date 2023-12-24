@@ -84,20 +84,20 @@ struct cpu_data
     std::vector<std::tuple<uint16_t, uint8_t, std::string>> cycles;
 };
 
-void fill_cpu_data(cpu_data &d, json_spirit::Object const &initial_or_final)
+void fill_cpu_data(cpu_state &state, json_spirit::Object const &initial_or_final)
 {
     json_spirit::Object const cpu = initial_or_final[0].value_.get_obj();
 
-    d.initial.cpu.a = std::stoi(cpu[0].value_.get_str(), nullptr, 16);
-    d.initial.cpu.b = std::stoi(cpu[1].value_.get_str(), nullptr, 16);
-    d.initial.cpu.c = std::stoi(cpu[2].value_.get_str(), nullptr, 16);
-    d.initial.cpu.d = std::stoi(cpu[3].value_.get_str(), nullptr, 16);
-    d.initial.cpu.e = std::stoi(cpu[4].value_.get_str(), nullptr, 16);
-    d.initial.cpu.f = std::stoi(cpu[5].value_.get_str(), nullptr, 16);
-    d.initial.cpu.h = std::stoi(cpu[6].value_.get_str(), nullptr, 16);
-    d.initial.cpu.l = std::stoi(cpu[7].value_.get_str(), nullptr, 16);
-    d.initial.cpu.pc = std::stoi(cpu[8].value_.get_str(), nullptr, 16);
-    d.initial.cpu.sp = std::stoi(cpu[9].value_.get_str(), nullptr, 16);
+    state.cpu.a = std::stoi(cpu[0].value_.get_str(), nullptr, 16);
+    state.cpu.b = std::stoi(cpu[1].value_.get_str(), nullptr, 16);
+    state.cpu.c = std::stoi(cpu[2].value_.get_str(), nullptr, 16);
+    state.cpu.d = std::stoi(cpu[3].value_.get_str(), nullptr, 16);
+    state.cpu.e = std::stoi(cpu[4].value_.get_str(), nullptr, 16);
+    state.cpu.f = std::stoi(cpu[5].value_.get_str(), nullptr, 16);
+    state.cpu.h = std::stoi(cpu[6].value_.get_str(), nullptr, 16);
+    state.cpu.l = std::stoi(cpu[7].value_.get_str(), nullptr, 16);
+    state.cpu.pc = std::stoi(cpu[8].value_.get_str(), nullptr, 16);
+    state.cpu.sp = std::stoi(cpu[9].value_.get_str(), nullptr, 16);
 
     json_spirit::Array const ram = initial_or_final[1].value_.get_array();
 
@@ -106,7 +106,7 @@ void fill_cpu_data(cpu_data &d, json_spirit::Object const &initial_or_final)
         json_spirit::Array const addr_value = arr.get_array();
         uint16_t const addr = std::stoi(addr_value[0].get_str(), nullptr, 16);
         uint16_t const value = std::stoi(addr_value[1].get_str(), nullptr, 16);
-        d.initial.ram.push_back({addr, value});
+        state.ram.push_back({addr, value});
     }
 }
 
@@ -136,11 +136,11 @@ std::vector<cpu_data> read_cpu_data(std::filesystem::path file)
 
         // Fill Initial
         json_spirit::Object const initial = main_obj[1].value_.get_obj();
-        fill_cpu_data(d, initial);
+        fill_cpu_data(d.initial, initial);
 
         // Fill Final
         json_spirit::Object const final_ = main_obj[2].value_.get_obj();
-        fill_cpu_data(d, final_);
+        fill_cpu_data(d.final, final_);
 
         // Fill Cycles
         json_spirit::Array const cycles = main_obj[3].value_.get_array();
