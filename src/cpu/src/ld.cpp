@@ -129,27 +129,29 @@ uint8_t cpu::cpu_impl::ld()
 // // 0xF8 : Put SP + n effective address into HL
 uint8_t cpu::cpu_impl::LD_HL_SP_e8()
 {
-    reset(flag::Z);
-    reset(flag::N);
+    reset_all_flags();
 
     uint16_t SP = m_reg.SP();
+    uint8_t e8 = m_op.m_data[0];
 
-    uint8_t val = m_op.m_data[0];
-    bool minus = val & 0x80;
-    val &= 0x7F;
+    // Seems like ALU in this cpu
+    // just adds SP + e8 like two unsigned values
+    // to check for C and H flags
+    if (is_half_carry(SP, e8))
+        set(flag::H);
 
-    if (minus)
-        SP -= val;
-    else
+    if (is_carry(SP, e8))
+        set(flag::C);
+
+    if (e8 & 0x80)
     {
-        if (is_half_carry(SP, val))
-            set(flag::H);
-
-        if (is_carry(SP, val))
-            set(flag::C);
-
-        SP += val;
+        // get two complement negative value
+        e8 -= 1;
+        SP -= (uint8_t)(~e8);
     }
+    else
+        SP += e8;
+
     m_reg.HL() = SP;
 
     return m_op.m_cycles[0];

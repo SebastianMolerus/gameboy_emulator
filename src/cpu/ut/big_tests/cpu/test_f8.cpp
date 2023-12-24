@@ -31,15 +31,14 @@ TEST(test_cpu_BIG, f8)
 
         b.go();
 
-        std::cerr << "Instruction " << data.name << "\n";
         ASSERT_EQ(r.A(), data.final.cpu.a);
         ASSERT_EQ(r.B(), data.final.cpu.b);
         ASSERT_EQ(r.C(), data.final.cpu.c);
         ASSERT_EQ(r.D(), data.final.cpu.d);
+        ASSERT_EQ(r.F(), data.final.cpu.f);
+        ASSERT_EQ(r.E(), data.final.cpu.e);
         ASSERT_EQ(r.H(), data.final.cpu.h);
         ASSERT_EQ(r.L(), data.final.cpu.l);
-        ASSERT_EQ(r.E(), data.final.cpu.e);
-        ASSERT_EQ(r.F(), data.final.cpu.f);
         ASSERT_EQ(r.PC(), data.final.cpu.pc);
         ASSERT_EQ(r.SP(), data.final.cpu.sp);
     }
