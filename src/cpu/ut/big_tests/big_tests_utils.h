@@ -177,15 +177,9 @@ std::vector<std::tuple<uint16_t, uint8_t, std::string>> c;
 
 bool cb(registers const &reg, opcode const &op, uint8_t)
 {
-    if (op.m_hex == 0)
-    {
-        // Clear info about reading NOP
-        c.pop_back();
-        return true;
-    }
     r = reg;
     opc = op;
-    return false;
+    return true;
 }
 
 struct bus : public rw_device

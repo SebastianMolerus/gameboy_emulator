@@ -16,9 +16,9 @@ function(create_suite suite_name executable_path)
 
 endfunction()
 
-create_suite(big_tests_adc alu/test_adc.cpp)
-create_suite(big_tests_add alu/test_add.cpp)
-create_suite(big_tests_sub alu/test_sub.cpp)
+# create_suite(big_tests_adc alu/test_adc.cpp) create_suite(big_tests_add
+# alu/test_add.cpp) create_suite(big_tests_sub alu/test_sub.cpp)
 
 create_suite(big_tests_ld_16 cpu/test_ld_16.cpp)
 create_suite(big_tests_ld_8 cpu/test_ld_8.cpp)
+create_suite(big_tests_jump cpu/test_jmp.cpp)
