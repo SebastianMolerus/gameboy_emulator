@@ -82,26 +82,26 @@ struct cpu::cpu_impl
 
     // Main entry for ALU
     uint8_t alu();
-    uint8_t ADD_A_REG8();
-    uint8_t ADD_A_IHLI();
-    uint8_t ADD_A_n8();
-    uint8_t ADC_n8();
-    uint8_t ADC_A_REG8();
-    uint8_t ADC_A_IHLI();
-    uint8_t SUB_A_REG8();
-    uint8_t SUB_A_IHLI();
-    uint8_t SUB_A_n8();
-    uint8_t ADD_SP_e8();
-    uint8_t ADD_HL_REG16();
-    uint8_t SBC_A_REG8();
-    uint8_t SBC_A_IHLI();
-    uint8_t SBC_A_n8();
-    uint8_t AND_A_REG8();
-    uint8_t AND_A_IHLI();
-    uint8_t AND_A_n8();
-    uint8_t XOR_A_REG8();
-    uint8_t XOR_A_IHLI();
-    uint8_t XOR_A_n8();
+    void ADD_A_REG8();
+    void ADD_A_IHLI();
+    void ADD_A_n8();
+    void ADC_n8();
+    void ADC_A_REG8();
+    void ADC_A_IHLI();
+    void SUB_A_REG8();
+    void SUB_A_IHLI();
+    void SUB_A_n8();
+    void ADD_SP_e8();
+    void ADD_HL_REG16();
+    void SBC_A_REG8();
+    void SBC_A_IHLI();
+    void SBC_A_n8();
+    void AND_A_REG8();
+    void AND_A_IHLI();
+    void AND_A_n8();
+    void XOR_A_REG8();
+    void XOR_A_IHLI();
+    void XOR_A_n8();
 
     // Main entry for misc
     uint8_t misc();
