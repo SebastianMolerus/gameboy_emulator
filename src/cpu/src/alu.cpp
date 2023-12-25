@@ -3,59 +3,74 @@
 namespace
 {
 
-uint8_t sub(cpu::cpu_impl &cpu, uint8_t data)
+void sub(cpu::cpu_impl &cpu, uint8_t &dst, uint8_t src)
+{
+    if (cpu.is_carry_on_substraction_byte(dst, src))
+        cpu.set(flag::C);
+    if (cpu.is_half_carry_on_substraction_byte(dst, src))
+        cpu.set(flag::H);
+    dst -= src;
+}
+
+void add(cpu::cpu_impl &cpu, uint8_t &dst, uint8_t src)
+{
+    if (cpu.is_carry_on_addition_byte(dst, src))
+        cpu.set(flag::C);
+    if (cpu.is_half_carry_on_addition_byte(dst, src))
+        cpu.set(flag::H);
+    dst += src;
+}
+
+uint8_t sub_op(cpu::cpu_impl &cpu, uint8_t data)
 {
     cpu.reset_all_flags();
     cpu.set(flag::N);
 
-    if (data > cpu.m_reg.A())
-        cpu.set(flag::C);
-
-    if ((data & 0xf) > (cpu.m_reg.A() & 0xf))
-        cpu.set(flag::H);
-
-    cpu.m_reg.A() -= data;
+    sub(cpu, cpu.m_reg.A(), data);
 
     if (cpu.m_reg.A() == 0)
         cpu.set(flag::Z);
     return cpu.m_op.m_cycles[0];
 }
 
-void adc(cpu::cpu_impl &cpu, uint8_t &dst, uint8_t src)
+uint8_t adc_op(cpu::cpu_impl &cpu, uint8_t source)
 {
-    if (cpu.is_carry_on_addition_byte(dst, src))
-        cpu.set(flag::C);
-    if (cpu.is_half_carry_on_addition_byte(dst, src))
-        cpu.set(flag::H);
-    dst += src;
-}
-
-uint8_t adc_op(cpu::cpu_impl &cpu, uint8_t source, uint8_t carry_value)
-{
+    uint8_t const val = cpu.m_reg.F() & flag::C ? 1 : 0;
     cpu.reset_all_flags();
 
-    adc(cpu, source, carry_value);
-    adc(cpu, cpu.m_reg.A(), source);
+    add(cpu, source, val);
+    add(cpu, cpu.m_reg.A(), source);
 
     if (cpu.m_reg.A() == 0)
         cpu.set(flag::Z);
     return cpu.m_op.m_cycles[0];
 }
 
-uint8_t add(cpu::cpu_impl &cpu, uint8_t &dst, uint16_t src)
+uint8_t add_op(cpu::cpu_impl &cpu, uint8_t &dst, uint16_t src)
 {
     cpu.reset_all_flags();
 
-    if (cpu.is_carry_on_addition_byte(dst, src))
-        cpu.set(flag::C);
-
-    if (cpu.is_half_carry_on_addition_byte(dst, src))
-        cpu.set(flag::H);
-
-    dst += src;
+    add(cpu, dst, src);
 
     assert(cpu.m_op.m_operands[0].m_name);
     if (cpu.m_reg.get_byte(cpu.m_op.m_operands[0].m_name) == 0)
+        cpu.set(flag::Z);
+
+    return cpu.m_op.m_cycles[0];
+}
+
+uint8_t sbc_op(cpu::cpu_impl &cpu, uint8_t data)
+{
+    uint8_t const val = cpu.m_reg.F() & flag::C ? 1 : 0;
+    cpu.reset_all_flags();
+    cpu.set(flag::N);
+
+    uint8_t &A = cpu.m_reg.A();
+
+    add(cpu, data, val);
+    sub(cpu, A, data);
+
+    if (A == 0x0)
         cpu.set(flag::Z);
 
     return cpu.m_op.m_cycles[0];
@@ -96,6 +111,18 @@ uint8_t cpu::cpu_impl::alu()
     case 0x95:
     case 0x97:
         return SUB_A_REG8();
+    case 0x98:
+    case 0x99:
+    case 0x9A:
+    case 0x9B:
+    case 0x9C:
+    case 0x9D:
+    case 0x9F:
+        return SBC_A_REG8();
+    case 0xDE:
+        return SBC_A_n8();
+    case 0x9E:
+        return SBC_A_IHLI();
     case 0x96:
         return SUB_A_IHLI();
     case 0xD6:
@@ -181,41 +208,57 @@ uint8_t cpu::cpu_impl::ADD_HL_REG16()
 
 uint8_t cpu::cpu_impl::ADC_n8()
 {
-    uint8_t const val = m_reg.F() & flag::C ? 1 : 0;
     uint8_t const n8 = m_op.m_data[0];
-    return adc_op(*this, n8, val);
+    return adc_op(*this, n8);
 }
 
 uint8_t cpu::cpu_impl::ADC_A_REG8()
 {
-    uint8_t const val = m_reg.F() & flag::C ? 1 : 0;
     assert(m_op.m_operands[1].m_name);
-    uint8_t const reg8 = m_reg.get_byte(m_op.m_operands[1].m_name);
-    return adc_op(*this, reg8, val);
+    uint8_t const REG8 = m_reg.get_byte(m_op.m_operands[1].m_name);
+    return adc_op(*this, REG8);
 }
 
 uint8_t cpu::cpu_impl::ADC_A_IHLI()
 {
-    uint8_t const val = m_reg.F() & flag::C ? 1 : 0;
-    uint8_t const reg8 = m_rw_device.read(m_reg.HL());
-    return adc_op(*this, reg8, val);
+    uint8_t const data = m_rw_device.read(m_reg.HL());
+    return adc_op(*this, data);
 }
 
 uint8_t cpu::cpu_impl::SUB_A_REG8()
 {
     assert(m_op.m_operands[1].m_name);
     uint8_t const reg8 = m_reg.get_byte(m_op.m_operands[1].m_name);
-    return sub(*this, reg8);
+    return sub_op(*this, reg8);
 }
 
 uint8_t cpu::cpu_impl::SUB_A_IHLI()
 {
     uint8_t const n8 = m_rw_device.read(m_reg.HL());
-    return sub(*this, n8);
+    return sub_op(*this, n8);
 }
 
 uint8_t cpu::cpu_impl::SUB_A_n8()
 {
     uint8_t const n8 = m_op.m_data[0];
-    return sub(*this, n8);
+    return sub_op(*this, n8);
+}
+
+uint8_t cpu::cpu_impl::SBC_A_REG8()
+{
+    assert(m_op.m_operands[1].m_name);
+    uint8_t const REG8 = m_reg.get_byte(m_op.m_operands[1].m_name);
+    return sbc_op(*this, REG8);
+}
+
+uint8_t cpu::cpu_impl::SBC_A_IHLI()
+{
+    uint8_t const data = m_rw_device.read(m_reg.HL());
+    return sbc_op(*this, data);
+}
+
+uint8_t cpu::cpu_impl::SBC_A_n8()
+{
+    uint8_t const n8 = m_op.m_data[0];
+    return sbc_op(*this, n8);
 }

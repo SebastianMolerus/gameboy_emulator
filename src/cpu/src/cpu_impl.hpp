@@ -37,6 +37,8 @@ struct cpu::cpu_impl
     bool is_half_carry_on_addition_byte(uint8_t dest, uint8_t src);
     bool is_carry_on_addition_word(uint16_t dst, uint16_t src);
     bool is_half_carry_on_addition_word(uint16_t dst, uint16_t src);
+    bool is_carry_on_substraction_byte(uint8_t dest, uint8_t src);
+    bool is_half_carry_on_substraction_byte(uint8_t dest, uint8_t src);
 
     // throws runtime error with current opcode hex
     void no_op_defined();
@@ -91,6 +93,9 @@ struct cpu::cpu_impl
     uint8_t SUB_A_n8();
     uint8_t ADD_SP_e8();
     uint8_t ADD_HL_REG16();
+    uint8_t SBC_A_REG8();
+    uint8_t SBC_A_IHLI();
+    uint8_t SBC_A_n8();
 
     // Main entry for misc
     uint8_t misc();

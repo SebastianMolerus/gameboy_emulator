@@ -12,7 +12,7 @@ const std::unordered_map<const char *, cpu::cpu_impl::processing_func> cpu::cpu_
     {"POP", &cpu::cpu_impl::ld},   {"JP", &cpu::cpu_impl::jmp},  {"JR", &cpu::cpu_impl::jmp},
     {"ADC", &cpu::cpu_impl::alu},  {"ADD", &cpu::cpu_impl::alu}, {"NOP", &cpu::cpu_impl::misc},
     {"CALL", &cpu::cpu_impl::jmp}, {"RET", &cpu::cpu_impl::jmp}, {"RETI", &cpu::cpu_impl::jmp},
-    {"RST", &cpu::cpu_impl::jmp},  {"SUB", &cpu::cpu_impl::alu}};
+    {"RST", &cpu::cpu_impl::jmp},  {"SUB", &cpu::cpu_impl::alu}, {"SBC", &cpu::cpu_impl::alu}};
 
 cpu::cpu_impl::cpu_impl(rw_device &rw_device, cb callback) : m_rw_device{rw_device}, m_callback{callback}
 {
@@ -89,6 +89,16 @@ bool cpu::cpu_impl::is_carry_on_addition_word(uint16_t dst, uint16_t src)
 bool cpu::cpu_impl::is_half_carry_on_addition_word(uint16_t dst, uint16_t src)
 {
     return ((dst & 0xFFF) + (src & 0xFFF)) & 0x1000;
+}
+
+bool cpu::cpu_impl::is_carry_on_substraction_byte(uint8_t dest, uint8_t src)
+{
+    return src > dest;
+}
+
+bool cpu::cpu_impl::is_half_carry_on_substraction_byte(uint8_t dest, uint8_t src)
+{
+    return (src & 0xF) > (dest & 0xF);
 }
 
 void cpu::cpu_impl::no_op_defined()
