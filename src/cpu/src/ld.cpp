@@ -188,12 +188,12 @@ uint8_t cpu::cpu_impl::push()
     assert(m_reg.SP() >= 2);
 
     // decrease stack first
-    m_reg.SP() -= 2;
+    // m_reg.SP() -= 2;
 
     uint16_t const source_REG = m_reg.get_word(m_op.m_operands[0].m_name);
 
-    m_rw_device.write(m_reg.SP(), source_REG);
-    m_rw_device.write(m_reg.SP() + 1, source_REG >> 8);
+    m_rw_device.write(--m_reg.SP(), source_REG >> 8);
+    m_rw_device.write(--m_reg.SP(), source_REG);
 
     return m_op.m_cycles[0];
 }
@@ -211,7 +211,7 @@ uint8_t cpu::cpu_impl::pop()
     assert(m_op.m_operands[0].m_name);
     uint16_t &target_REG = m_reg.get_word(m_op.m_operands[0].m_name);
 
-    uint8_t const lo = m_rw_device.read(m_reg.SP()++);
+    uint8_t lo = m_rw_device.read(m_reg.SP()++);
     uint8_t const hi = m_rw_device.read(m_reg.SP()++);
 
     // special case, pop AF
@@ -226,6 +226,8 @@ uint8_t cpu::cpu_impl::pop()
             set(flag::H);
         if (lo & flag::C)
             set(flag::C);
+
+        lo &= 0xF0;
     }
 
     target_REG = hi;
