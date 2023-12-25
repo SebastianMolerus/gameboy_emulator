@@ -12,11 +12,9 @@ find_package(GTest CONFIG REQUIRED)
 
 find_package(Boost REQUIRED)
 
-# Data for big tests include(FetchContent) FetchContent_Declare( sm83-test-data
-# GIT_REPOSITORY "https://github.com/adtennant/sm83-test-data.git" GIT_TAG
-# "origin/master" SOURCE_DIR
-# "${CMAKE_CURRENT_LIST_DIR}/src/cpu/ut/big_tests/sm83-test-data")
-# FetchContent_MakeAvailable(sm83-test-data)
+find_package(Git REQUIRED)
+message(STATUS "Submodule update in Progress")
+execute_process(COMMAND ${GIT_EXECUTABLE} submodule update --init)
 
 # Json Spirit
 add_library(json_spirit SHARED IMPORTED)
