@@ -40,6 +40,7 @@ jobs:
         run: cmake --build ${{github.workspace}}/build
 
       - name: Unit Tests
+        if: ${{ matrix.configuration }} == 'Release'
         run: ctest --test-dir ${{github.workspace}}/build -VV
          
       
