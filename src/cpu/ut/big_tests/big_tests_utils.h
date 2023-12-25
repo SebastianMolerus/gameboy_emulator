@@ -113,7 +113,13 @@ void fill_cpu_data(cpu_state &state, json_spirit::Object const &initial_or_final
 
 std::vector<cpu_data> read_cpu_data(std::filesystem::path file)
 {
-    assert(std::filesystem::exists(file));
+    if (!std::filesystem::exists(file))
+    {
+        std::stringstream ss;
+        ss << "Path doesn't exist ";
+        ss << file << "\n";
+        throw std::runtime_error(ss.str());
+    }
 
     std::ifstream big_file(file);
     std::stringstream ss;
@@ -217,6 +223,9 @@ struct bus : public rw_device
 
 void validate_cpu_states(std::vector<cpu_data> const &states)
 {
+    if (states.empty())
+        throw std::runtime_error("No data to validate\n");
+
     for (auto const &data : states)
     {
         registers startup;
@@ -273,6 +282,17 @@ void validate_cpu_states(std::vector<cpu_data> const &states)
 
         ASSERT_EQ(c, data.cycles);
     }
+}
+
+void validate_opcode(uint8_t hex)
+{
+    std::stringstream ss;
+    ss << std::hex << std::setfill('0') << std::setw(2) << static_cast<int>(hex);
+    std::cout << "Testing Opcode [0x" << ss.str() << "]\n";
+    auto file = ss.str() + ".json";
+    const std::filesystem::path test_path{test_data_dir / "cpu_tests" / "v1" / file.c_str()};
+    auto const all_data = read_cpu_data(test_path);
+    validate_cpu_states(all_data);
 }
 
 } // namespace

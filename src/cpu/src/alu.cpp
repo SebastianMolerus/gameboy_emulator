@@ -67,6 +67,11 @@ uint8_t cpu::cpu_impl::alu()
 {
     switch (m_op.m_hex)
     {
+    case 0x09:
+    case 0x19:
+    case 0x29:
+    case 0x39:
+        return ADD_HL_REG16();
     case 0x80:
     case 0x81:
     case 0x82:
@@ -103,6 +108,8 @@ uint8_t cpu::cpu_impl::alu()
         return ADD_A_n8();
     case 0xCE:
         return ADC_n8();
+    case 0xE8:
+        return ADD_SP_e8();
     default:
         no_op_defined();
     }
@@ -125,6 +132,50 @@ uint8_t cpu::cpu_impl::ADD_A_IHLI()
 uint8_t cpu::cpu_impl::ADD_A_n8()
 {
     add(*this, m_reg.A(), m_op.m_data[0]);
+    return m_op.m_cycles[0];
+}
+
+uint8_t cpu::cpu_impl::ADD_SP_e8()
+{
+    reset_all_flags();
+
+    uint16_t &SP = m_reg.SP();
+    uint8_t e8 = m_op.m_data[0];
+
+    if (is_carry(SP, e8))
+        set(flag::C);
+    if (is_half_carry(SP, e8))
+        set(flag::H);
+
+    if (e8 & 0x80)
+    {
+        e8 -= 1;
+        SP -= (uint8_t)(~e8);
+    }
+    else
+        SP += e8;
+
+    return m_op.m_cycles[0];
+}
+
+uint8_t cpu::cpu_impl::ADD_HL_REG16()
+{
+    reset(flag::C);
+    reset(flag::H);
+    reset(flag::N);
+
+    assert(m_op.m_operands[1].m_name);
+
+    uint16_t REG16 = m_reg.get_word(m_op.m_operands[1].m_name);
+
+    if (is_carry_on_addition(m_reg.HL(), REG16))
+        set(flag::C);
+
+    if (is_half_carry_on_addition(m_reg.HL(), REG16))
+        set(flag::H);
+
+    m_reg.HL() += REG16;
+
     return m_op.m_cycles[0];
 }
 

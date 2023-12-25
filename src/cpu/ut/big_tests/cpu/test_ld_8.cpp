@@ -15,12 +15,6 @@ TEST(test_cpu_BIG, test_all_l8)
 {
     for (auto hex : ld_8_opcodes)
     {
-        std::stringstream ss;
-        ss << std::hex << static_cast<int>(hex);
-        std::cout << "Testing Opcode [0x" << ss.str() << "]\n";
-        auto file = ss.str() + ".json";
-        const std::filesystem::path test_path{test_data_dir / "cpu_tests" / "v1" / file.c_str()};
-        auto const all_data = read_cpu_data(test_path);
-        validate_cpu_states(all_data);
+        validate_opcode(hex);
     }
 }

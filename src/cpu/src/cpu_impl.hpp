@@ -33,6 +33,9 @@ struct cpu::cpu_impl
     void reset(flag f);
     void reset_all_flags();
 
+    bool is_carry_on_addition(uint16_t dst, uint16_t src);
+    bool is_half_carry_on_addition(uint16_t dst, uint16_t src);
+
     // is carry during addition dest += src
     bool is_carry(uint8_t dest, uint8_t src);
 
@@ -90,6 +93,8 @@ struct cpu::cpu_impl
     uint8_t SUB_A_REG8();
     uint8_t SUB_A_IHLI();
     uint8_t SUB_A_n8();
+    uint8_t ADD_SP_e8();
+    uint8_t ADD_HL_REG16();
 
     // Main entry for misc
     uint8_t misc();
