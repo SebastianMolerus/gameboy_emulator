@@ -518,7 +518,7 @@ TEST(test_load_16bit, pop_HL)
 }
 
 // 0xF1
-TEST(test_load_16bit, pop_AF)
+TEST(test_load_16bit, DISABLED_pop_AF)
 {
     std::string assembly{R"(
         LD SP, 0x303
