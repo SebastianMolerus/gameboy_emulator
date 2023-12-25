@@ -46,14 +46,14 @@ uint8_t adc_op(cpu::cpu_impl &cpu, uint8_t source)
     return cpu.m_op.m_cycles[0];
 }
 
-uint8_t add_op(cpu::cpu_impl &cpu, uint8_t &dst, uint16_t src)
+uint8_t add_op(cpu::cpu_impl &cpu, uint8_t src)
 {
     cpu.reset_all_flags();
+    uint8_t &A = cpu.m_reg.A();
 
-    add(cpu, dst, src);
+    add(cpu, A, src);
 
-    assert(cpu.m_op.m_operands[0].m_name);
-    if (cpu.m_reg.get_byte(cpu.m_op.m_operands[0].m_name) == 0)
+    if (A == 0)
         cpu.set(flag::Z);
 
     return cpu.m_op.m_cycles[0];
@@ -169,20 +169,20 @@ uint8_t cpu::cpu_impl::alu()
 uint8_t cpu::cpu_impl::ADD_A_REG8()
 {
     assert(m_op.m_operands[1].m_name);
-    add(*this, m_reg.A(), m_reg.get_byte(m_op.m_operands[1].m_name));
-    return m_op.m_cycles[0];
+    uint8_t REG8 = m_reg.get_byte(m_op.m_operands[1].m_name);
+    return add_op(*this, REG8);
 }
 
 uint8_t cpu::cpu_impl::ADD_A_IHLI()
 {
-    add(*this, m_reg.A(), m_rw_device.read(m_reg.HL()));
-    return m_op.m_cycles[0];
+    uint8_t const data = m_rw_device.read(m_reg.HL());
+    return add_op(*this, data);
 }
 
 uint8_t cpu::cpu_impl::ADD_A_n8()
 {
-    add(*this, m_reg.A(), m_op.m_data[0]);
-    return m_op.m_cycles[0];
+    uint8_t const data = m_op.m_data[0];
+    return add_op(*this, data);
 }
 
 uint8_t cpu::cpu_impl::ADD_SP_e8()
