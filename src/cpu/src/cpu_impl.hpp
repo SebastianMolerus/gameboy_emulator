@@ -96,6 +96,9 @@ struct cpu::cpu_impl
     uint8_t SBC_A_REG8();
     uint8_t SBC_A_IHLI();
     uint8_t SBC_A_n8();
+    uint8_t AND_A_REG8();
+    uint8_t AND_A_IHLI();
+    uint8_t AND_A_n8();
 
     // Main entry for misc
     uint8_t misc();
