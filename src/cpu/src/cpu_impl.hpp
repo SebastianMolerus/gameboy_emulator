@@ -51,20 +51,20 @@ struct cpu::cpu_impl
 
     // Main entry for Loads
     uint8_t ld();
-    uint8_t LD_HL_SP_e8();
-    uint8_t LD_REG16_n16();
-    uint8_t LD_Ia16I_SP();
-    uint8_t LD_SP_HL();
-    uint8_t push();
-    uint8_t pop();
-    uint8_t LD_REG8_REG8();
-    uint8_t LD_IREG16I_A();
-    uint8_t LD_REG_n8();
-    uint8_t LDH();
-    uint8_t LD_REG8_IREG16I();
-    uint8_t LD_Ia16I_A();
-    uint8_t LD_ICI_A();
-    uint8_t LD_IHLI_REG8();
+    void LD_HL_SP_e8();
+    void LD_REG16_n16();
+    void LD_Ia16I_SP();
+    void LD_SP_HL();
+    void push();
+    void pop();
+    void LD_REG8_REG8();
+    void LD_IREG16I_A();
+    void LD_REG_n8();
+    void LDH();
+    void LD_REG8_IREG16I();
+    void LD_Ia16I_A();
+    void LD_ICI_A();
+    void LD_IHLI_REG8();
 
     // Main entry for jumps
     uint8_t jmp();
@@ -99,6 +99,9 @@ struct cpu::cpu_impl
     uint8_t AND_A_REG8();
     uint8_t AND_A_IHLI();
     uint8_t AND_A_n8();
+    uint8_t XOR_A_REG8();
+    uint8_t XOR_A_IHLI();
+    uint8_t XOR_A_n8();
 
     // Main entry for misc
     uint8_t misc();

@@ -87,6 +87,16 @@ uint8_t and_op(cpu::cpu_impl &cpu, uint8_t data)
     return cpu.m_op.m_cycles[0];
 }
 
+uint8_t xor_op(cpu::cpu_impl &cpu, uint8_t data)
+{
+    cpu.reset_all_flags();
+    uint8_t &A = cpu.m_reg.A();
+    A ^= data;
+    if (A == 0x0)
+        cpu.set(flag::Z);
+    return cpu.m_op.m_cycles[0];
+}
+
 } // namespace
 
 uint8_t cpu::cpu_impl::alu()
@@ -142,6 +152,18 @@ uint8_t cpu::cpu_impl::alu()
         return AND_A_IHLI();
     case 0xE6:
         return AND_A_n8();
+    case 0xA8:
+    case 0xA9:
+    case 0xAA:
+    case 0xAB:
+    case 0xAC:
+    case 0xAD:
+    case 0xAF:
+        return XOR_A_REG8();
+    case 0xAE:
+        return XOR_A_IHLI();
+    case 0xEE:
+        return XOR_A_n8();
     case 0xDE:
         return SBC_A_n8();
     case 0x9E:
@@ -303,4 +325,21 @@ uint8_t cpu::cpu_impl::AND_A_n8()
 {
     uint8_t const n8 = m_op.m_data[0];
     return and_op(*this, n8);
+}
+
+uint8_t cpu::cpu_impl::XOR_A_REG8()
+{
+    assert(m_op.m_operands[1].m_name);
+    uint8_t const REG8 = m_reg.get_byte(m_op.m_operands[1].m_name);
+    return xor_op(*this, REG8);
+}
+uint8_t cpu::cpu_impl::XOR_A_IHLI()
+{
+    uint8_t const data = m_rw_device.read(m_reg.HL());
+    return xor_op(*this, data);
+}
+uint8_t cpu::cpu_impl::XOR_A_n8()
+{
+    uint8_t const n8 = m_op.m_data[0];
+    return xor_op(*this, n8);
 }
