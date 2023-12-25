@@ -137,10 +137,10 @@ uint8_t cpu::cpu_impl::LD_HL_SP_e8()
     // Seems like ALU in this cpu
     // just adds SP + e8 like two unsigned values
     // to check for C and H flags
-    if (is_half_carry(SP, e8))
+    if (is_half_carry_on_addition_byte(SP, e8))
         set(flag::H);
 
-    if (is_carry(SP, e8))
+    if (is_carry_on_addition_byte(SP, e8))
         set(flag::C);
 
     if (e8 & 0x80)

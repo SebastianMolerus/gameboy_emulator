@@ -23,9 +23,9 @@ uint8_t sub(cpu::cpu_impl &cpu, uint8_t data)
 
 void adc(cpu::cpu_impl &cpu, uint8_t &dst, uint8_t src)
 {
-    if (cpu.is_carry(dst, src))
+    if (cpu.is_carry_on_addition_byte(dst, src))
         cpu.set(flag::C);
-    if (cpu.is_half_carry(dst, src))
+    if (cpu.is_half_carry_on_addition_byte(dst, src))
         cpu.set(flag::H);
     dst += src;
 }
@@ -46,10 +46,10 @@ uint8_t add(cpu::cpu_impl &cpu, uint8_t &dst, uint16_t src)
 {
     cpu.reset_all_flags();
 
-    if (cpu.is_carry(dst, src))
+    if (cpu.is_carry_on_addition_byte(dst, src))
         cpu.set(flag::C);
 
-    if (cpu.is_half_carry(dst, src))
+    if (cpu.is_half_carry_on_addition_byte(dst, src))
         cpu.set(flag::H);
 
     dst += src;
@@ -142,9 +142,9 @@ uint8_t cpu::cpu_impl::ADD_SP_e8()
     uint16_t &SP = m_reg.SP();
     uint8_t e8 = m_op.m_data[0];
 
-    if (is_carry(SP, e8))
+    if (is_carry_on_addition_byte(SP, e8))
         set(flag::C);
-    if (is_half_carry(SP, e8))
+    if (is_half_carry_on_addition_byte(SP, e8))
         set(flag::H);
 
     if (e8 & 0x80)
@@ -168,10 +168,10 @@ uint8_t cpu::cpu_impl::ADD_HL_REG16()
 
     uint16_t REG16 = m_reg.get_word(m_op.m_operands[1].m_name);
 
-    if (is_carry_on_addition(m_reg.HL(), REG16))
+    if (is_carry_on_addition_word(m_reg.HL(), REG16))
         set(flag::C);
 
-    if (is_half_carry_on_addition(m_reg.HL(), REG16))
+    if (is_half_carry_on_addition_word(m_reg.HL(), REG16))
         set(flag::H);
 
     m_reg.HL() += REG16;

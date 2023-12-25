@@ -33,19 +33,15 @@ struct cpu::cpu_impl
     void reset(flag f);
     void reset_all_flags();
 
-    bool is_carry_on_addition(uint16_t dst, uint16_t src);
-    bool is_half_carry_on_addition(uint16_t dst, uint16_t src);
-
-    // is carry during addition dest += src
-    bool is_carry(uint8_t dest, uint8_t src);
-
-    // is half-carry during addition dest += src
-    bool is_half_carry(uint8_t dest, uint8_t src);
+    bool is_carry_on_addition_byte(uint8_t dest, uint8_t src);
+    bool is_half_carry_on_addition_byte(uint8_t dest, uint8_t src);
+    bool is_carry_on_addition_word(uint16_t dst, uint16_t src);
+    bool is_half_carry_on_addition_word(uint16_t dst, uint16_t src);
 
     // throws runtime error with current opcode hex
     void no_op_defined();
 
-    // combine Word from data
+    // combine Word from incoming data
     uint16_t combined_data();
 
     void push_PC();

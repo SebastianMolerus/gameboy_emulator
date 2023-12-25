@@ -18,16 +18,6 @@ cpu::cpu_impl::cpu_impl(rw_device &rw_device, cb callback) : m_rw_device{rw_devi
 {
 }
 
-bool cpu::cpu_impl::is_carry_on_addition(uint16_t dst, uint16_t src)
-{
-    return (dst + src) & 0x10000;
-}
-
-bool cpu::cpu_impl::is_half_carry_on_addition(uint16_t dst, uint16_t src)
-{
-    return ((dst & 0xFFF) + (src & 0xFFF)) & 0x1000;
-}
-
 void cpu::cpu_impl::start()
 {
     while (1)
@@ -81,14 +71,24 @@ void cpu::cpu_impl::reset_all_flags()
     reset(flag::Z);
 }
 
-bool cpu::cpu_impl::is_carry(uint8_t dest, uint8_t src)
+bool cpu::cpu_impl::is_carry_on_addition_byte(uint8_t dest, uint8_t src)
 {
     return (dest + src) & 0x100;
 }
 
-bool cpu::cpu_impl::is_half_carry(uint8_t dest, uint8_t src)
+bool cpu::cpu_impl::is_half_carry_on_addition_byte(uint8_t dest, uint8_t src)
 {
     return ((src & 0xF) + (dest & 0xF)) & 0x10;
+}
+
+bool cpu::cpu_impl::is_carry_on_addition_word(uint16_t dst, uint16_t src)
+{
+    return (dst + src) & 0x10000;
+}
+
+bool cpu::cpu_impl::is_half_carry_on_addition_word(uint16_t dst, uint16_t src)
+{
+    return ((dst & 0xFFF) + (src & 0xFFF)) & 0x1000;
 }
 
 void cpu::cpu_impl::no_op_defined()
