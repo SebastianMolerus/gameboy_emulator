@@ -279,6 +279,9 @@ uint8_t cpu::cpu_impl::alu()
     case 0xFE:
         CP_A_n8();
         break;
+    case 0x27:
+        DAA();
+        break;
     default:
         no_op_defined();
     }
@@ -485,33 +488,108 @@ void cpu::cpu_impl::DEC_REG16()
 
 void cpu::cpu_impl::INC_REG8()
 {
-    reset(flag::H);
-    reset(flag::N);
-    reset(flag::Z);
+    bool const C = m_reg.F() & flag::C;
+    reset_all_flags();
 
-    uint8_t &REG8 = m_reg.get_byte(m_op.m_operands[1].m_name);
+    uint8_t &REG8 = m_reg.get_byte(m_op.m_operands[0].m_name);
 
     add(*this, REG8, 1);
 
+    if (C)
+        set(flag::C);
+    else
+        reset(flag::C);
+
     if (REG8 == 0)
         set(flag::Z);
 }
+
+void cpu::cpu_impl::INC_IHLI()
+{
+    bool const C = m_reg.F() & flag::C;
+    reset_all_flags();
+
+    uint8_t data = m_rw_device.read(m_reg.get_word(m_op.m_operands[0].m_name));
+
+    add(*this, data, 1);
+
+    if (C)
+        set(flag::C);
+    else
+        reset(flag::C);
+
+    if (data == 0)
+        set(flag::Z);
+
+    m_rw_device.write(m_reg.get_word(m_op.m_operands[0].m_name), data);
+}
+
 void cpu::cpu_impl::DEC_REG8()
 {
-    reset(flag::H);
-    reset(flag::N);
-    reset(flag::Z);
-
-    uint8_t &REG8 = m_reg.get_byte(m_op.m_operands[1].m_name);
+    bool const C = m_reg.F() & flag::C;
+    reset_all_flags();
+    set(flag::N);
+    uint8_t &REG8 = m_reg.get_byte(m_op.m_operands[0].m_name);
 
     sub(*this, REG8, 1);
 
+    if (C)
+        set(flag::C);
+    else
+        reset(flag::C);
+
     if (REG8 == 0)
         set(flag::Z);
 }
-void cpu::cpu_impl::INC_IHLI()
-{
-}
+
 void cpu::cpu_impl::DEC_IHLI()
 {
+    bool const C = m_reg.F() & flag::C;
+    reset_all_flags();
+    set(flag::N);
+
+    uint8_t data = m_rw_device.read(m_reg.get_word(m_op.m_operands[0].m_name));
+
+    sub(*this, data, 1);
+
+    if (C)
+        set(flag::C);
+    else
+        reset(flag::C);
+
+    if (data == 0)
+        set(flag::Z);
+
+    m_rw_device.write(m_reg.get_word(m_op.m_operands[0].m_name), data);
+}
+
+void cpu::cpu_impl::DAA()
+{
+    uint8_t &A = m_reg.A();
+
+    uint8_t offset{};
+
+    if (((A & 0xF) > 0x9 && !(m_reg.F() & flag::N)) || (m_reg.F() & flag::H))
+        offset |= 0x06;
+
+    if (((A & 0xF0) > 0x90 && !(m_reg.F() & flag::N)) || (m_reg.F() & flag::C))
+        offset |= 0x60;
+
+    if (!(m_reg.F() & flag::N))
+    {
+        A += offset;
+    }
+    else
+    {
+        A -= offset;
+    }
+
+    reset(flag::H);
+    reset(flag::Z);
+    reset(flag::C);
+
+    if (A == 0)
+        set(flag::Z);
+    if (A > 0x99)
+        set(flag::C);
 }

@@ -14,7 +14,8 @@ const std::unordered_map<const char *, cpu::cpu_impl::processing_func> cpu::cpu_
     {"CALL", &cpu::cpu_impl::jmp}, {"RET", &cpu::cpu_impl::jmp}, {"RETI", &cpu::cpu_impl::jmp},
     {"RST", &cpu::cpu_impl::jmp},  {"SUB", &cpu::cpu_impl::alu}, {"SBC", &cpu::cpu_impl::alu},
     {"AND", &cpu::cpu_impl::alu},  {"XOR", &cpu::cpu_impl::alu}, {"OR", &cpu::cpu_impl::alu},
-    {"CP", &cpu::cpu_impl::alu},   {"INC", &cpu::cpu_impl::alu}, {"DEC", &cpu::cpu_impl::alu}};
+    {"CP", &cpu::cpu_impl::alu},   {"INC", &cpu::cpu_impl::alu}, {"DEC", &cpu::cpu_impl::alu},
+    {"DAA", &cpu::cpu_impl::alu}};
 
 cpu::cpu_impl::cpu_impl(rw_device &rw_device, cb callback) : m_rw_device{rw_device}, m_callback{callback}
 {
