@@ -122,6 +122,9 @@ struct cpu::cpu_impl
     // Main entry for shift, rotate, bit
     uint8_t srb();
     void RLCA();
+    void RLA();
+    void RRCA();
+    void RRA();
 
     // Main entry for misc
     uint8_t misc();

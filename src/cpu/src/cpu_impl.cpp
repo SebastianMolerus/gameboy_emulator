@@ -8,15 +8,16 @@
 //               CPU_IMPL PART
 // ******************************************
 const std::unordered_map<const char *, cpu::cpu_impl::processing_func> cpu::cpu_impl::m_mapper{
-    {"LD", &cpu::cpu_impl::ld},    {"LDH", &cpu::cpu_impl::ld},  {"PUSH", &cpu::cpu_impl::ld},
-    {"POP", &cpu::cpu_impl::ld},   {"JP", &cpu::cpu_impl::jmp},  {"JR", &cpu::cpu_impl::jmp},
-    {"ADC", &cpu::cpu_impl::alu},  {"ADD", &cpu::cpu_impl::alu}, {"NOP", &cpu::cpu_impl::misc},
-    {"CALL", &cpu::cpu_impl::jmp}, {"RET", &cpu::cpu_impl::jmp}, {"RETI", &cpu::cpu_impl::jmp},
-    {"RST", &cpu::cpu_impl::jmp},  {"SUB", &cpu::cpu_impl::alu}, {"SBC", &cpu::cpu_impl::alu},
-    {"AND", &cpu::cpu_impl::alu},  {"XOR", &cpu::cpu_impl::alu}, {"OR", &cpu::cpu_impl::alu},
-    {"CP", &cpu::cpu_impl::alu},   {"INC", &cpu::cpu_impl::alu}, {"DEC", &cpu::cpu_impl::alu},
-    {"DAA", &cpu::cpu_impl::alu},  {"SCF", &cpu::cpu_impl::alu}, {"CPL", &cpu::cpu_impl::alu},
-    {"CCF", &cpu::cpu_impl::alu},  {"RLCA", &cpu::cpu_impl::srb}};
+    {"LD", &cpu::cpu_impl::ld},    {"LDH", &cpu::cpu_impl::ld},   {"PUSH", &cpu::cpu_impl::ld},
+    {"POP", &cpu::cpu_impl::ld},   {"JP", &cpu::cpu_impl::jmp},   {"JR", &cpu::cpu_impl::jmp},
+    {"ADC", &cpu::cpu_impl::alu},  {"ADD", &cpu::cpu_impl::alu},  {"NOP", &cpu::cpu_impl::misc},
+    {"CALL", &cpu::cpu_impl::jmp}, {"RET", &cpu::cpu_impl::jmp},  {"RETI", &cpu::cpu_impl::jmp},
+    {"RST", &cpu::cpu_impl::jmp},  {"SUB", &cpu::cpu_impl::alu},  {"SBC", &cpu::cpu_impl::alu},
+    {"AND", &cpu::cpu_impl::alu},  {"XOR", &cpu::cpu_impl::alu},  {"OR", &cpu::cpu_impl::alu},
+    {"CP", &cpu::cpu_impl::alu},   {"INC", &cpu::cpu_impl::alu},  {"DEC", &cpu::cpu_impl::alu},
+    {"DAA", &cpu::cpu_impl::alu},  {"SCF", &cpu::cpu_impl::alu},  {"CPL", &cpu::cpu_impl::alu},
+    {"CCF", &cpu::cpu_impl::alu},  {"RLCA", &cpu::cpu_impl::srb}, {"RLA", &cpu::cpu_impl::srb},
+    {"RRCA", &cpu::cpu_impl::srb}, {"RRA", &cpu::cpu_impl::srb}};
 
 cpu::cpu_impl::cpu_impl(rw_device &rw_device, cb callback) : m_rw_device{rw_device}, m_callback{callback}
 {

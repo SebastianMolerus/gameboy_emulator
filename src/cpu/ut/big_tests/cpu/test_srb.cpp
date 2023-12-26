@@ -3,7 +3,7 @@
 namespace
 {
 
-std::array<uint8_t, 1> const srb_opcodes{0x07};
+std::array<uint8_t, 4> const srb_opcodes{0x07, 0x17, 0x0F, 0x1F};
 
 } // namespace
 
