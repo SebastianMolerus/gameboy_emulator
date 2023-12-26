@@ -119,6 +119,10 @@ struct cpu::cpu_impl
     void CPL();
     void CCF();
 
+    // Main entry for shift, rotate, bit
+    uint8_t srb();
+    void RLCA();
+
     // Main entry for misc
     uint8_t misc();
     uint8_t NOP();
