@@ -114,6 +114,18 @@ uint8_t cpu::cpu_impl::alu()
 {
     switch (m_op.m_hex)
     {
+    case 0x03:
+    case 0x13:
+    case 0x23:
+    case 0x33:
+        INC_REG16();
+        break;
+    case 0x0B:
+    case 0x1B:
+    case 0x2B:
+    case 0x3B:
+        DEC_REG16();
+        break;
     case 0x09:
     case 0x19:
     case 0x29:
@@ -433,4 +445,16 @@ void cpu::cpu_impl::CP_A_n8()
 {
     uint8_t const n8 = m_op.m_data[0];
     cp_op(*this, n8);
+}
+
+void cpu::cpu_impl::INC_REG16()
+{
+    assert(m_op.m_operands[0].m_name);
+    ++m_reg.get_word(m_op.m_operands[0].m_name);
+}
+
+void cpu::cpu_impl::DEC_REG16()
+{
+    assert(m_op.m_operands[0].m_name);
+    --m_reg.get_word(m_op.m_operands[0].m_name);
 }
