@@ -73,7 +73,7 @@ void sbc_op(cpu::cpu_impl &cpu, uint8_t data)
 void and_op(cpu::cpu_impl &cpu, uint8_t data)
 {
     cpu.reset_all_flags();
-    cpu.set(flag::H);
+
     uint8_t &A = cpu.m_reg.A();
     A &= data;
     if (A == 0x0)
@@ -98,6 +98,16 @@ void or_op(cpu::cpu_impl &cpu, uint8_t data)
         cpu.set(flag::Z);
 }
 
+void cp_op(cpu::cpu_impl &cpu, uint8_t data)
+{
+    cpu.reset_all_flags();
+    cpu.set(flag::N);
+    uint8_t A = cpu.m_reg.A();
+    sub(cpu, A, data);
+    if (A == 0x0)
+        cpu.set(flag::Z);
+}
+
 } // namespace
 
 uint8_t cpu::cpu_impl::alu()
@@ -110,6 +120,9 @@ uint8_t cpu::cpu_impl::alu()
     case 0x39:
         ADD_HL_REG16();
         break;
+    case 0xE8:
+        ADD_SP_e8();
+        break;
     case 0x80:
     case 0x81:
     case 0x82:
@@ -118,6 +131,12 @@ uint8_t cpu::cpu_impl::alu()
     case 0x85:
     case 0x87:
         ADD_A_REG8();
+        break;
+    case 0x86:
+        ADD_A_IHLI();
+        break;
+    case 0xC6:
+        ADD_A_n8();
         break;
     case 0x88:
     case 0x89:
@@ -128,6 +147,12 @@ uint8_t cpu::cpu_impl::alu()
     case 0x8F:
         ADC_A_REG8();
         break;
+    case 0x8E:
+        ADC_A_IHLI();
+        break;
+    case 0xCE:
+        ADC_n8();
+        break;
     case 0x90:
     case 0x91:
     case 0x92:
@@ -137,6 +162,12 @@ uint8_t cpu::cpu_impl::alu()
     case 0x97:
         SUB_A_REG8();
         break;
+    case 0x96:
+        SUB_A_IHLI();
+        break;
+    case 0xD6:
+        SUB_A_n8();
+        break;
     case 0x98:
     case 0x99:
     case 0x9A:
@@ -145,6 +176,12 @@ uint8_t cpu::cpu_impl::alu()
     case 0x9D:
     case 0x9F:
         SBC_A_REG8();
+        break;
+    case 0x9E:
+        SBC_A_IHLI();
+        break;
+    case 0xDE:
+        SBC_A_n8();
         break;
     case 0xA0:
     case 0xA1:
@@ -173,6 +210,9 @@ uint8_t cpu::cpu_impl::alu()
     case 0xAE:
         XOR_A_IHLI();
         break;
+    case 0xEE:
+        XOR_A_n8();
+        break;
     case 0xB0:
     case 0xB1:
     case 0xB2:
@@ -188,35 +228,20 @@ uint8_t cpu::cpu_impl::alu()
     case 0xF6:
         OR_A_n8();
         break;
-    case 0xEE:
-        XOR_A_n8();
+    case 0xB8:
+    case 0xB9:
+    case 0xBA:
+    case 0xBB:
+    case 0xBC:
+    case 0xBD:
+    case 0xBF:
+        CP_A_REG8();
         break;
-    case 0xDE:
-        SBC_A_n8();
+    case 0xBE:
+        CP_A_IHLI();
         break;
-    case 0x9E:
-        SBC_A_IHLI();
-        break;
-    case 0x96:
-        SUB_A_IHLI();
-        break;
-    case 0xD6:
-        SUB_A_n8();
-        break;
-    case 0x8E:
-        ADC_A_IHLI();
-        break;
-    case 0x86:
-        ADD_A_IHLI();
-        break;
-    case 0xC6:
-        ADD_A_n8();
-        break;
-    case 0xCE:
-        ADC_n8();
-        break;
-    case 0xE8:
-        ADD_SP_e8();
+    case 0xFE:
+        CP_A_n8();
         break;
     default:
         no_op_defined();
@@ -391,4 +416,21 @@ void cpu::cpu_impl::OR_A_n8()
 {
     uint8_t const n8 = m_op.m_data[0];
     or_op(*this, n8);
+}
+
+void cpu::cpu_impl::CP_A_REG8()
+{
+    assert(m_op.m_operands[1].m_name);
+    uint8_t const REG8 = m_reg.get_byte(m_op.m_operands[1].m_name);
+    cp_op(*this, REG8);
+}
+void cpu::cpu_impl::CP_A_IHLI()
+{
+    uint8_t const data = m_rw_device.read(m_reg.HL());
+    cp_op(*this, data);
+}
+void cpu::cpu_impl::CP_A_n8()
+{
+    uint8_t const n8 = m_op.m_data[0];
+    cp_op(*this, n8);
 }
