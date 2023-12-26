@@ -285,6 +285,12 @@ uint8_t cpu::cpu_impl::alu()
     case 0x37:
         SCF();
         break;
+    case 0x2F:
+        CPL();
+        break;
+    case 0x3F:
+        CCF();
+        break;
     default:
         no_op_defined();
     }
@@ -605,4 +611,22 @@ void cpu::cpu_impl::SCF()
     reset(flag::H);
     reset(flag::N);
     set(flag::C);
+}
+
+void cpu::cpu_impl::CPL()
+{
+    set(flag::H);
+    set(flag::N);
+    m_reg.A() = ~m_reg.A();
+}
+
+void cpu::cpu_impl::CCF()
+{
+    reset(flag::H);
+    reset(flag::N);
+    bool const C = m_reg.F() & flag::C;
+    if (C)
+        reset(flag::C);
+    else
+        set(flag::C);
 }
