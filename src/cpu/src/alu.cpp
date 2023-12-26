@@ -567,22 +567,25 @@ void cpu::cpu_impl::DAA()
 {
     uint8_t &A = m_reg.A();
 
+    bool const C = m_reg.F() & flag::C;
+    bool const sub = m_reg.F() & flag::N;
+
+    bool set_carry{};
+    if (((A > 0x99) && !sub) || C)
+        set_carry = true;
+
     uint8_t offset{};
 
-    if (((A & 0xF) > 0x9 && !(m_reg.F() & flag::N)) || (m_reg.F() & flag::H))
+    bool const hc = m_reg.F() & flag::H;
+    if ((((A & 0xF) > 0x9) && !sub) || hc)
         offset |= 0x06;
-
-    if (((A & 0xF0) > 0x90 && !(m_reg.F() & flag::N)) || (m_reg.F() & flag::C))
+    if (((A > 0x99) && !sub) || C)
         offset |= 0x60;
 
-    if (!(m_reg.F() & flag::N))
-    {
-        A += offset;
-    }
-    else
-    {
+    if (sub)
         A -= offset;
-    }
+    else
+        A += offset;
 
     reset(flag::H);
     reset(flag::Z);
@@ -590,6 +593,6 @@ void cpu::cpu_impl::DAA()
 
     if (A == 0)
         set(flag::Z);
-    if (A > 0x99)
+    if (set_carry)
         set(flag::C);
 }
