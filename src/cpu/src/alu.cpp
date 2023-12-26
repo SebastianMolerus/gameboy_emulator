@@ -73,7 +73,7 @@ void sbc_op(cpu::cpu_impl &cpu, uint8_t data)
 void and_op(cpu::cpu_impl &cpu, uint8_t data)
 {
     cpu.reset_all_flags();
-
+    cpu.set(flag::H);
     uint8_t &A = cpu.m_reg.A();
     A &= data;
     if (A == 0x0)
