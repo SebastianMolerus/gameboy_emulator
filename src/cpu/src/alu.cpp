@@ -89,6 +89,15 @@ void xor_op(cpu::cpu_impl &cpu, uint8_t data)
         cpu.set(flag::Z);
 }
 
+void or_op(cpu::cpu_impl &cpu, uint8_t data)
+{
+    cpu.reset_all_flags();
+    uint8_t &A = cpu.m_reg.A();
+    A |= data;
+    if (A == 0x0)
+        cpu.set(flag::Z);
+}
+
 } // namespace
 
 uint8_t cpu::cpu_impl::alu()
@@ -163,6 +172,21 @@ uint8_t cpu::cpu_impl::alu()
         break;
     case 0xAE:
         XOR_A_IHLI();
+        break;
+    case 0xB0:
+    case 0xB1:
+    case 0xB2:
+    case 0xB3:
+    case 0xB4:
+    case 0xB5:
+    case 0xB7:
+        OR_A_REG8();
+        break;
+    case 0xB6:
+        OR_A_IHLI();
+        break;
+    case 0xF6:
+        OR_A_n8();
         break;
     case 0xEE:
         XOR_A_n8();
@@ -350,4 +374,21 @@ void cpu::cpu_impl::XOR_A_n8()
 {
     uint8_t const n8 = m_op.m_data[0];
     xor_op(*this, n8);
+}
+
+void cpu::cpu_impl::OR_A_REG8()
+{
+    assert(m_op.m_operands[1].m_name);
+    uint8_t const REG8 = m_reg.get_byte(m_op.m_operands[1].m_name);
+    or_op(*this, REG8);
+}
+void cpu::cpu_impl::OR_A_IHLI()
+{
+    uint8_t const data = m_rw_device.read(m_reg.HL());
+    or_op(*this, data);
+}
+void cpu::cpu_impl::OR_A_n8()
+{
+    uint8_t const n8 = m_op.m_data[0];
+    or_op(*this, n8);
 }

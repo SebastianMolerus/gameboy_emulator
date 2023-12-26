@@ -102,6 +102,9 @@ struct cpu::cpu_impl
     void XOR_A_REG8();
     void XOR_A_IHLI();
     void XOR_A_n8();
+    void OR_A_REG8();
+    void OR_A_IHLI();
+    void OR_A_n8();
 
     // Main entry for misc
     uint8_t misc();
