@@ -115,6 +115,7 @@ struct cpu::cpu_impl
     void INC_IHLI();
     void DEC_IHLI();
     void DAA();
+    void SCF();
 
     // Main entry for misc
     uint8_t misc();

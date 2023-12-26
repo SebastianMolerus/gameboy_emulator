@@ -282,6 +282,9 @@ uint8_t cpu::cpu_impl::alu()
     case 0x27:
         DAA();
         break;
+    case 0x37:
+        SCF();
+        break;
     default:
         no_op_defined();
     }
@@ -595,4 +598,11 @@ void cpu::cpu_impl::DAA()
         set(flag::Z);
     if (set_carry)
         set(flag::C);
+}
+
+void cpu::cpu_impl::SCF()
+{
+    reset(flag::H);
+    reset(flag::N);
+    set(flag::C);
 }
