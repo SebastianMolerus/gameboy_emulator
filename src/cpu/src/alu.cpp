@@ -120,11 +120,35 @@ uint8_t cpu::cpu_impl::alu()
     case 0x33:
         INC_REG16();
         break;
+    case 0x04:
+    case 0x14:
+    case 0x24:
+    case 0x0C:
+    case 0x1C:
+    case 0x2C:
+    case 0x3C:
+        INC_REG8();
+        break;
+    case 0x34:
+        INC_IHLI();
+        break;
     case 0x0B:
     case 0x1B:
     case 0x2B:
     case 0x3B:
         DEC_REG16();
+        break;
+    case 0x05:
+    case 0x15:
+    case 0x25:
+    case 0x0D:
+    case 0x1D:
+    case 0x2D:
+    case 0x3D:
+        DEC_REG8();
+        break;
+    case 0x35:
+        DEC_IHLI();
         break;
     case 0x09:
     case 0x19:
@@ -457,4 +481,37 @@ void cpu::cpu_impl::DEC_REG16()
 {
     assert(m_op.m_operands[0].m_name);
     --m_reg.get_word(m_op.m_operands[0].m_name);
+}
+
+void cpu::cpu_impl::INC_REG8()
+{
+    reset(flag::H);
+    reset(flag::N);
+    reset(flag::Z);
+
+    uint8_t &REG8 = m_reg.get_byte(m_op.m_operands[1].m_name);
+
+    add(*this, REG8, 1);
+
+    if (REG8 == 0)
+        set(flag::Z);
+}
+void cpu::cpu_impl::DEC_REG8()
+{
+    reset(flag::H);
+    reset(flag::N);
+    reset(flag::Z);
+
+    uint8_t &REG8 = m_reg.get_byte(m_op.m_operands[1].m_name);
+
+    sub(*this, REG8, 1);
+
+    if (REG8 == 0)
+        set(flag::Z);
+}
+void cpu::cpu_impl::INC_IHLI()
+{
+}
+void cpu::cpu_impl::DEC_IHLI()
+{
 }

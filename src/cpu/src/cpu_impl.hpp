@@ -110,6 +110,10 @@ struct cpu::cpu_impl
     void CP_A_n8();
     void INC_REG16();
     void DEC_REG16();
+    void INC_REG8();
+    void DEC_REG8();
+    void INC_IHLI();
+    void DEC_IHLI();
 
     // Main entry for misc
     uint8_t misc();
