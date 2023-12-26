@@ -1,4 +1,5 @@
 #include "cpu_impl.hpp"
+#include "cpu.hpp"
 #include <sstream>
 #include <stdexcept>
 #include <unordered_map>
@@ -7,10 +8,16 @@
 //               CPU_IMPL PART
 // ******************************************
 const std::unordered_map<const char *, cpu::cpu_impl::processing_func> cpu::cpu_impl::m_mapper{
-    {"LD", &cpu::cpu_impl::ld},     {"LDH", &cpu::cpu_impl::ld},   {"PUSH", &cpu::cpu_impl::ld},
-    {"POP", &cpu::cpu_impl::ld},    {"JP", &cpu::cpu_impl::jmp},   {"JR", &cpu::cpu_impl::jmp},
-    {"ADD", &cpu::cpu_impl::arith}, {"NOP", &cpu::cpu_impl::misc}, {"CALL", &cpu::cpu_impl::jmp},
-    {"RET", &cpu::cpu_impl::jmp},   {"RETI", &cpu::cpu_impl::jmp}, {"RST", &cpu::cpu_impl::jmp}};
+    {"LD", &cpu::cpu_impl::ld},    {"LDH", &cpu::cpu_impl::ld},   {"PUSH", &cpu::cpu_impl::ld},
+    {"POP", &cpu::cpu_impl::ld},   {"JP", &cpu::cpu_impl::jmp},   {"JR", &cpu::cpu_impl::jmp},
+    {"ADC", &cpu::cpu_impl::alu},  {"ADD", &cpu::cpu_impl::alu},  {"NOP", &cpu::cpu_impl::misc},
+    {"CALL", &cpu::cpu_impl::jmp}, {"RET", &cpu::cpu_impl::jmp},  {"RETI", &cpu::cpu_impl::jmp},
+    {"RST", &cpu::cpu_impl::jmp},  {"SUB", &cpu::cpu_impl::alu},  {"SBC", &cpu::cpu_impl::alu},
+    {"AND", &cpu::cpu_impl::alu},  {"XOR", &cpu::cpu_impl::alu},  {"OR", &cpu::cpu_impl::alu},
+    {"CP", &cpu::cpu_impl::alu},   {"INC", &cpu::cpu_impl::alu},  {"DEC", &cpu::cpu_impl::alu},
+    {"DAA", &cpu::cpu_impl::alu},  {"SCF", &cpu::cpu_impl::alu},  {"CPL", &cpu::cpu_impl::alu},
+    {"CCF", &cpu::cpu_impl::alu},  {"RLCA", &cpu::cpu_impl::srb}, {"RLA", &cpu::cpu_impl::srb},
+    {"RRCA", &cpu::cpu_impl::srb}, {"RRA", &cpu::cpu_impl::srb}};
 
 cpu::cpu_impl::cpu_impl(rw_device &rw_device, cb callback) : m_rw_device{rw_device}, m_callback{callback}
 {
@@ -69,14 +76,34 @@ void cpu::cpu_impl::reset_all_flags()
     reset(flag::Z);
 }
 
-bool cpu::cpu_impl::is_carry(uint8_t dest, uint8_t src)
+bool cpu::cpu_impl::is_carry_on_addition_byte(uint8_t dest, uint8_t src)
 {
     return (dest + src) & 0x100;
 }
 
-bool cpu::cpu_impl::is_half_carry(uint8_t dest, uint8_t src)
+bool cpu::cpu_impl::is_half_carry_on_addition_byte(uint8_t dest, uint8_t src)
 {
-    return ((dest & 0xF) + (src & 0xF)) & 0x10;
+    return ((src & 0xF) + (dest & 0xF)) & 0x10;
+}
+
+bool cpu::cpu_impl::is_carry_on_addition_word(uint16_t dst, uint16_t src)
+{
+    return (dst + src) & 0x10000;
+}
+
+bool cpu::cpu_impl::is_half_carry_on_addition_word(uint16_t dst, uint16_t src)
+{
+    return ((dst & 0xFFF) + (src & 0xFFF)) & 0x1000;
+}
+
+bool cpu::cpu_impl::is_carry_on_substraction_byte(uint8_t dest, uint8_t src)
+{
+    return src > dest;
+}
+
+bool cpu::cpu_impl::is_half_carry_on_substraction_byte(uint8_t dest, uint8_t src)
+{
+    return (src & 0xF) > (dest & 0xF);
 }
 
 void cpu::cpu_impl::no_op_defined()
@@ -111,8 +138,10 @@ void cpu::cpu_impl::pop_PC()
 // ******************************************
 //                  CPU PART
 // ******************************************
-cpu::cpu(rw_device &rw_device, cb callback) : m_pimpl{std::make_unique<cpu_impl>(rw_device, callback)}
+cpu::cpu(rw_device &rw_device, cb callback, registers start_values)
+    : m_pimpl{std::make_unique<cpu_impl>(rw_device, callback)}
 {
+    m_pimpl->m_reg = start_values;
 }
 
 cpu::~cpu() = default;

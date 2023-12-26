@@ -1,0 +1,3 @@
+[submodule "src/cpu/ut/big_tests/sm83-test-data"]
+	path = src/cpu/ut/big_tests/sm83-test-data
+	url = https://github.com/adtennant/sm83-test-data

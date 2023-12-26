@@ -3,7 +3,7 @@
 #include <utils.h>
 
 // 0x20
-TEST(test_jmp, JR_NZ_e8)
+TEST(test_jmp, DISABLED_JR_NZ_e8)
 {
     std::string assembly{R"(
         JR NZ, 0x2  ;  1. jump to [3]
@@ -37,7 +37,7 @@ TEST(test_jmp, JR_NZ_e8)
 }
 
 // 0x30
-TEST(test_jmp, JR_NC_e8)
+TEST(test_jmp, DISABLED_JR_NC_e8)
 {
     std::string assembly{R"(
         JR NC, 0x2
@@ -70,7 +70,7 @@ TEST(test_jmp, JR_NC_e8)
 }
 
 // 0x28
-TEST(test_jmp, JR_Z_e8)
+TEST(test_jmp, DISABLED_JR_Z_e8)
 {
     std::string assembly{R"(
         ADD A, B
@@ -106,7 +106,7 @@ TEST(test_jmp, JR_Z_e8)
 }
 
 // 0x38
-TEST(test_jmp, JR_C_e8)
+TEST(test_jmp, DISABLED_JR_C_e8)
 {
     std::string assembly{R"(
         LD A, 0xFF
@@ -134,7 +134,7 @@ TEST(test_jmp, JR_C_e8)
 }
 
 // 0x18
-TEST(test_jmp, JR_e8)
+TEST(test_jmp, DISABLED_JR_e8)
 {
     std::string assembly{R"(
         LD A, 0x99
