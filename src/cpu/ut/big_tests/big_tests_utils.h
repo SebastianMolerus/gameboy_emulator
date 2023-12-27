@@ -251,10 +251,13 @@ void validate_cpu_states(std::vector<cpu_data> const &states)
         }
         catch (std::runtime_error const &err)
         {
-            std::cerr << "Exception during execution of " << data.name << "\n";
-            std::cerr << err.what() << ". Going to next test\n";
+            // std::cerr << "Exception during execution of " << data.name << "\n";
+            //  std::cerr << err.what() << ". Going to next test\n";
+            // std::cerr << err.what();
             continue;
         }
+
+        std::cerr << "Execution success: " << data.name << "\n";
 
         ASSERT_EQ(r.A(), data.final.cpu.a) << "Instruction " << data.name << ". Expected A==" << (int)data.final.cpu.a
                                            << ". Get A==" << (int)r.A() << "\n";

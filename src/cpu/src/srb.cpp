@@ -4,6 +4,7 @@
 
 uint8_t cpu::cpu_impl::srb()
 {
+    no_op_defined("SRB.cpp");
     switch (m_op.m_hex)
     {
     case 0x07:
@@ -19,9 +20,22 @@ uint8_t cpu::cpu_impl::srb()
         RRA();
         break;
     default:
-        no_op_defined();
+        no_op_defined("SRB.cpp");
     }
-    return 0;
+    return m_op.m_cycles[0];
+}
+
+uint8_t cpu::cpu_impl::pref_srb()
+{
+    switch (m_op.m_hex)
+    {
+    case 0x00:
+        RLC_B();
+        break;
+    default:
+        no_op_defined("SRB_pref.cpp");
+    }
+    return m_op.m_cycles[0];
 }
 
 // Circular left rotation
@@ -65,4 +79,14 @@ void cpu::cpu_impl::RRA()
         m_reg.A() |= 0x80;
     else
         m_reg.A() &= 0x7F;
+}
+
+void cpu::cpu_impl::RLC_B()
+{
+    reset_all_flags();
+    uint8_t &B = m_reg.B();
+    if (B & 0x80)
+        set(flag::C);
+    std::bitset<8> b{std::rotl(B, 1)};
+    B = b.to_ulong();
 }

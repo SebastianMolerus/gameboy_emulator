@@ -5,6 +5,8 @@
 #include <cstdint>
 #include <decoder.hpp>
 #include <reg.hpp>
+#include <sstream>
+#include <stdexcept>
 
 struct cpu::cpu_impl
 {
@@ -14,6 +16,7 @@ struct cpu::cpu_impl
     ~cpu_impl() = default;
 
     static const std::unordered_map<const char *, processing_func> m_mapper;
+    static const std::unordered_map<const char *, processing_func> m_mapper_pref;
 
     registers m_reg;
     rw_device &m_rw_device;
@@ -41,7 +44,7 @@ struct cpu::cpu_impl
     bool is_half_carry_on_substraction_byte(uint8_t dest, uint8_t src);
 
     // throws runtime error with current opcode hex
-    void no_op_defined();
+    void no_op_defined(std::string module_name = {});
 
     // combine Word from incoming data
     uint16_t combined_data();
@@ -125,6 +128,9 @@ struct cpu::cpu_impl
     void RLA();
     void RRCA();
     void RRA();
+    // Main entry for shift, rotate, bit ( PREFIXED )
+    uint8_t pref_srb();
+    void RLC_B();
 
     // Main entry for misc
     uint8_t misc();

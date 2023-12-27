@@ -19,23 +19,43 @@ const std::unordered_map<const char *, cpu::cpu_impl::processing_func> cpu::cpu_
     {"CCF", &cpu::cpu_impl::alu},  {"RLCA", &cpu::cpu_impl::srb}, {"RLA", &cpu::cpu_impl::srb},
     {"RRCA", &cpu::cpu_impl::srb}, {"RRA", &cpu::cpu_impl::srb}};
 
+const std::unordered_map<const char *, cpu::cpu_impl::processing_func> cpu::cpu_impl::m_mapper_pref{
+    {"RLC", &cpu::cpu_impl::pref_srb}};
+
+using mapping_iter = std::unordered_map<const char *, cpu::cpu_impl::processing_func>::const_iterator;
+
 cpu::cpu_impl::cpu_impl(rw_device &rw_device, cb callback) : m_rw_device{rw_device}, m_callback{callback}
 {
 }
 
 void cpu::cpu_impl::start()
 {
+    constexpr uint8_t PREFIX_OPCODE_HEX{0xCB};
+
     while (1)
     {
-        uint8_t const hex = read_byte();
-        m_op = get_opcode(hex);
-
-        auto func = m_mapper.find(m_op.m_mnemonic);
-        if (func == m_mapper.end())
+        mapping_iter func;
+        if (uint8_t const hex{read_byte()}; hex != PREFIX_OPCODE_HEX)
         {
-            std::stringstream ss;
-            ss << "CPU: cannot find [" << m_op.m_mnemonic << "] in mapped functions.";
-            throw std::runtime_error(ss.str());
+            m_op = get_opcode(hex);
+            func = m_mapper.find(m_op.m_mnemonic);
+            if (func == m_mapper.end())
+            {
+                std::stringstream ss;
+                ss << "CPU: cannot find [" << m_op.m_mnemonic << "] in mapped functions.\n";
+                throw std::runtime_error(ss.str());
+            }
+        }
+        else
+        {
+            m_op = get_pref_opcode(read_byte());
+            func = m_mapper_pref.find(m_op.m_mnemonic);
+            if (func == m_mapper_pref.end())
+            {
+                std::stringstream ss;
+                ss << "CPU: cannot find [" << m_op.m_mnemonic << "] in (PREF) mapped functions.\n";
+                throw std::runtime_error(ss.str());
+            }
         }
 
         for (auto i = 0; i < m_op.m_bytes - 1; ++i)
@@ -106,10 +126,10 @@ bool cpu::cpu_impl::is_half_carry_on_substraction_byte(uint8_t dest, uint8_t src
     return (src & 0xF) > (dest & 0xF);
 }
 
-void cpu::cpu_impl::no_op_defined()
+void cpu::cpu_impl::no_op_defined(std::string module_name)
 {
     std::stringstream ss;
-    ss << __func__ << ": no operation defined for opcode 0x" << std::hex << (int)m_op.m_hex;
+    ss << module_name << ": No operation defined for opcode 0x" << std::hex << (int)m_op.m_hex << "\n";
     throw std::runtime_error(ss.str());
 }
 
