@@ -16,12 +16,12 @@ struct cpu::cpu_impl
     ~cpu_impl() = default;
 
     static const std::unordered_map<const char *, processing_func> m_mapper;
-    static const std::unordered_map<const char *, processing_func> m_mapper_pref;
 
     registers m_reg;
     rw_device &m_rw_device;
     opcode m_op;
     bool m_IME{}; // Interrupt master enable;
+    bool m_pref{};
     cb m_callback;
 
     // working loop entry
@@ -134,7 +134,7 @@ struct cpu::cpu_impl
 
     // Main entry for misc
     uint8_t misc();
-    uint8_t NOP();
+    void NOP();
 };
 
 #endif

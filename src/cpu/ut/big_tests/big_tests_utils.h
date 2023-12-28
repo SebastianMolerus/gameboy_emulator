@@ -31,7 +31,13 @@ struct alu_data
 
 std::vector<alu_data> read_alu_data(std::filesystem::path file)
 {
-    assert(std::filesystem::exists(file));
+    if (!std::filesystem::exists(file))
+    {
+        std::stringstream ss;
+        ss << "File doesn't exist ";
+        ss << file << '\n';
+        throw std::runtime_error(ss.str());
+    }
 
     std::ifstream big_file(file);
     std::stringstream ss;
@@ -172,9 +178,9 @@ std::vector<cpu_data> read_cpu_data(std::filesystem::path file)
     std::stringstream diagnostic_message;                                                                              \
     diagnostic_message << "Diagnostic:"                                                                                \
                        << "\n"                                                                                         \
-                       << "Start values: " << (int)data.x << " " << (int)data.y << " " << (int)data.flags << "\n";     \
+                       << "Start values:    " << (int)data.x << " " << (int)data.y << " " << (int)data.flags << "\n";  \
     diagnostic_message << "Expected values: " << (int)data.result.value << " " << (int)data.result.flags << "\n";      \
-    diagnostic_message << "Current values: " << (int)r.A() << " " << (int)r.F() << "\n";
+    diagnostic_message << "Current values:  " << (int)r.A() << " " << (int)r.F() << "\n";
 
 std::filesystem::path const test_data_dir{BIG_TEST_DATA_DIR};
 registers r;
@@ -183,6 +189,9 @@ std::vector<std::tuple<uint16_t, uint8_t, std::string>> c;
 
 bool cb(registers const &reg, opcode const &op, uint8_t)
 {
+    // PREFIX
+    if (op.m_hex == 0xCB)
+        return false;
     r = reg;
     opc = op;
     return true;
@@ -251,13 +260,10 @@ void validate_cpu_states(std::vector<cpu_data> const &states)
         }
         catch (std::runtime_error const &err)
         {
-            // std::cerr << "Exception during execution of " << data.name << "\n";
-            //  std::cerr << err.what() << ". Going to next test\n";
-            // std::cerr << err.what();
+            std::cerr << "Exception during execution of " << data.name << "\n";
+            std::cerr << err.what() << ". Going to next test\n";
             continue;
         }
-
-        std::cerr << "Execution success: " << data.name << "\n";
 
         ASSERT_EQ(r.A(), data.final.cpu.a) << "Instruction " << data.name << ". Expected A==" << (int)data.final.cpu.a
                                            << ". Get A==" << (int)r.A() << "\n";

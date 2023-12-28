@@ -1,5 +1,4 @@
 #include "../big_tests_utils.h"
-#include <gtest/gtest.h>
 
 namespace
 {

@@ -275,18 +275,15 @@ bool load_opcodes() noexcept
     }
 }
 
-opcode &get_opcode(uint8_t opcode_hex) noexcept
+opcode &get_opcode(uint8_t opcode_hex, bool pref_opcode) noexcept
 {
     bool result = load_opcodes();
     assert(result);
-    return OPCODES_CACHE[opcode_hex];
-}
 
-opcode &get_pref_opcode(uint8_t opcode_hex) noexcept
-{
-    bool result = load_opcodes();
-    assert(result);
-    return PREF_OPCODES_CACHE[opcode_hex];
+    if (!pref_opcode)
+        return OPCODES_CACHE[opcode_hex];
+    else
+        return PREF_OPCODES_CACHE[opcode_hex];
 }
 
 opcode &get_opcode(std::string_view instruction) noexcept

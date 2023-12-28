@@ -8,18 +8,16 @@
 //               CPU_IMPL PART
 // ******************************************
 const std::unordered_map<const char *, cpu::cpu_impl::processing_func> cpu::cpu_impl::m_mapper{
-    {"LD", &cpu::cpu_impl::ld},    {"LDH", &cpu::cpu_impl::ld},   {"PUSH", &cpu::cpu_impl::ld},
-    {"POP", &cpu::cpu_impl::ld},   {"JP", &cpu::cpu_impl::jmp},   {"JR", &cpu::cpu_impl::jmp},
-    {"ADC", &cpu::cpu_impl::alu},  {"ADD", &cpu::cpu_impl::alu},  {"NOP", &cpu::cpu_impl::misc},
-    {"CALL", &cpu::cpu_impl::jmp}, {"RET", &cpu::cpu_impl::jmp},  {"RETI", &cpu::cpu_impl::jmp},
-    {"RST", &cpu::cpu_impl::jmp},  {"SUB", &cpu::cpu_impl::alu},  {"SBC", &cpu::cpu_impl::alu},
-    {"AND", &cpu::cpu_impl::alu},  {"XOR", &cpu::cpu_impl::alu},  {"OR", &cpu::cpu_impl::alu},
-    {"CP", &cpu::cpu_impl::alu},   {"INC", &cpu::cpu_impl::alu},  {"DEC", &cpu::cpu_impl::alu},
-    {"DAA", &cpu::cpu_impl::alu},  {"SCF", &cpu::cpu_impl::alu},  {"CPL", &cpu::cpu_impl::alu},
-    {"CCF", &cpu::cpu_impl::alu},  {"RLCA", &cpu::cpu_impl::srb}, {"RLA", &cpu::cpu_impl::srb},
-    {"RRCA", &cpu::cpu_impl::srb}, {"RRA", &cpu::cpu_impl::srb}};
-
-const std::unordered_map<const char *, cpu::cpu_impl::processing_func> cpu::cpu_impl::m_mapper_pref{
+    {"LD", &cpu::cpu_impl::ld},       {"LDH", &cpu::cpu_impl::ld},   {"PUSH", &cpu::cpu_impl::ld},
+    {"POP", &cpu::cpu_impl::ld},      {"JP", &cpu::cpu_impl::jmp},   {"JR", &cpu::cpu_impl::jmp},
+    {"ADC", &cpu::cpu_impl::alu},     {"ADD", &cpu::cpu_impl::alu},  {"NOP", &cpu::cpu_impl::misc},
+    {"CALL", &cpu::cpu_impl::jmp},    {"RET", &cpu::cpu_impl::jmp},  {"RETI", &cpu::cpu_impl::jmp},
+    {"RST", &cpu::cpu_impl::jmp},     {"SUB", &cpu::cpu_impl::alu},  {"SBC", &cpu::cpu_impl::alu},
+    {"AND", &cpu::cpu_impl::alu},     {"XOR", &cpu::cpu_impl::alu},  {"OR", &cpu::cpu_impl::alu},
+    {"CP", &cpu::cpu_impl::alu},      {"INC", &cpu::cpu_impl::alu},  {"DEC", &cpu::cpu_impl::alu},
+    {"DAA", &cpu::cpu_impl::alu},     {"SCF", &cpu::cpu_impl::alu},  {"CPL", &cpu::cpu_impl::alu},
+    {"CCF", &cpu::cpu_impl::alu},     {"RLCA", &cpu::cpu_impl::srb}, {"RLA", &cpu::cpu_impl::srb},
+    {"RRCA", &cpu::cpu_impl::srb},    {"RRA", &cpu::cpu_impl::srb},  {"PREFIX", &cpu::cpu_impl::misc},
     {"RLC", &cpu::cpu_impl::pref_srb}};
 
 using mapping_iter = std::unordered_map<const char *, cpu::cpu_impl::processing_func>::const_iterator;
@@ -30,32 +28,24 @@ cpu::cpu_impl::cpu_impl(rw_device &rw_device, cb callback) : m_rw_device{rw_devi
 
 void cpu::cpu_impl::start()
 {
-    constexpr uint8_t PREFIX_OPCODE_HEX{0xCB};
+    constexpr uint8_t PREFIX_OPCODE{0xCB};
 
     while (1)
     {
         mapping_iter func;
-        if (uint8_t const hex{read_byte()}; hex != PREFIX_OPCODE_HEX)
+        uint8_t const hex{read_byte()};
+
+        m_op = get_opcode(hex, m_pref);
+
+        if (m_pref)
+            m_pref = false;
+
+        func = m_mapper.find(m_op.m_mnemonic);
+        if (func == m_mapper.end())
         {
-            m_op = get_opcode(hex);
-            func = m_mapper.find(m_op.m_mnemonic);
-            if (func == m_mapper.end())
-            {
-                std::stringstream ss;
-                ss << "CPU: cannot find [" << m_op.m_mnemonic << "] in mapped functions.\n";
-                throw std::runtime_error(ss.str());
-            }
-        }
-        else
-        {
-            m_op = get_pref_opcode(read_byte());
-            func = m_mapper_pref.find(m_op.m_mnemonic);
-            if (func == m_mapper_pref.end())
-            {
-                std::stringstream ss;
-                ss << "CPU: cannot find [" << m_op.m_mnemonic << "] in (PREF) mapped functions.\n";
-                throw std::runtime_error(ss.str());
-            }
+            std::stringstream ss;
+            ss << "CPU: cannot find [" << m_op.m_mnemonic << "] in mapped functions.\n";
+            throw std::runtime_error(ss.str());
         }
 
         for (auto i = 0; i < m_op.m_bytes - 1; ++i)
@@ -70,6 +60,9 @@ void cpu::cpu_impl::start()
             if (bool res = std::invoke(m_callback, m_reg, m_op, wait_cycles); res)
                 return;
         }
+
+        if (m_op.m_hex == PREFIX_OPCODE)
+            m_pref = true;
     }
 }
 

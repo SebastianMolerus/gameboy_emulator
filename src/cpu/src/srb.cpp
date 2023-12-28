@@ -89,4 +89,6 @@ void cpu::cpu_impl::RLC_B()
         set(flag::C);
     std::bitset<8> b{std::rotl(B, 1)};
     B = b.to_ulong();
+    if (B == 0)
+        set(flag::Z);
 }

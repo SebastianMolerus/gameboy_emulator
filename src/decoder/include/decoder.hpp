@@ -34,8 +34,7 @@ struct opcode
     bool m_immediate;
 };
 
-opcode &get_opcode(uint8_t opcode_hex) noexcept;
-opcode &get_pref_opcode(uint8_t opcode_hex) noexcept;
+opcode &get_opcode(uint8_t opcode_hex, bool pref_opcode = false) noexcept;
 
 opcode &get_opcode(std::string_view instruction) noexcept;
 

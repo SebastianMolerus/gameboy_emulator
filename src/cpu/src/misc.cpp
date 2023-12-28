@@ -5,14 +5,15 @@ uint8_t cpu::cpu_impl::misc()
     switch (m_op.m_hex)
     {
     case 0x00:
-        return NOP();
+    case 0xCB:
+        NOP();
+        break;
     default:
         no_op_defined();
     }
-    return 0;
+    return m_op.m_cycles[0];
 }
 
-uint8_t cpu::cpu_impl::NOP()
+void cpu::cpu_impl::NOP()
 {
-    return 4;
 }
