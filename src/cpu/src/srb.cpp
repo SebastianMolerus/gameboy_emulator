@@ -27,6 +27,12 @@ void rotate_c_r(cpu::cpu_impl &cpu, uint8_t &data)
     data = b.to_ulong();
 }
 
+void rotate_c_4(cpu::cpu_impl &cpu, uint8_t &data)
+{
+    std::bitset<8> b{std::rotr(data, 4)};
+    data = b.to_ulong();
+}
+
 } // namespace
 
 uint8_t cpu::cpu_impl::srb()
@@ -138,6 +144,18 @@ uint8_t cpu::cpu_impl::pref_srb()
         break;
     case 0x2E:
         SRA_IHLI();
+        break;
+    case 0x30:
+    case 0x31:
+    case 0x32:
+    case 0x33:
+    case 0x34:
+    case 0x35:
+    case 0x37:
+        SWAP_REG8();
+        break;
+    case 0x36:
+        SWAP_IHLI();
         break;
     case 0x08:
     case 0x09:
@@ -362,6 +380,29 @@ void cpu::cpu_impl::SRA_IHLI()
     uint8_t const temp{data};
     data >>= 1;
     data |= temp & 0x80;
+
+    if (data == 0)
+        set(flag::Z);
+
+    m_rw_device.write(m_reg.HL(), data);
+}
+
+void cpu::cpu_impl::SWAP_REG8()
+{
+    reset_all_flags();
+    assert(m_op.m_operands[0].m_name);
+    uint8_t &REG8 = m_reg.get_byte(m_op.m_operands[0].m_name);
+    rotate_c_4(*this, REG8);
+
+    if (REG8 == 0)
+        set(flag::Z);
+}
+
+void cpu::cpu_impl::SWAP_IHLI()
+{
+    reset_all_flags();
+    uint8_t data{m_rw_device.read(m_reg.HL())};
+    rotate_c_4(*this, data);
 
     if (data == 0)
         set(flag::Z);

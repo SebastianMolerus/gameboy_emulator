@@ -143,6 +143,8 @@ struct cpu::cpu_impl
     void SLA_IHLI();
     void SRA_REG8();
     void SRA_IHLI();
+    void SWAP_REG8();
+    void SWAP_IHLI();
 
     // Main entry for misc
     uint8_t misc();
