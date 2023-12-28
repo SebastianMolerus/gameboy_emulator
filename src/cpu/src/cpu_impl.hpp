@@ -128,12 +128,15 @@ struct cpu::cpu_impl
     void RLA();
     void RRCA();
     void RRA();
+
     // Main entry for shift, rotate, bit ( PREFIXED )
     uint8_t pref_srb();
     void RLC_REG8();
     void RLC_IHLI();
     void RRC_REG8();
     void RRC_IHLI();
+    void RL_REG8();
+    void RL_IHLI();
 
     // Main entry for misc
     uint8_t misc();

@@ -100,6 +100,18 @@ uint8_t cpu::cpu_impl::pref_srb()
     case 0x06:
         RLC_IHLI();
         break;
+    case 0x10:
+    case 0x11:
+    case 0x12:
+    case 0x13:
+    case 0x14:
+    case 0x15:
+    case 0x17:
+        RL_REG8();
+        break;
+    case 0x16:
+        RL_IHLI();
+        break;
     case 0x08:
     case 0x09:
     case 0x0A:
@@ -154,5 +166,58 @@ void cpu::cpu_impl::RRC_IHLI()
     rotate_r(*this, data);
     if (data == 0)
         set(flag::Z);
+    m_rw_device.write(m_reg.HL(), data);
+}
+
+void cpu::cpu_impl::RL_REG8()
+{
+    bool const C = m_reg.F() & flag::C;
+    reset_all_flags();
+
+    assert(m_op.m_operands[0].m_name);
+    uint8_t &REG8 = m_reg.get_byte(m_op.m_operands[0].m_name);
+
+    if (REG8 & 0x80)
+    {
+        set(flag::C);
+    }
+    else
+        reset(flag::C);
+
+    std::bitset<8> b{std::rotl(REG8, 1)};
+    REG8 = b.to_ulong();
+
+    if (C)
+        REG8 |= 0x1;
+    else
+        REG8 &= 0xFE;
+
+    if (REG8 == 0)
+        set(flag::Z);
+}
+
+void cpu::cpu_impl::RL_IHLI()
+{
+    bool const C = m_reg.F() & flag::C;
+    reset_all_flags();
+
+    uint8_t data{m_rw_device.read(m_reg.HL())};
+
+    if (data & 0x80)
+        set(flag::C);
+    else
+        reset(flag::C);
+
+    std::bitset<8> b{std::rotl(data, 1)};
+    data = b.to_ulong();
+
+    if (C)
+        data |= 0x1;
+    else
+        data &= 0xFE;
+
+    if (data == 0)
+        set(flag::Z);
+
     m_rw_device.write(m_reg.HL(), data);
 }

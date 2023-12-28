@@ -170,13 +170,13 @@ std::vector<cpu_data> read_cpu_data(std::filesystem::path file)
     return result;
 }
 
-#define DIAGNOSTIC                                                                                                     \
+#define DIAGNOSTIC(reg)                                                                                                \
     std::stringstream diagnostic_message;                                                                              \
     diagnostic_message << "Diagnostic:"                                                                                \
                        << "\n"                                                                                         \
                        << "Start values:    " << (int)data.x << " " << (int)data.y << " " << (int)data.flags << "\n";  \
     diagnostic_message << "Expected values: " << (int)data.result.value << " " << (int)data.result.flags << "\n";      \
-    diagnostic_message << "Current values:  " << (int)r.A() << " " << (int)r.F() << "\n";
+    diagnostic_message << "Current values:  " << (int)reg << " " << (int)r.F() << "\n";
 
 std::filesystem::path const test_data_dir{BIG_TEST_DATA_DIR};
 registers r;
@@ -316,7 +316,7 @@ void validate_prefixed(std::string mnemonic, uint8_t const first_hex)
         ss << std::hex << std::setfill('0') << std::setw(2) << (int)hex[hex.size() - 1] << " ";
         hex.push_back(first_hex + i);
     }
-    ss << "]\n";
+    ss << "] \n";
     std::cout << ss.str();
 
     for (auto const &data : result)
@@ -330,7 +330,7 @@ void validate_prefixed(std::string mnemonic, uint8_t const first_hex)
             bus b{opcodes, startup};
             b.go();
 
-            DIAGNOSTIC
+            DIAGNOSTIC(r.B())
             ASSERT_EQ(r.B(), data.result.value) << diagnostic_message.str();
             ASSERT_EQ(r.F(), data.result.flags) << diagnostic_message.str();
         }
@@ -344,7 +344,7 @@ void validate_prefixed(std::string mnemonic, uint8_t const first_hex)
             bus b{opcodes, startup};
             b.go();
 
-            DIAGNOSTIC
+            DIAGNOSTIC(r.B())
             ASSERT_EQ(r.C(), data.result.value) << diagnostic_message.str();
             ASSERT_EQ(r.F(), data.result.flags) << diagnostic_message.str();
         }
@@ -358,7 +358,7 @@ void validate_prefixed(std::string mnemonic, uint8_t const first_hex)
             bus b{opcodes, startup};
             b.go();
 
-            DIAGNOSTIC
+            DIAGNOSTIC(r.B())
             ASSERT_EQ(r.D(), data.result.value) << diagnostic_message.str();
             ASSERT_EQ(r.F(), data.result.flags) << diagnostic_message.str();
         }
@@ -372,7 +372,7 @@ void validate_prefixed(std::string mnemonic, uint8_t const first_hex)
             bus b{opcodes, startup};
             b.go();
 
-            DIAGNOSTIC
+            DIAGNOSTIC(r.B())
             ASSERT_EQ(r.E(), data.result.value) << diagnostic_message.str();
             ASSERT_EQ(r.F(), data.result.flags) << diagnostic_message.str();
         }
@@ -386,7 +386,7 @@ void validate_prefixed(std::string mnemonic, uint8_t const first_hex)
             bus b{opcodes, startup};
             b.go();
 
-            DIAGNOSTIC
+            DIAGNOSTIC(r.B())
             ASSERT_EQ(r.H(), data.result.value) << diagnostic_message.str();
             ASSERT_EQ(r.F(), data.result.flags) << diagnostic_message.str();
         }
@@ -400,7 +400,7 @@ void validate_prefixed(std::string mnemonic, uint8_t const first_hex)
             bus b{opcodes, startup};
             b.go();
 
-            DIAGNOSTIC
+            DIAGNOSTIC(r.B())
             ASSERT_EQ(r.L(), data.result.value) << diagnostic_message.str();
             ASSERT_EQ(r.F(), data.result.flags) << diagnostic_message.str();
         }
@@ -415,7 +415,7 @@ void validate_prefixed(std::string mnemonic, uint8_t const first_hex)
             b.m_ram[0x678] = data.x;
             b.go();
 
-            DIAGNOSTIC
+            DIAGNOSTIC(r.B())
             ASSERT_EQ(b.m_ram[0x678], data.result.value) << diagnostic_message.str();
             ASSERT_EQ(r.F(), data.result.flags) << diagnostic_message.str();
         }
@@ -429,7 +429,7 @@ void validate_prefixed(std::string mnemonic, uint8_t const first_hex)
             bus b{opcodes, startup};
             b.go();
 
-            DIAGNOSTIC
+            DIAGNOSTIC(r.B())
             ASSERT_EQ(r.A(), data.result.value) << diagnostic_message.str();
             ASSERT_EQ(r.F(), data.result.flags) << diagnostic_message.str();
         }
