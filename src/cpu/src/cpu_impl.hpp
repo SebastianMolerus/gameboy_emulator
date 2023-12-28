@@ -132,6 +132,8 @@ struct cpu::cpu_impl
     uint8_t pref_srb();
     void RLC_REG8();
     void RLC_IHLI();
+    void RRC_REG8();
+    void RRC_IHLI();
 
     // Main entry for misc
     uint8_t misc();

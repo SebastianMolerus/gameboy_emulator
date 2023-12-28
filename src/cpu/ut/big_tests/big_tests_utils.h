@@ -32,12 +32,7 @@ struct alu_data
 std::vector<alu_data> read_alu_data(std::filesystem::path file)
 {
     if (!std::filesystem::exists(file))
-    {
-        std::stringstream ss;
-        ss << "File doesn't exist ";
-        ss << file << '\n';
-        throw std::runtime_error(ss.str());
-    }
+        throw std::runtime_error(std::string{"File doesn't exist: "} + file.string());
 
     std::ifstream big_file(file);
     std::stringstream ss;
@@ -61,6 +56,9 @@ std::vector<alu_data> read_alu_data(std::filesystem::path file)
             result.push_back(new_data);
         }
     }
+
+    if (result.empty())
+        throw std::runtime_error(std::string{"No alu test data were loaded from file: "} + file.string());
 
     return result;
 }
@@ -120,12 +118,7 @@ void fill_cpu_data(cpu_state &state, json_spirit::Object const &initial_or_final
 std::vector<cpu_data> read_cpu_data(std::filesystem::path file)
 {
     if (!std::filesystem::exists(file))
-    {
-        std::stringstream ss;
-        ss << "Path doesn't exist ";
-        ss << file << "\n";
-        throw std::runtime_error(ss.str());
-    }
+        throw std::runtime_error(std::string{"File doesn't exist: "} + file.string());
 
     std::ifstream big_file(file);
     std::stringstream ss;
@@ -134,7 +127,7 @@ std::vector<cpu_data> read_cpu_data(std::filesystem::path file)
 
     json_spirit::Value value;
     if (!read(ss, value))
-        return {};
+        throw std::runtime_error(std::string{"Cannot read Json from: "} + file.string());
 
     json_spirit::Array arr = value.get_array();
 
@@ -170,6 +163,9 @@ std::vector<cpu_data> read_cpu_data(std::filesystem::path file)
 
         result.push_back(d);
     }
+
+    if (result.empty())
+        throw std::runtime_error(std::string{"No cpu test data were loaded from file: "} + file.string());
 
     return result;
 }

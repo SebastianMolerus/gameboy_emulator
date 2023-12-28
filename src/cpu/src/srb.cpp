@@ -14,6 +14,16 @@ void rotate_l(cpu::cpu_impl &cpu, uint8_t &data)
     data = b.to_ulong();
 }
 
+// Circular right rotate
+// data[0] ( pre rotated ) is new Carry
+void rotate_r(cpu::cpu_impl &cpu, uint8_t &data)
+{
+    std::bitset<8> b{std::rotr(data, 1)};
+    if (b.test(7))
+        cpu.set(flag::C);
+    data = b.to_ulong();
+}
+
 } // namespace
 
 uint8_t cpu::cpu_impl::srb()
@@ -38,28 +48,6 @@ uint8_t cpu::cpu_impl::srb()
     return m_op.m_cycles[0];
 }
 
-uint8_t cpu::cpu_impl::pref_srb()
-{
-    switch (m_op.m_hex)
-    {
-    case 0x00:
-    case 0x01:
-    case 0x02:
-    case 0x03:
-    case 0x04:
-    case 0x05:
-    case 0x07:
-        RLC_REG8();
-        break;
-    case 0x06:
-        RLC_IHLI();
-        break;
-    default:
-        no_op_defined("SRB_pref.cpp");
-    }
-    return m_op.m_cycles[0];
-}
-
 void cpu::cpu_impl::RLCA()
 {
     reset_all_flags();
@@ -80,11 +68,7 @@ void cpu::cpu_impl::RLA()
 void cpu::cpu_impl::RRCA()
 {
     reset_all_flags();
-    uint8_t &A = m_reg.A();
-    if (A & 0x1)
-        set(flag::C);
-    std::bitset<8> b{std::rotr(A, 1)};
-    A = b.to_ulong();
+    rotate_r(*this, m_reg.A());
 }
 
 void cpu::cpu_impl::RRA()
@@ -95,6 +79,43 @@ void cpu::cpu_impl::RRA()
         m_reg.A() |= 0x80;
     else
         m_reg.A() &= 0x7F;
+}
+
+// ******************************************
+//              PREFIXED PART
+// ******************************************
+uint8_t cpu::cpu_impl::pref_srb()
+{
+    switch (m_op.m_hex)
+    {
+    case 0x00:
+    case 0x01:
+    case 0x02:
+    case 0x03:
+    case 0x04:
+    case 0x05:
+    case 0x07:
+        RLC_REG8();
+        break;
+    case 0x06:
+        RLC_IHLI();
+        break;
+    case 0x08:
+    case 0x09:
+    case 0x0A:
+    case 0x0B:
+    case 0x0C:
+    case 0x0D:
+    case 0x0F:
+        RRC_REG8();
+        break;
+    case 0x0E:
+        RRC_IHLI();
+        break;
+    default:
+        no_op_defined("SRB_pref.cpp");
+    }
+    return m_op.m_cycles[0];
 }
 
 void cpu::cpu_impl::RLC_REG8()
@@ -112,6 +133,25 @@ void cpu::cpu_impl::RLC_IHLI()
     reset_all_flags();
     uint8_t data{m_rw_device.read(m_reg.HL())};
     rotate_l(*this, data);
+    if (data == 0)
+        set(flag::Z);
+    m_rw_device.write(m_reg.HL(), data);
+}
+
+void cpu::cpu_impl::RRC_REG8()
+{
+    reset_all_flags();
+    assert(m_op.m_operands[0].m_name);
+    uint8_t &REG8 = m_reg.get_byte(m_op.m_operands[0].m_name);
+    rotate_r(*this, REG8);
+    if (REG8 == 0)
+        set(flag::Z);
+}
+void cpu::cpu_impl::RRC_IHLI()
+{
+    reset_all_flags();
+    uint8_t data{m_rw_device.read(m_reg.HL())};
+    rotate_r(*this, data);
     if (data == 0)
         set(flag::Z);
     m_rw_device.write(m_reg.HL(), data);
