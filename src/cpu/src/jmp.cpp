@@ -55,7 +55,7 @@ uint8_t cpu::cpu_impl::jmp()
 uint8_t cpu::cpu_impl::JR_CC_e8()
 {
     if (m_reg.check_condition(m_op.m_operands[0].m_name))
-        return JR_e8();          // jump
+        return JR_e8(); // jump
     else
         return m_op.m_cycles[1]; // no jump
 }
@@ -88,7 +88,7 @@ uint8_t cpu::cpu_impl::JP_HL()
 uint8_t cpu::cpu_impl::JP_CC_a16()
 {
     if (m_reg.check_condition(m_op.m_operands[0].m_name))
-        return JP_nn();          // jump
+        return JP_nn(); // jump
     else
         return m_op.m_cycles[1]; // no jump
 }
@@ -96,7 +96,7 @@ uint8_t cpu::cpu_impl::JP_CC_a16()
 uint8_t cpu::cpu_impl::CALL_CC_a16()
 {
     if (m_reg.check_condition(m_op.m_operands[0].m_name))
-        return CALL_a16();       // call
+        return CALL_a16(); // call
     else
         return m_op.m_cycles[1]; // no call
 }

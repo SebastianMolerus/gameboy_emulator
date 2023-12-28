@@ -8,10 +8,7 @@ const std::filesystem::path adc_tests_path{test_data_dir / "alu_tests" / "v1" / 
 
 TEST(test_alu_BIG, adc_8_bit)
 {
-    ASSERT_TRUE(std::filesystem::exists(adc_tests_path));
-
     auto const result = read_alu_data(adc_tests_path);
-
     for (auto const &data : result)
     {
         {
