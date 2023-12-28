@@ -4,9 +4,12 @@
 
 namespace
 {
+#define bitcheck(byte, nbit) ((byte) & (1 << (nbit)))
+#define bitset(byte, nbit) ((byte) |= (1 << (nbit)))
+#define bitclear(byte, nbit) ((byte) &= ~(1 << (nbit)))
 // Circular left rotate
 // data[7] ( pre rotated ) is new Carry
-void rotate_l(cpu::cpu_impl &cpu, uint8_t &data)
+void rotate_c_l(cpu::cpu_impl &cpu, uint8_t &data)
 {
     std::bitset<8> b{std::rotl(data, 1)};
     if (b.test(0))
@@ -16,7 +19,7 @@ void rotate_l(cpu::cpu_impl &cpu, uint8_t &data)
 
 // Circular right rotate
 // data[0] ( pre rotated ) is new Carry
-void rotate_r(cpu::cpu_impl &cpu, uint8_t &data)
+void rotate_c_r(cpu::cpu_impl &cpu, uint8_t &data)
 {
     std::bitset<8> b{std::rotr(data, 1)};
     if (b.test(7))
@@ -51,7 +54,7 @@ uint8_t cpu::cpu_impl::srb()
 void cpu::cpu_impl::RLCA()
 {
     reset_all_flags();
-    rotate_l(*this, m_reg.A());
+    rotate_c_l(*this, m_reg.A());
 }
 
 // RLCA + carry is copied into A[0]
@@ -60,15 +63,15 @@ void cpu::cpu_impl::RLA()
     bool const C = m_reg.F() & flag::C;
     RLCA();
     if (C)
-        m_reg.A() |= 0x1;
+        bitset(m_reg.A(), 0);
     else
-        m_reg.A() &= 0xFE;
+        bitclear(m_reg.A(), 0);
 }
 
 void cpu::cpu_impl::RRCA()
 {
     reset_all_flags();
-    rotate_r(*this, m_reg.A());
+    rotate_c_r(*this, m_reg.A());
 }
 
 void cpu::cpu_impl::RRA()
@@ -76,9 +79,9 @@ void cpu::cpu_impl::RRA()
     bool const C = m_reg.F() & flag::C;
     RRCA();
     if (C)
-        m_reg.A() |= 0x80;
+        bitset(m_reg.A(), 7);
     else
-        m_reg.A() &= 0x7F;
+        bitclear(m_reg.A(), 7);
 }
 
 // ******************************************
@@ -124,6 +127,18 @@ uint8_t cpu::cpu_impl::pref_srb()
     case 0x26:
         SLA_IHLI();
         break;
+    case 0x28:
+    case 0x29:
+    case 0x2A:
+    case 0x2B:
+    case 0x2C:
+    case 0x2D:
+    case 0x2F:
+        SRA_REG8();
+        break;
+    case 0x2E:
+        SRA_IHLI();
+        break;
     case 0x08:
     case 0x09:
     case 0x0A:
@@ -148,6 +163,7 @@ uint8_t cpu::cpu_impl::pref_srb()
     case 0x1E:
         RR_IHLI();
         break;
+
     default:
         no_op_defined("SRB_pref.cpp");
     }
@@ -159,7 +175,7 @@ void cpu::cpu_impl::RLC_REG8()
     reset_all_flags();
     assert(m_op.m_operands[0].m_name);
     uint8_t &REG8 = m_reg.get_byte(m_op.m_operands[0].m_name);
-    rotate_l(*this, REG8);
+    rotate_c_l(*this, REG8);
     if (REG8 == 0)
         set(flag::Z);
 }
@@ -168,7 +184,7 @@ void cpu::cpu_impl::RLC_IHLI()
 {
     reset_all_flags();
     uint8_t data{m_rw_device.read(m_reg.HL())};
-    rotate_l(*this, data);
+    rotate_c_l(*this, data);
     if (data == 0)
         set(flag::Z);
     m_rw_device.write(m_reg.HL(), data);
@@ -179,7 +195,7 @@ void cpu::cpu_impl::RRC_REG8()
     reset_all_flags();
     assert(m_op.m_operands[0].m_name);
     uint8_t &REG8 = m_reg.get_byte(m_op.m_operands[0].m_name);
-    rotate_r(*this, REG8);
+    rotate_c_r(*this, REG8);
     if (REG8 == 0)
         set(flag::Z);
 }
@@ -187,7 +203,7 @@ void cpu::cpu_impl::RRC_IHLI()
 {
     reset_all_flags();
     uint8_t data{m_rw_device.read(m_reg.HL())};
-    rotate_r(*this, data);
+    rotate_c_r(*this, data);
     if (data == 0)
         set(flag::Z);
     m_rw_device.write(m_reg.HL(), data);
@@ -201,20 +217,15 @@ void cpu::cpu_impl::RL_REG8()
     assert(m_op.m_operands[0].m_name);
     uint8_t &REG8 = m_reg.get_byte(m_op.m_operands[0].m_name);
 
-    if (REG8 & 0x80)
-    {
+    if (bitcheck(REG8, 7))
         set(flag::C);
-    }
-    else
-        reset(flag::C);
 
-    std::bitset<8> b{std::rotl(REG8, 1)};
-    REG8 = b.to_ulong();
+    REG8 <<= 1;
 
     if (C)
-        REG8 |= 0x1;
+        bitset(REG8, 0);
     else
-        REG8 &= 0xFE;
+        bitclear(REG8, 0);
 
     if (REG8 == 0)
         set(flag::Z);
@@ -227,18 +238,15 @@ void cpu::cpu_impl::RL_IHLI()
 
     uint8_t data{m_rw_device.read(m_reg.HL())};
 
-    if (data & 0x80)
+    if (bitcheck(data, 7))
         set(flag::C);
-    else
-        reset(flag::C);
 
-    std::bitset<8> b{std::rotl(data, 1)};
-    data = b.to_ulong();
+    data <<= 1;
 
     if (C)
-        data |= 0x1;
+        bitset(data, 0);
     else
-        data &= 0xFE;
+        bitclear(data, 0);
 
     if (data == 0)
         set(flag::Z);
@@ -254,18 +262,15 @@ void cpu::cpu_impl::RR_REG8()
     assert(m_op.m_operands[0].m_name);
     uint8_t &REG8 = m_reg.get_byte(m_op.m_operands[0].m_name);
 
-    if (REG8 & 0x1)
+    if (bitcheck(REG8, 0))
         set(flag::C);
-    else
-        reset(flag::C);
 
-    std::bitset<8> b{std::rotr(REG8, 1)};
-    REG8 = b.to_ulong();
+    REG8 >>= 1;
 
     if (C)
-        REG8 |= 0x80;
+        bitset(REG8, 7);
     else
-        REG8 &= 0x7F;
+        bitclear(REG8, 7);
 
     if (REG8 == 0)
         set(flag::Z);
@@ -278,18 +283,15 @@ void cpu::cpu_impl::RR_IHLI()
 
     uint8_t data{m_rw_device.read(m_reg.HL())};
 
-    if (data & 0x1)
+    if (bitcheck(data, 0))
         set(flag::C);
-    else
-        reset(flag::C);
 
-    std::bitset<8> b{std::rotr(data, 1)};
-    data = b.to_ulong();
+    data >>= 1;
 
     if (C)
-        data |= 0x80;
+        bitset(data, 7);
     else
-        data &= 0x7F;
+        bitclear(data, 7);
 
     if (data == 0)
         set(flag::Z);
@@ -304,14 +306,10 @@ void cpu::cpu_impl::SLA_REG8()
     assert(m_op.m_operands[0].m_name);
     uint8_t &REG8 = m_reg.get_byte(m_op.m_operands[0].m_name);
 
-    if (REG8 & 0x80)
+    if (bitcheck(REG8, 7))
         set(flag::C);
-    else
-        reset(flag::C);
 
-    std::bitset<8> b{std::rotl(REG8, 1)};
-    b.set(0, 0);
-    REG8 = b.to_ulong();
+    REG8 <<= 1;
 
     if (REG8 == 0)
         set(flag::Z);
@@ -323,14 +321,47 @@ void cpu::cpu_impl::SLA_IHLI()
 
     uint8_t data{m_rw_device.read(m_reg.HL())};
 
-    if (data & 0x80)
+    if (bitcheck(data, 7))
         set(flag::C);
-    else
-        reset(flag::C);
 
-    std::bitset<8> b{std::rotl(data, 1)};
-    b.set(0, 0);
-    data = b.to_ulong();
+    data <<= 1;
+
+    if (data == 0)
+        set(flag::Z);
+
+    m_rw_device.write(m_reg.HL(), data);
+}
+
+void cpu::cpu_impl::SRA_REG8()
+{
+    reset_all_flags();
+
+    assert(m_op.m_operands[0].m_name);
+    uint8_t &REG8 = m_reg.get_byte(m_op.m_operands[0].m_name);
+
+    if (bitcheck(REG8, 0))
+        set(flag::C);
+
+    uint8_t const temp{REG8};
+    REG8 >>= 1;
+    REG8 |= temp & 0x80;
+
+    if (REG8 == 0)
+        set(flag::Z);
+}
+
+void cpu::cpu_impl::SRA_IHLI()
+{
+    reset_all_flags();
+
+    uint8_t data{m_rw_device.read(m_reg.HL())};
+
+    if (bitcheck(data, 0))
+        set(flag::C);
+
+    uint8_t const temp{data};
+    data >>= 1;
+    data |= temp & 0x80;
 
     if (data == 0)
         set(flag::Z);

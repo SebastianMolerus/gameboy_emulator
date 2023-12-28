@@ -19,7 +19,7 @@ const std::unordered_map<const char *, cpu::cpu_impl::processing_func> cpu::cpu_
     {"CCF", &cpu::cpu_impl::alu},      {"RLCA", &cpu::cpu_impl::srb},     {"RLA", &cpu::cpu_impl::srb},
     {"RRCA", &cpu::cpu_impl::srb},     {"RRA", &cpu::cpu_impl::srb},      {"PREFIX", &cpu::cpu_impl::misc},
     {"RLC", &cpu::cpu_impl::pref_srb}, {"RRC", &cpu::cpu_impl::pref_srb}, {"RL", &cpu::cpu_impl::pref_srb},
-    {"RR", &cpu::cpu_impl::pref_srb},  {"SLA", &cpu::cpu_impl::pref_srb}};
+    {"RR", &cpu::cpu_impl::pref_srb},  {"SLA", &cpu::cpu_impl::pref_srb}, {"SRA", &cpu::cpu_impl::pref_srb}};
 
 using mapping_iter = std::unordered_map<const char *, cpu::cpu_impl::processing_func>::const_iterator;
 
@@ -86,10 +86,7 @@ void cpu::cpu_impl::reset(flag f)
 
 void cpu::cpu_impl::reset_all_flags()
 {
-    reset(flag::N);
-    reset(flag::C);
-    reset(flag::H);
-    reset(flag::Z);
+    m_reg.F() = 0;
 }
 
 bool cpu::cpu_impl::is_carry_on_addition_byte(uint8_t dest, uint8_t src)
