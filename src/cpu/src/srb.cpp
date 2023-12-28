@@ -43,7 +43,16 @@ uint8_t cpu::cpu_impl::pref_srb()
     switch (m_op.m_hex)
     {
     case 0x00:
-        RLC_B();
+    case 0x01:
+    case 0x02:
+    case 0x03:
+    case 0x04:
+    case 0x05:
+    case 0x07:
+        RLC_REG8();
+        break;
+    case 0x06:
+        RLC_IHLI();
         break;
     default:
         no_op_defined("SRB_pref.cpp");
@@ -88,11 +97,22 @@ void cpu::cpu_impl::RRA()
         m_reg.A() &= 0x7F;
 }
 
-void cpu::cpu_impl::RLC_B()
+void cpu::cpu_impl::RLC_REG8()
 {
     reset_all_flags();
-    uint8_t &B = m_reg.B();
-    rotate_l(*this, B);
-    if (B == 0)
+    assert(m_op.m_operands[0].m_name);
+    uint8_t &REG8 = m_reg.get_byte(m_op.m_operands[0].m_name);
+    rotate_l(*this, REG8);
+    if (REG8 == 0)
         set(flag::Z);
+}
+
+void cpu::cpu_impl::RLC_IHLI()
+{
+    reset_all_flags();
+    uint8_t data{m_rw_device.read(m_reg.HL())};
+    rotate_l(*this, data);
+    if (data == 0)
+        set(flag::Z);
+    m_rw_device.write(m_reg.HL(), data);
 }
