@@ -309,13 +309,13 @@ void validate_prefixed(std::string mnemonic, uint8_t const first_hex)
 
     std::vector<uint8_t> hex{first_hex};
 
+    for (uint8_t i = 1; i < 8; ++i)
+        hex.push_back(first_hex + i);
+
     std::stringstream ss;
     ss << "[Validate prefixed opcodes ";
-    for (uint8_t i = 1; i < 8; ++i)
-    {
-        ss << std::hex << std::setfill('0') << std::setw(2) << (int)hex[hex.size() - 1] << " ";
-        hex.push_back(first_hex + i);
-    }
+    for (int i : hex)
+        ss << "0x" << std::hex << std::setfill('0') << std::setw(2) << i << " ";
     ss << "] \n";
     std::cout << ss.str();
 
