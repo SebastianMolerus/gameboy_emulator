@@ -133,7 +133,7 @@ uint8_t cpu::cpu_impl::ld()
         LD_REG8_REG8();
         break;
     default:
-        no_op_defined();
+        no_op_defined("ld.cpp");
     }
 
     return m_op.m_cycles[0];

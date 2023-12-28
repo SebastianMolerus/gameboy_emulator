@@ -292,7 +292,7 @@ uint8_t cpu::cpu_impl::alu()
         CCF();
         break;
     default:
-        no_op_defined();
+        no_op_defined("alu.cpp");
     }
     return m_op.m_cycles[0];
 }

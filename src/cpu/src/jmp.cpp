@@ -47,7 +47,7 @@ uint8_t cpu::cpu_impl::jmp()
     case 0xE9:
         return JP_HL();
     default:
-        no_op_defined();
+        no_op_defined("jmp.cpp");
     }
     return 0;
 }

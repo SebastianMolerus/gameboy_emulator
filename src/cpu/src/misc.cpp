@@ -9,7 +9,7 @@ uint8_t cpu::cpu_impl::misc()
         NOP();
         break;
     default:
-        no_op_defined();
+        no_op_defined("misc.cpp");
     }
     return m_op.m_cycles[0];
 }
