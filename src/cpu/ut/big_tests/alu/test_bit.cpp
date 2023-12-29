@@ -14,28 +14,9 @@ std::array<uint8_t, 8> constexpr bit_7_opcodes{0x78, 0x79, 0x7A, 0x7B, 0x7C, 0x7
 std::unordered_map<uint8_t, std::array<uint8_t, 8>> m_mapper{{0, bit_0_opcodes}, {1, bit_1_opcodes}, {2, bit_2_opcodes},
                                                              {3, bit_3_opcodes}, {4, bit_4_opcodes}, {5, bit_5_opcodes},
                                                              {6, bit_6_opcodes}, {7, bit_7_opcodes}};
-#define GTEST_COUT std::cerr << "[          ] "
-
-struct failure_message
-{
-    std::stringstream m_msg;
-    failure_message(alu_data data)
-    {
-        m_msg << "data.x " << (int)data.x << " data.y " << (int)data.y << " data.flags " << (int)data.flags << "\n";
-    }
-
-    ~failure_message()
-    {
-        if (::testing::Test::HasFailure())
-            std::cerr << m_msg.str();
-    }
-};
 
 } // namespace
 
-// X ( reg8 or Data)
-// Y ( BIT )
-// B, C, D, E, H, L, [HL], A
 TEST(test_alu_BIG, bit)
 {
 
@@ -45,7 +26,6 @@ TEST(test_alu_BIG, bit)
     {
         auto const arr = m_mapper.at(data.y);
         {
-            failure_message msg(data);
             registers startup;
             startup.B() = data.x;
             startup.F() = data.flags;
@@ -59,7 +39,6 @@ TEST(test_alu_BIG, bit)
         }
 
         {
-            failure_message msg(data);
             registers startup;
             startup.C() = data.x;
             startup.F() = data.flags;
@@ -73,7 +52,6 @@ TEST(test_alu_BIG, bit)
         }
 
         {
-            failure_message msg(data);
             registers startup;
             startup.D() = data.x;
             startup.F() = data.flags;
@@ -87,7 +65,6 @@ TEST(test_alu_BIG, bit)
         }
 
         {
-            failure_message msg(data);
             registers startup;
             startup.E() = data.x;
             startup.F() = data.flags;
@@ -101,7 +78,6 @@ TEST(test_alu_BIG, bit)
         }
 
         {
-            failure_message msg(data);
             registers startup;
             startup.H() = data.x;
             startup.F() = data.flags;
@@ -115,7 +91,6 @@ TEST(test_alu_BIG, bit)
         }
 
         {
-            failure_message msg(data);
             registers startup;
             startup.L() = data.x;
             startup.F() = data.flags;
@@ -129,7 +104,6 @@ TEST(test_alu_BIG, bit)
         }
 
         {
-            failure_message msg(data);
             registers startup;
             startup.HL() = 0xFF;
             startup.F() = data.flags;
@@ -144,7 +118,6 @@ TEST(test_alu_BIG, bit)
         }
 
         {
-            failure_message msg(data);
             registers startup;
             startup.A() = data.x;
             startup.F() = data.flags;

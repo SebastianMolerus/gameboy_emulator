@@ -21,9 +21,8 @@ TEST(test_alu_BIG, adc_8_bit)
             bus b{opcodes, startup};
             b.go();
 
-            DIAGNOSTIC(r.A())
-            ASSERT_EQ(r.A(), data.result.value) << diagnostic_message.str();
-            ASSERT_EQ(r.F(), data.result.flags) << diagnostic_message.str();
+            ASSERT_EQ(r.A(), data.result.value);
+            ASSERT_EQ(r.F(), data.result.flags);
         }
 
         {
@@ -37,9 +36,8 @@ TEST(test_alu_BIG, adc_8_bit)
             bus b{opcodes, startup};
             b.go();
 
-            DIAGNOSTIC(r.A())
-            ASSERT_EQ(r.A(), data.result.value) << diagnostic_message.str();
-            ASSERT_EQ(r.F(), data.result.flags) << diagnostic_message.str();
+            ASSERT_EQ(r.A(), data.result.value);
+            ASSERT_EQ(r.F(), data.result.flags);
         }
 
         {
@@ -53,9 +51,8 @@ TEST(test_alu_BIG, adc_8_bit)
             bus b{opcodes, startup};
             b.go();
 
-            DIAGNOSTIC(r.A())
-            ASSERT_EQ(r.A(), data.result.value) << diagnostic_message.str();
-            ASSERT_EQ(r.F(), data.result.flags) << diagnostic_message.str();
+            ASSERT_EQ(r.A(), data.result.value);
+            ASSERT_EQ(r.F(), data.result.flags);
         }
 
         {
@@ -69,9 +66,8 @@ TEST(test_alu_BIG, adc_8_bit)
             bus b{opcodes, startup};
             b.go();
 
-            DIAGNOSTIC(r.A())
-            ASSERT_EQ(r.A(), data.result.value) << diagnostic_message.str();
-            ASSERT_EQ(r.F(), data.result.flags) << diagnostic_message.str();
+            ASSERT_EQ(r.A(), data.result.value);
+            ASSERT_EQ(r.F(), data.result.flags);
         }
 
         {
@@ -85,9 +81,8 @@ TEST(test_alu_BIG, adc_8_bit)
             bus b{opcodes, startup};
             b.go();
 
-            DIAGNOSTIC(r.A())
-            ASSERT_EQ(r.A(), data.result.value) << diagnostic_message.str();
-            ASSERT_EQ(r.F(), data.result.flags) << diagnostic_message.str();
+            ASSERT_EQ(r.A(), data.result.value);
+            ASSERT_EQ(r.F(), data.result.flags);
         }
 
         {
@@ -101,9 +96,8 @@ TEST(test_alu_BIG, adc_8_bit)
             bus b{opcodes, startup};
             b.go();
 
-            DIAGNOSTIC(r.A())
-            ASSERT_EQ(r.A(), data.result.value) << diagnostic_message.str();
-            ASSERT_EQ(r.F(), data.result.flags) << diagnostic_message.str();
+            ASSERT_EQ(r.A(), data.result.value);
+            ASSERT_EQ(r.F(), data.result.flags);
         }
 
         {
@@ -117,9 +111,8 @@ TEST(test_alu_BIG, adc_8_bit)
             bus b{opcodes, startup};
             b.go();
 
-            DIAGNOSTIC(r.A())
-            ASSERT_EQ(r.A(), data.result.value) << diagnostic_message.str();
-            ASSERT_EQ(r.F(), data.result.flags) << diagnostic_message.str();
+            ASSERT_EQ(r.A(), data.result.value);
+            ASSERT_EQ(r.F(), data.result.flags);
         }
 
         {
@@ -134,9 +127,8 @@ TEST(test_alu_BIG, adc_8_bit)
             b.m_ram[0x9] = data.y;
             b.go();
 
-            DIAGNOSTIC(r.A())
-            ASSERT_EQ(r.A(), data.result.value) << diagnostic_message.str();
-            ASSERT_EQ(r.F(), data.result.flags) << diagnostic_message.str();
+            ASSERT_EQ(r.A(), data.result.value);
+            ASSERT_EQ(r.F(), data.result.flags);
         }
     }
 }

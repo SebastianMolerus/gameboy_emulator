@@ -149,6 +149,7 @@ struct cpu::cpu_impl
     void SRL_IHLI();
     void BIT();
     void RES();
+    void SET();
 
     // Main entry for misc
     uint8_t misc();
