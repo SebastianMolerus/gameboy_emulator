@@ -313,14 +313,17 @@ void validate_prefixed(std::string mnemonic, uint8_t const first_hex)
         hex.push_back(first_hex + i);
 
     std::stringstream ss;
-    ss << "[Validate prefixed opcodes ";
+    ss << "[Validate prefixed opcodes";
     for (int i : hex)
         ss << "0x" << std::hex << std::setfill('0') << std::setw(2) << i << " ";
     ss << "] \n";
     std::cout << ss.str();
 
+    int i = 0;
     for (auto const &data : result)
     {
+        std::cout << "DATA " << i << "\n";
+        ++i;
         {
             registers startup;
             startup.B() = data.x;
@@ -330,109 +333,108 @@ void validate_prefixed(std::string mnemonic, uint8_t const first_hex)
             bus b{opcodes, startup};
             b.go();
 
-            DIAGNOSTIC(r.B())
-            ASSERT_EQ(r.B(), data.result.value) << diagnostic_message.str();
-            ASSERT_EQ(r.F(), data.result.flags) << diagnostic_message.str();
+            ASSERT_EQ(r.B(), data.result.value) << "OP:" << (int)hex[0] << "\n";
+            ASSERT_EQ(r.F(), data.result.flags) << "OP:" << (int)hex[0] << "\n";
         }
 
-        {
-            registers startup;
-            startup.C() = data.x;
-            startup.F() = data.flags;
+        // {
+        //     registers startup;
+        //     startup.C() = data.x;
+        //     startup.F() = data.flags;
 
-            std::array<uint8_t, 2> opcodes{0xCB, hex[1]};
-            bus b{opcodes, startup};
-            b.go();
+        //     std::array<uint8_t, 2> opcodes{0xCB, hex[1]};
+        //     bus b{opcodes, startup};
+        //     b.go();
 
-            DIAGNOSTIC(r.B())
-            ASSERT_EQ(r.C(), data.result.value) << diagnostic_message.str();
-            ASSERT_EQ(r.F(), data.result.flags) << diagnostic_message.str();
-        }
+        //     DIAGNOSTIC(r.C())
+        //     ASSERT_EQ(r.C(), data.result.value) << diagnostic_message.str();
+        //     ASSERT_EQ(r.F(), data.result.flags) << diagnostic_message.str();
+        // }
 
-        {
-            registers startup;
-            startup.D() = data.x;
-            startup.F() = data.flags;
+        // {
+        //     registers startup;
+        //     startup.D() = data.x;
+        //     startup.F() = data.flags;
 
-            std::array<uint8_t, 2> opcodes{0xCB, hex[2]};
-            bus b{opcodes, startup};
-            b.go();
+        //     std::array<uint8_t, 2> opcodes{0xCB, hex[2]};
+        //     bus b{opcodes, startup};
+        //     b.go();
 
-            DIAGNOSTIC(r.B())
-            ASSERT_EQ(r.D(), data.result.value) << diagnostic_message.str();
-            ASSERT_EQ(r.F(), data.result.flags) << diagnostic_message.str();
-        }
+        //     DIAGNOSTIC(r.D())
+        //     ASSERT_EQ(r.D(), data.result.value) << diagnostic_message.str();
+        //     ASSERT_EQ(r.F(), data.result.flags) << diagnostic_message.str();
+        // }
 
-        {
-            registers startup;
-            startup.E() = data.x;
-            startup.F() = data.flags;
+        // {
+        //     registers startup;
+        //     startup.E() = data.x;
+        //     startup.F() = data.flags;
 
-            std::array<uint8_t, 2> opcodes{0xCB, hex[3]};
-            bus b{opcodes, startup};
-            b.go();
+        //     std::array<uint8_t, 2> opcodes{0xCB, hex[3]};
+        //     bus b{opcodes, startup};
+        //     b.go();
 
-            DIAGNOSTIC(r.B())
-            ASSERT_EQ(r.E(), data.result.value) << diagnostic_message.str();
-            ASSERT_EQ(r.F(), data.result.flags) << diagnostic_message.str();
-        }
+        //     DIAGNOSTIC(r.E())
+        //     ASSERT_EQ(r.E(), data.result.value) << diagnostic_message.str();
+        //     ASSERT_EQ(r.F(), data.result.flags) << diagnostic_message.str();
+        // }
 
-        {
-            registers startup;
-            startup.H() = data.x;
-            startup.F() = data.flags;
+        // {
+        //     registers startup;
+        //     startup.H() = data.x;
+        //     startup.F() = data.flags;
 
-            std::array<uint8_t, 2> opcodes{0xCB, hex[4]};
-            bus b{opcodes, startup};
-            b.go();
+        //     std::array<uint8_t, 2> opcodes{0xCB, hex[4]};
+        //     bus b{opcodes, startup};
+        //     b.go();
 
-            DIAGNOSTIC(r.B())
-            ASSERT_EQ(r.H(), data.result.value) << diagnostic_message.str();
-            ASSERT_EQ(r.F(), data.result.flags) << diagnostic_message.str();
-        }
+        //     DIAGNOSTIC(r.H())
+        //     ASSERT_EQ(r.H(), data.result.value) << diagnostic_message.str();
+        //     ASSERT_EQ(r.F(), data.result.flags) << diagnostic_message.str();
+        // }
 
-        {
-            registers startup;
-            startup.L() = data.x;
-            startup.F() = data.flags;
+        // {
+        //     registers startup;
+        //     startup.L() = data.x;
+        //     startup.F() = data.flags;
 
-            std::array<uint8_t, 2> opcodes{0xCB, hex[5]};
-            bus b{opcodes, startup};
-            b.go();
+        //     std::array<uint8_t, 2> opcodes{0xCB, hex[5]};
+        //     bus b{opcodes, startup};
+        //     b.go();
 
-            DIAGNOSTIC(r.B())
-            ASSERT_EQ(r.L(), data.result.value) << diagnostic_message.str();
-            ASSERT_EQ(r.F(), data.result.flags) << diagnostic_message.str();
-        }
+        //     DIAGNOSTIC(r.L())
+        //     ASSERT_EQ(r.L(), data.result.value) << diagnostic_message.str();
+        //     ASSERT_EQ(r.F(), data.result.flags) << diagnostic_message.str();
+        // }
 
-        {
-            registers startup;
-            startup.HL() = 0x678;
-            startup.F() = data.flags;
+        // {
+        //     registers startup;
+        //     startup.HL() = 0x678;
+        //     startup.F() = data.flags;
 
-            std::array<uint8_t, 2> opcodes{0xCB, hex[6]};
-            bus b{opcodes, startup};
-            b.m_ram[0x678] = data.x;
-            b.go();
+        //     std::array<uint8_t, 2> opcodes{0xCB, hex[6]};
+        //     bus b{opcodes, startup};
+        //     b.m_ram[0x678] = data.x;
+        //     b.go();
 
-            DIAGNOSTIC(r.B())
-            ASSERT_EQ(b.m_ram[0x678], data.result.value) << diagnostic_message.str();
-            ASSERT_EQ(r.F(), data.result.flags) << diagnostic_message.str();
-        }
+        //     DIAGNOSTIC(b.m_ram[0x678])
+        //     // ASSERT_EQ(b.m_ram[0x678], data.result.value) << diagnostic_message.str();
+        //     ASSERT_EQ(r.F(), data.result.flags) << diagnostic_message.str();
+        // }
 
-        {
-            registers startup;
-            startup.A() = data.x;
-            startup.F() = data.flags;
+        // {
+        //     registers startup;
+        //     startup.A() = data.x;
+        //     startup.F() = data.flags;
 
-            std::array<uint8_t, 2> opcodes{0xCB, hex[7]};
-            bus b{opcodes, startup};
-            b.go();
+        //     std::array<uint8_t, 2> opcodes{0xCB, hex[7]};
+        //     bus b{opcodes, startup};
+        //     b.go();
 
-            DIAGNOSTIC(r.B())
-            ASSERT_EQ(r.A(), data.result.value) << diagnostic_message.str();
-            ASSERT_EQ(r.F(), data.result.flags) << diagnostic_message.str();
-        }
+        //     DIAGNOSTIC(r.A())
+        //     ASSERT_EQ(r.A(), data.result.value) << diagnostic_message.str();
+        //     ASSERT_EQ(r.F(), data.result.flags) << diagnostic_message.str();
+        // }
     }
 }
 

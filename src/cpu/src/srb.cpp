@@ -157,6 +157,18 @@ uint8_t cpu::cpu_impl::pref_srb()
     case 0x36:
         SWAP_IHLI();
         break;
+    case 0x38:
+    case 0x39:
+    case 0x3A:
+    case 0x3B:
+    case 0x3C:
+    case 0x3D:
+    case 0x3F:
+        SRL_REG8();
+        break;
+    case 0x3E:
+        SRL_IHLI();
+        break;
     case 0x08:
     case 0x09:
     case 0x0A:
@@ -181,7 +193,9 @@ uint8_t cpu::cpu_impl::pref_srb()
     case 0x1E:
         RR_IHLI();
         break;
-
+    case 0x40 ... 0x7F:
+        BIT();
+        break;
     default:
         no_op_defined("SRB_pref.cpp");
     }
@@ -408,4 +422,60 @@ void cpu::cpu_impl::SWAP_IHLI()
         set(flag::Z);
 
     m_rw_device.write(m_reg.HL(), data);
+}
+
+void cpu::cpu_impl::SRL_REG8()
+{
+    reset_all_flags();
+
+    assert(m_op.m_operands[0].m_name);
+    uint8_t &REG8 = m_reg.get_byte(m_op.m_operands[0].m_name);
+
+    if (bitcheck(REG8, 0))
+        set(flag::C);
+
+    REG8 >>= 1;
+
+    if (REG8 == 0)
+        set(flag::Z);
+}
+
+void cpu::cpu_impl::SRL_IHLI()
+{
+    reset_all_flags();
+
+    uint8_t data{m_rw_device.read(m_reg.HL())};
+
+    if (bitcheck(data, 0))
+        set(flag::C);
+
+    data >>= 1;
+
+    if (data == 0)
+        set(flag::Z);
+
+    m_rw_device.write(m_reg.HL(), data);
+}
+
+void cpu::cpu_impl::BIT()
+{
+    reset(flag::N);
+    set(flag::H);
+
+    assert(m_op.m_operands[0].m_name); // Bit
+    assert(m_op.m_operands[1].m_name); // REG
+
+    uint8_t const data = ([this] {
+        if (!m_op.m_operands[1].m_immediate)
+            return m_rw_device.read(m_reg.get_word(m_op.m_operands[1].m_name));
+        else
+            return m_reg.get_byte(m_op.m_operands[1].m_name);
+    })();
+
+    int bit = std::stoi(m_op.m_operands[0].m_name);
+
+    if (bitcheck(data, bit))
+        reset(flag::Z);
+    else
+        set(flag::Z);
 }
