@@ -2,5 +2,5 @@
 
 TEST(test_alu_BIG, swap)
 {
-    validate_prefixed("swap", 0x30);
+    validate_prefixed("swap.json", 0x30);
 }

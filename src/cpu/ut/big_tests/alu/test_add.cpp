@@ -1,16 +1,8 @@
 #include "../big_tests_utils.h"
 
-namespace
-{
-const std::filesystem::path add_tests_path{test_data_dir / "alu_tests" / "v1" / "add.json"};
-}
-
 TEST(test_alu_BIG, add_8_bit)
 {
-    ASSERT_TRUE(std::filesystem::exists(add_tests_path));
-
-    auto const result = read_alu_data(add_tests_path);
-
+    auto const result = read_alu_data("add.json");
     for (auto const &data : result)
     {
         {

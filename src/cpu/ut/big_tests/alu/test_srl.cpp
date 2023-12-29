@@ -2,5 +2,5 @@
 
 TEST(test_alu_BIG, srl)
 {
-    validate_prefixed("srl", 0x38);
+    validate_prefixed("srl.json", 0x38);
 }

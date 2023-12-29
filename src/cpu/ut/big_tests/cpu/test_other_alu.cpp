@@ -2,9 +2,7 @@
 
 namespace
 {
-
-std::array<uint8_t, 4> const opcodes{0x27, 0x37, 0x2F, 0x3F};
-
+std::array<uint8_t, 4> constexpr opcodes{0x27, 0x37, 0x2F, 0x3F};
 } // namespace
 
 TEST(test_cpu_BIG, test_all_other_alu)

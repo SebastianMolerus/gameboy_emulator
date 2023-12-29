@@ -20,7 +20,7 @@ std::unordered_map<uint8_t, std::array<uint8_t, 8>> m_mapper{{0, bit_0_opcodes},
 TEST(test_alu_BIG, res)
 {
 
-    auto const all_data = read_alu_data(test_data_dir / "alu_tests" / "v1" / "res.json");
+    auto const all_data = read_alu_data("res.json");
 
     for (auto const &data : all_data)
     {

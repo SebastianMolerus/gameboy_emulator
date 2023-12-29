@@ -1,14 +1,9 @@
 #include "../big_tests_utils.h"
 #include <gtest/gtest.h>
 
-namespace
-{
-const std::filesystem::path adc_tests_path{test_data_dir / "alu_tests" / "v1" / "adc.json"};
-}
-
 TEST(test_alu_BIG, adc_8_bit)
 {
-    auto const result = read_alu_data(adc_tests_path);
+    auto const result = read_alu_data("adc.json");
     for (auto const &data : result)
     {
         {

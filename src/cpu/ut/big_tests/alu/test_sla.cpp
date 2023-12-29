@@ -2,5 +2,5 @@
 
 TEST(test_alu_BIG, sla)
 {
-    validate_prefixed("sla", 0x20);
+    validate_prefixed("sla.json", 0x20);
 }

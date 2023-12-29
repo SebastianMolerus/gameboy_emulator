@@ -27,33 +27,6 @@ struct alu_data
 namespace
 {
 
-struct cpu_state
-{
-    struct
-    {
-        uint8_t a;
-        uint8_t b;
-        uint8_t c;
-        uint8_t d;
-        uint8_t e;
-        uint8_t f;
-        uint8_t h;
-        uint8_t l;
-        uint16_t pc;
-        uint16_t sp;
-    } cpu;
-    std::vector<std::pair<uint16_t, uint8_t>> ram;
-};
-
-struct cpu_data
-{
-    std::string name;
-    cpu_state initial;
-    cpu_state final;
-    std::vector<std::tuple<uint16_t, uint8_t, std::string>> cycles;
-};
-
-std::filesystem::path const test_data_dir{BIG_TEST_DATA_DIR};
 registers r;
 opcode opc;
 std::vector<std::tuple<uint16_t, uint8_t, std::string>> c;
@@ -103,9 +76,9 @@ struct bus : public rw_device
     }
 };
 
-std::vector<alu_data> read_alu_data(std::filesystem::path file);
+std::vector<alu_data> read_alu_data(std::string alu_file_name);
 
 void validate_opcode(uint8_t hex);
-void validate_prefixed(std::string mnemonic, uint8_t const first_hex);
+void validate_prefixed(std::string alu_file_name, uint8_t const first_hex);
 
 #endif

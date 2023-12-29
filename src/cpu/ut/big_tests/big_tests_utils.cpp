@@ -2,6 +2,37 @@
 
 #include <json_spirit/json_spirit.h>
 
+namespace
+{
+
+std::filesystem::path const test_data_dir{BIG_TEST_DATA_DIR};
+
+struct cpu_state
+{
+    struct
+    {
+        uint8_t a;
+        uint8_t b;
+        uint8_t c;
+        uint8_t d;
+        uint8_t e;
+        uint8_t f;
+        uint8_t h;
+        uint8_t l;
+        uint16_t pc;
+        uint16_t sp;
+    } cpu;
+    std::vector<std::pair<uint16_t, uint8_t>> ram;
+};
+
+struct cpu_data
+{
+    std::string name;
+    cpu_state initial;
+    cpu_state final;
+    std::vector<std::tuple<uint16_t, uint8_t, std::string>> cycles;
+};
+
 void fill_cpu_data(cpu_state &state, json_spirit::Object const &initial_or_final)
 {
     json_spirit::Object const cpu = initial_or_final[0].value_.get_obj();
@@ -27,6 +58,7 @@ void fill_cpu_data(cpu_state &state, json_spirit::Object const &initial_or_final
         state.ram.push_back({addr, value});
     }
 }
+} // namespace
 
 void validate_cpu_states(std::vector<cpu_data> const &states)
 {
@@ -147,12 +179,13 @@ std::vector<cpu_data> read_cpu_data(std::filesystem::path file)
     return result;
 }
 
-std::vector<alu_data> read_alu_data(std::filesystem::path file)
+std::vector<alu_data> read_alu_data(std::string alu_file_name)
 {
-    if (!std::filesystem::exists(file))
-        throw std::runtime_error(std::string{"File doesn't exist: "} + file.string());
+    std::filesystem::path const file_path{test_data_dir / "alu_tests" / "v1" / alu_file_name};
+    if (!std::filesystem::exists(file_path))
+        throw std::runtime_error(std::string{"File doesn't exist: "} + file_path.string());
 
-    std::ifstream big_file(file);
+    std::ifstream big_file(file_path);
     std::stringstream ss;
     ss << big_file.rdbuf();
 
@@ -176,7 +209,7 @@ std::vector<alu_data> read_alu_data(std::filesystem::path file)
     }
 
     if (result.empty())
-        throw std::runtime_error(std::string{"No alu test data were loaded from file: "} + file.string());
+        throw std::runtime_error(std::string{"No alu test data were loaded from file: "} + file_path.string());
 
     return result;
 }
@@ -192,11 +225,9 @@ void validate_opcode(uint8_t hex)
     validate_cpu_states(all_data);
 }
 
-void validate_prefixed(std::string mnemonic, uint8_t const first_hex)
+void validate_prefixed(std::string alu_file_name, uint8_t const first_hex)
 {
-    mnemonic += ".json";
-    const std::filesystem::path test_path{test_data_dir / "alu_tests" / "v1" / mnemonic};
-    auto const result = read_alu_data(test_path);
+    auto const result = read_alu_data(alu_file_name);
 
     std::vector<uint8_t> hex{first_hex};
 
