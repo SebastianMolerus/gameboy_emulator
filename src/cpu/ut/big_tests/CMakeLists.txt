@@ -28,6 +28,7 @@ create_suite(big_tests_alu_sra alu/test_sra.cpp)
 create_suite(big_tests_alu_swap alu/test_swap.cpp)
 create_suite(big_tests_alu_srl alu/test_srl.cpp)
 create_suite(big_tests_alu_bit alu/test_bit.cpp)
+create_suite(big_tests_alu_res alu/test_res.cpp)
 
 create_suite(big_tests_cpu_ld_16 cpu/test_ld_16.cpp)
 create_suite(big_tests_cpu_ld_8 cpu/test_ld_8.cpp)

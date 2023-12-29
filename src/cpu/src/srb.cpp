@@ -196,6 +196,9 @@ uint8_t cpu::cpu_impl::pref_srb()
     case 0x40 ... 0x7F:
         BIT();
         break;
+    case 0x80 ... 0xBF:
+        RES();
+        break;
     default:
         no_op_defined("SRB_pref.cpp");
     }
@@ -478,4 +481,23 @@ void cpu::cpu_impl::BIT()
         reset(flag::Z);
     else
         set(flag::Z);
+}
+
+void cpu::cpu_impl::RES()
+{
+    assert(m_op.m_operands[0].m_name); // Bit
+    assert(m_op.m_operands[1].m_name); // REG
+    int const bit = std::stoi(m_op.m_operands[0].m_name);
+
+    if (!m_op.m_operands[1].m_immediate)
+    {
+        uint8_t value{m_rw_device.read(m_reg.HL())};
+        bitclear(value, bit);
+        m_rw_device.write(m_reg.HL(), value);
+    }
+    else
+    {
+        uint8_t &REG8 = m_reg.get_byte(m_op.m_operands[1].m_name);
+        bitclear(REG8, bit);
+    }
 }

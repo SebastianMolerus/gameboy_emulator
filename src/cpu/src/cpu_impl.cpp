@@ -20,7 +20,8 @@ const std::unordered_map<const char *, cpu::cpu_impl::processing_func> cpu::cpu_
     {"RRCA", &cpu::cpu_impl::srb},      {"RRA", &cpu::cpu_impl::srb},      {"PREFIX", &cpu::cpu_impl::misc},
     {"RLC", &cpu::cpu_impl::pref_srb},  {"RRC", &cpu::cpu_impl::pref_srb}, {"RL", &cpu::cpu_impl::pref_srb},
     {"RR", &cpu::cpu_impl::pref_srb},   {"SLA", &cpu::cpu_impl::pref_srb}, {"SRA", &cpu::cpu_impl::pref_srb},
-    {"SWAP", &cpu::cpu_impl::pref_srb}, {"SRL", &cpu::cpu_impl::pref_srb}, {"BIT", &cpu::cpu_impl::pref_srb}};
+    {"SWAP", &cpu::cpu_impl::pref_srb}, {"SRL", &cpu::cpu_impl::pref_srb}, {"BIT", &cpu::cpu_impl::pref_srb},
+    {"RES", &cpu::cpu_impl::pref_srb}};
 
 using mapping_iter = std::unordered_map<const char *, cpu::cpu_impl::processing_func>::const_iterator;
 
