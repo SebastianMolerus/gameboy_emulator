@@ -472,7 +472,7 @@ void cpu::cpu_impl::BIT()
             return m_reg.get_byte(m_op.m_operands[1].m_name);
     })();
 
-    int bit = std::stoi(m_op.m_operands[0].m_name);
+    int const bit = std::stoi(m_op.m_operands[0].m_name);
 
     if (bitcheck(data, bit))
         reset(flag::Z);
