@@ -1,6 +1,25 @@
 #include "cpu_impl.hpp"
 #include <string>
 
+namespace
+{
+
+void push_PC(cpu::cpu_impl &c)
+{
+    assert(c.m_reg.SP() > 0x1);
+    c.m_rw_device.write(--c.m_reg.SP(), c.m_reg.PC() >> 8);
+    c.m_rw_device.write(--c.m_reg.SP(), c.m_reg.PC());
+}
+
+void pop_PC(cpu::cpu_impl &c)
+{
+    assert(c.m_reg.SP() < 0xFFFE);
+    c.m_reg.m_PC.m_lo = c.m_rw_device.read(c.m_reg.SP()++);
+    c.m_reg.m_PC.m_hi = c.m_rw_device.read(c.m_reg.SP()++);
+}
+
+} // namespace
+
 uint8_t cpu::cpu_impl::jmp()
 {
     switch (m_op.m_hex)
@@ -103,13 +122,13 @@ uint8_t cpu::cpu_impl::CALL_CC_a16()
 
 uint8_t cpu::cpu_impl::CALL_a16()
 {
-    push_PC();
+    push_PC(*this);
     return JP_nn();
 }
 
 uint8_t cpu::cpu_impl::RET()
 {
-    pop_PC();
+    pop_PC(*this);
     return m_op.m_cycles[0];
 }
 
@@ -130,7 +149,7 @@ uint8_t cpu::cpu_impl::RETI()
 uint8_t cpu::cpu_impl::RST_nn()
 {
     assert(m_op.m_operands[0].m_name);
-    push_PC();
+    push_PC(*this);
     m_reg.PC() = std::stoi({m_op.m_operands[0].m_name + 1}, nullptr, 16);
     return m_op.m_cycles[0];
 }

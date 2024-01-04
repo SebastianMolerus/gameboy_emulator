@@ -136,20 +136,6 @@ uint16_t cpu::cpu_impl::combined_data()
     return addr;
 }
 
-void cpu::cpu_impl::push_PC()
-{
-    assert(m_reg.SP() > 0x1);
-    m_rw_device.write(--m_reg.SP(), m_reg.PC() >> 8);
-    m_rw_device.write(--m_reg.SP(), m_reg.PC());
-}
-
-void cpu::cpu_impl::pop_PC()
-{
-    assert(m_reg.SP() < 0xFFFE);
-    m_reg.m_PC.m_lo = m_rw_device.read(m_reg.SP()++);
-    m_reg.m_PC.m_hi = m_rw_device.read(m_reg.SP()++);
-}
-
 // ******************************************
 //                  CPU PART
 // ******************************************

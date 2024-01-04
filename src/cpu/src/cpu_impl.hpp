@@ -49,9 +49,6 @@ struct cpu::cpu_impl
     // combine Word from incoming data
     uint16_t combined_data();
 
-    void push_PC();
-    void pop_PC();
-
     // Main entry for Loads
     uint8_t ld();
     void LD_HL_SP_e8();
