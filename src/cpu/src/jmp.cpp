@@ -20,7 +20,7 @@ void pop_PC(cpu::cpu_impl &c)
 
 } // namespace
 
-uint8_t cpu::cpu_impl::jmp()
+void cpu::cpu_impl::jmp()
 {
     switch (m_op.m_hex)
     {
@@ -68,18 +68,15 @@ uint8_t cpu::cpu_impl::jmp()
     default:
         no_op_defined("jmp.cpp");
     }
-    return 0;
 }
 
-uint8_t cpu::cpu_impl::JR_CC_e8()
+void cpu::cpu_impl::JR_CC_e8()
 {
     if (m_reg.check_condition(m_op.m_operands[0].m_name))
-        return JR_e8(); // jump
-    else
-        return m_op.m_cycles[1]; // no jump
+        JR_e8(); // jump
 }
 
-uint8_t cpu::cpu_impl::JR_e8()
+void cpu::cpu_impl::JR_e8()
 {
     uint8_t e8 = m_op.m_data[0];
     if (e8 & 0x80)
@@ -89,67 +86,57 @@ uint8_t cpu::cpu_impl::JR_e8()
     }
     else
         m_reg.PC() += e8;
-    return m_op.m_cycles[0];
 }
 
-uint8_t cpu::cpu_impl::JP_nn()
+void cpu::cpu_impl::JP_nn()
 {
     m_reg.PC() = combined_data();
-    return m_op.m_cycles[0];
 }
 
-uint8_t cpu::cpu_impl::JP_HL()
+void cpu::cpu_impl::JP_HL()
 {
     m_reg.PC() = m_reg.HL();
-    return m_op.m_cycles[0];
 }
 
-uint8_t cpu::cpu_impl::JP_CC_a16()
+void cpu::cpu_impl::JP_CC_a16()
 {
     if (m_reg.check_condition(m_op.m_operands[0].m_name))
-        return JP_nn(); // jump
-    else
-        return m_op.m_cycles[1]; // no jump
+        JP_nn(); // jump
 }
 
-uint8_t cpu::cpu_impl::CALL_CC_a16()
+void cpu::cpu_impl::CALL_CC_a16()
 {
     if (m_reg.check_condition(m_op.m_operands[0].m_name))
-        return CALL_a16(); // call
-    else
-        return m_op.m_cycles[1]; // no call
+        CALL_a16(); // call
 }
 
-uint8_t cpu::cpu_impl::CALL_a16()
+void cpu::cpu_impl::CALL_a16()
 {
     push_PC(*this);
-    return JP_nn();
+    JP_nn();
 }
 
-uint8_t cpu::cpu_impl::RET()
+void cpu::cpu_impl::RET()
 {
     pop_PC(*this);
-    return m_op.m_cycles[0];
 }
 
-uint8_t cpu::cpu_impl::RET_CC()
+void cpu::cpu_impl::RET_CC()
 {
     assert(m_op.m_operands[0].m_name);
     if (m_reg.check_condition(m_op.m_operands[0].m_name))
-        return RET();
-    return m_op.m_cycles[1];
+        RET();
 }
 
-uint8_t cpu::cpu_impl::RETI()
+void cpu::cpu_impl::RETI()
 {
     m_IME = true;
-    return RET();
+    RET();
 }
 
-uint8_t cpu::cpu_impl::RST_nn()
+void cpu::cpu_impl::RST_nn()
 {
     assert(m_op.m_operands[0].m_name);
     push_PC(*this);
     m_reg.PC() = std::stoi({m_op.m_operands[0].m_name + 1}, nullptr, 16);
-    return m_op.m_cycles[0];
 }

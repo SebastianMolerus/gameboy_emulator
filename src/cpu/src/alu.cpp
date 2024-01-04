@@ -110,7 +110,7 @@ void cp_op(cpu::cpu_impl &cpu, uint8_t data)
 
 } // namespace
 
-uint8_t cpu::cpu_impl::alu()
+void cpu::cpu_impl::alu()
 {
     switch (m_op.m_hex)
     {
@@ -294,7 +294,6 @@ uint8_t cpu::cpu_impl::alu()
     default:
         no_op_defined("alu.cpp");
     }
-    return m_op.m_cycles[0];
 }
 
 void cpu::cpu_impl::ADD_A_REG8()

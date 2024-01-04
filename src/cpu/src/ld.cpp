@@ -1,6 +1,6 @@
 #include "cpu_impl.hpp"
 
-uint8_t cpu::cpu_impl::ld()
+void cpu::cpu_impl::ld()
 {
     switch (m_op.m_hex)
     {
@@ -135,8 +135,6 @@ uint8_t cpu::cpu_impl::ld()
     default:
         no_op_defined("ld.cpp");
     }
-
-    return m_op.m_cycles[0];
 }
 
 // 0xF8 : Put SP + n effective address into HL

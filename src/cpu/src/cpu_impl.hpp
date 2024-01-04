@@ -10,22 +10,22 @@
 
 struct cpu::cpu_impl
 {
-    using processing_func = uint8_t (cpu::cpu_impl::*)();
 
     cpu_impl(rw_device &rw_device, cb callback = nullptr);
     ~cpu_impl() = default;
 
-    static const std::unordered_map<const char *, processing_func> m_mapper;
+    using instruction = void (cpu::cpu_impl::*)();
+    instruction m_cur_instr;
 
     registers m_reg;
     rw_device &m_rw_device;
     opcode m_op;
-    bool m_IME{}; // Interrupt master enable;
-    bool m_pref{};
     cb m_callback;
+    uint8_t m_T_states{1};
+    bool m_IME{};
+    bool m_pref{};
 
-    // working loop entry
-    void start();
+    void tick();
 
     // read byte from memory pointed by PC
     // increment PC
@@ -50,7 +50,7 @@ struct cpu::cpu_impl
     uint16_t combined_data();
 
     // Main entry for Loads
-    uint8_t ld();
+    void ld();
     void LD_HL_SP_e8();
     void LD_REG16_n16();
     void LD_Ia16I_SP();
@@ -67,21 +67,21 @@ struct cpu::cpu_impl
     void LD_IHLI_REG8();
 
     // Main entry for jumps
-    uint8_t jmp();
-    uint8_t JR_CC_e8();
-    uint8_t JR_e8();
-    uint8_t JP_nn();
-    uint8_t JP_CC_a16();
-    uint8_t JP_HL();
-    uint8_t CALL_CC_a16();
-    uint8_t CALL_a16();
-    uint8_t RET();
-    uint8_t RET_CC();
-    uint8_t RETI();
-    uint8_t RST_nn();
+    void jmp();
+    void JR_CC_e8();
+    void JR_e8();
+    void JP_nn();
+    void JP_CC_a16();
+    void JP_HL();
+    void CALL_CC_a16();
+    void CALL_a16();
+    void RET();
+    void RET_CC();
+    void RETI();
+    void RST_nn();
 
     // Main entry for ALU
-    uint8_t alu();
+    void alu();
     void ADD_A_REG8();
     void ADD_A_IHLI();
     void ADD_A_n8();
@@ -120,14 +120,14 @@ struct cpu::cpu_impl
     void CCF();
 
     // Main entry for shift, rotate, bit
-    uint8_t srb();
+    void srb();
     void RLCA();
     void RLA();
     void RRCA();
     void RRA();
 
     // Main entry for shift, rotate, bit ( PREFIXED )
-    uint8_t pref_srb();
+    void pref_srb();
     void RLC_REG8();
     void RLC_IHLI();
     void RRC_REG8();
@@ -149,8 +149,10 @@ struct cpu::cpu_impl
     void SET();
 
     // Main entry for misc
-    uint8_t misc();
+    void misc();
     void NOP();
+
+    void ILLEGAL();
 };
 
 #endif

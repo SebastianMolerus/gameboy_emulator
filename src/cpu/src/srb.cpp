@@ -35,7 +35,7 @@ void rotate_c_4(cpu::cpu_impl &cpu, uint8_t &data)
 
 } // namespace
 
-uint8_t cpu::cpu_impl::srb()
+void cpu::cpu_impl::srb()
 {
     switch (m_op.m_hex)
     {
@@ -54,7 +54,6 @@ uint8_t cpu::cpu_impl::srb()
     default:
         no_op_defined("SRB.cpp");
     }
-    return m_op.m_cycles[0];
 }
 
 void cpu::cpu_impl::RLCA()
@@ -93,7 +92,7 @@ void cpu::cpu_impl::RRA()
 // ******************************************
 //              PREFIXED PART
 // ******************************************
-uint8_t cpu::cpu_impl::pref_srb()
+void cpu::cpu_impl::pref_srb()
 {
     switch (m_op.m_hex)
     {
@@ -205,7 +204,6 @@ uint8_t cpu::cpu_impl::pref_srb()
     default:
         no_op_defined("SRB_pref.cpp");
     }
-    return m_op.m_cycles[0];
 }
 
 void cpu::cpu_impl::RLC_REG8()

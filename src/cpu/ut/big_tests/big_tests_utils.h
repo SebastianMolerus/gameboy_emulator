@@ -27,52 +27,55 @@ struct alu_data
 namespace
 {
 
+bool cpu_running{true};
 registers r;
 opcode opc;
-std::vector<std::tuple<uint16_t, uint8_t, std::string>> c;
 
-bool cb(registers const &reg, opcode const &op, uint8_t)
+void cb(registers const &reg, opcode const &op)
 {
     // PREFIX
     if (op.m_hex == 0xCB)
-        return false;
+        return;
     r = reg;
     opc = op;
-    return true;
+    cpu_running = false;
 }
 
 } // namespace
 
 struct bus : public rw_device
 {
+    std::vector<std::tuple<uint16_t, uint8_t, std::string>> m_saved_cycles;
     std::array<uint8_t, 0x10000> m_ram{0x0};
     cpu m_cpu;
 
     bus(registers startup_values) : m_cpu{*this, cb, startup_values}
     {
-        c.clear();
+        cpu_running = true;
     }
 
     bus(std::span<uint8_t> opcodes, registers startup_values) : m_cpu{*this, cb, startup_values}
     {
+        cpu_running = true;
         for (auto i = 0; i < opcodes.size(); ++i)
             m_ram[i] = opcodes[i];
     }
 
     virtual uint8_t read(uint16_t addr)
     {
-        c.push_back({addr, m_ram[addr], "read"});
+        m_saved_cycles.push_back({addr, m_ram[addr], "read"});
         return m_ram[addr];
     }
     virtual void write(uint16_t addr, uint8_t data)
     {
-        c.push_back({addr, data, "write"});
+        m_saved_cycles.push_back({addr, data, "write"});
         m_ram[addr] = data;
     }
 
     void go()
     {
-        m_cpu.start();
+        while (cpu_running)
+            m_cpu.tick();
     }
 };
 

@@ -7,7 +7,13 @@
 // ******************************************
 //               CPU_IMPL PART
 // ******************************************
-const std::unordered_map<const char *, cpu::cpu_impl::processing_func> cpu::cpu_impl::m_mapper{
+namespace
+{
+
+using mapper_T = std::unordered_map<const char *, cpu::cpu_impl::instruction>;
+using mapper_const_iter = mapper_T::const_iterator;
+
+const mapper_T mapper{
     {"LD", &cpu::cpu_impl::ld},         {"LDH", &cpu::cpu_impl::ld},       {"PUSH", &cpu::cpu_impl::ld},
     {"POP", &cpu::cpu_impl::ld},        {"JP", &cpu::cpu_impl::jmp},       {"JR", &cpu::cpu_impl::jmp},
     {"ADC", &cpu::cpu_impl::alu},       {"ADD", &cpu::cpu_impl::alu},      {"NOP", &cpu::cpu_impl::misc},
@@ -21,54 +27,85 @@ const std::unordered_map<const char *, cpu::cpu_impl::processing_func> cpu::cpu_
     {"RLC", &cpu::cpu_impl::pref_srb},  {"RRC", &cpu::cpu_impl::pref_srb}, {"RL", &cpu::cpu_impl::pref_srb},
     {"RR", &cpu::cpu_impl::pref_srb},   {"SLA", &cpu::cpu_impl::pref_srb}, {"SRA", &cpu::cpu_impl::pref_srb},
     {"SWAP", &cpu::cpu_impl::pref_srb}, {"SRL", &cpu::cpu_impl::pref_srb}, {"BIT", &cpu::cpu_impl::pref_srb},
-    {"RES", &cpu::cpu_impl::pref_srb},  {"SET", &cpu::cpu_impl::pref_srb}};
+    {"RES", &cpu::cpu_impl::pref_srb},  {"SET", &cpu::cpu_impl::pref_srb}, {"ILLEGAL_D3", &cpu::cpu_impl::misc}};
 
-using mapping_iter = std::unordered_map<const char *, cpu::cpu_impl::processing_func>::const_iterator;
+cpu::cpu_impl::instruction instruction_lookup(const char *mnemonic)
+{
+    auto iter = mapper.find(mnemonic);
+    if (iter == mapper.end())
+    {
+        std::stringstream ss;
+        ss << "CPU: cannot find [" << mnemonic << "] in mapped functions.\n";
+        throw std::runtime_error(ss.str());
+    }
+    return iter->second;
+}
 
-cpu::cpu_impl::cpu_impl(rw_device &rw_device, cb callback) : m_rw_device{rw_device}, m_callback{callback}
+uint8_t wait_cycles(cpu::cpu_impl &c)
+{
+    switch (c.m_op.m_hex)
+    {
+    case 0x20:
+    case 0x30:
+    case 0x28:
+    case 0x38:
+    case 0xC0:
+    case 0xD0:
+    case 0xC2:
+    case 0xD2:
+    case 0xC4:
+    case 0xD4:
+    case 0xC8:
+    case 0xD8:
+    case 0xCA:
+    case 0xDA:
+    case 0xCC:
+    case 0xDC:
+        if (!c.m_reg.check_condition(c.m_op.m_operands[0].m_name))
+            return c.m_op.m_cycles[1];
+    default:
+        return c.m_op.m_cycles[0];
+    }
+}
+
+} // namespace
+
+cpu::cpu_impl::cpu_impl(rw_device &rw_device, cb callback)
+    : m_rw_device{rw_device}, m_callback{callback}, m_cur_instr{nullptr}
 {
 }
 
-void cpu::cpu_impl::start()
+void cpu::cpu_impl::tick()
 {
-    constexpr uint8_t PREFIX_OPCODE{0xCB};
-
-    while (1)
+    --m_T_states;
+    if (m_T_states > 0)
     {
-        mapping_iter func;
-        uint8_t const hex{read_byte()};
-
-        m_op = get_opcode(hex, m_pref);
-
-        if (m_pref)
-            m_pref = false;
-
-        func = m_mapper.find(m_op.m_mnemonic);
-        if (func == m_mapper.end())
-        {
-            std::stringstream ss;
-            ss << "CPU: cannot find [" << m_op.m_mnemonic << "] in mapped functions.\n";
-            if (m_pref)
-                ss << "[PREFIXED]\n";
-            throw std::runtime_error(ss.str());
-        }
-
-        for (auto i = 0; i < m_op.m_bytes - 1; ++i)
-            m_op.m_data[i] = read_byte();
-
-        uint8_t const wait_cycles = std::invoke(func->second, *this);
-
-        // ADD WAIT HERE
-
-        if (m_callback)
-        {
-            if (bool res = std::invoke(m_callback, m_reg, m_op, wait_cycles); res)
-                return;
-        }
-
-        if (std::strcmp(m_op.m_mnemonic, "PREFIX") == 0)
-            m_pref = true;
+        // Simulation of instruction processing
+        // Need more ticks to complete
+        return;
     }
+
+    // execute previously instruction & callback
+    if (m_cur_instr)
+    {
+        std::invoke(m_cur_instr, *this);
+        if (m_callback)
+            std::invoke(m_callback, m_reg, m_op);
+    }
+
+    // load next instruction
+    m_op = get_opcode(read_byte(), m_pref);
+    m_cur_instr = instruction_lookup(m_op.m_mnemonic);
+    m_T_states = wait_cycles(*this);
+
+    if (m_pref)
+        m_pref = false;
+
+    for (auto i = 0; i < m_op.m_bytes - 1; ++i)
+        m_op.m_data[i] = read_byte();
+
+    if (std::strcmp(m_op.m_mnemonic, "PREFIX") == 0)
+        m_pref = true;
 }
 
 uint8_t cpu::cpu_impl::read_byte()
@@ -147,8 +184,8 @@ cpu::cpu(rw_device &rw_device, cb callback, registers start_values)
 
 cpu::~cpu() = default;
 
-void cpu::start()
+void cpu::tick()
 {
     assert(m_pimpl);
-    m_pimpl->start();
+    m_pimpl->tick();
 }

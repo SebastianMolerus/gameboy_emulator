@@ -1,6 +1,6 @@
 #include "cpu_impl.hpp"
 
-uint8_t cpu::cpu_impl::misc()
+void cpu::cpu_impl::misc()
 {
     switch (m_op.m_hex)
     {
@@ -8,12 +8,19 @@ uint8_t cpu::cpu_impl::misc()
     case 0xCB:
         NOP();
         break;
+    case 0xD3:
+        ILLEGAL();
+        break;
     default:
         no_op_defined("misc.cpp");
     }
-    return m_op.m_cycles[0];
 }
 
 void cpu::cpu_impl::NOP()
 {
+}
+
+void cpu::cpu_impl::ILLEGAL()
+{
+    throw std::runtime_error("ILLEGAL INSTRUCTION WERE EXECUTED\n");
 }

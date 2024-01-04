@@ -120,7 +120,10 @@ void validate_cpu_states(std::vector<cpu_data> const &states)
         for (auto const &[addr, value] : data.final.ram)
             ASSERT_EQ(b.m_ram[addr], value);
 
-        ASSERT_EQ(c, data.cycles);
+        for (auto i = 0; i < data.cycles.size(); ++i)
+        {
+            ASSERT_EQ(b.m_saved_cycles[i], data.cycles[i]);
+        }
     }
 }
 
