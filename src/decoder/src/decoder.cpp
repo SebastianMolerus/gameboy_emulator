@@ -2,9 +2,11 @@
 
 #include <json_spirit/json_spirit.h>
 
+#include <algorithm>
 #include <filesystem>
 #include <fstream>
 #include <string_view>
+
 
 using namespace json_spirit;
 
@@ -254,6 +256,13 @@ bool cache_opcodes()
     Object const p_op_codes = prefixed_opcodes.get_obj();
     for (auto const &oc : p_op_codes)
         process_opcode(oc, PREF_OPCODES_CACHE);
+
+    // in prefixed opcodes table
+    // each op has 2B size
+    // it is ( probably ) summ of prefix ( 1B ) + pref opcode ( 1B )
+    // I'll just set this value as 1B
+    for (auto &op : PREF_OPCODES_CACHE)
+        op.m_bytes = 1;
 
     return true;
 }

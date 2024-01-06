@@ -89,6 +89,11 @@ struct registers
         return m_PC.m_u16;
     }
 
+    uint16_t get_pc() const
+    {
+        return m_PC.m_u16;
+    }
+
     uint16_t &get_word(const char *reg)
     {
         if (strcmp(reg, "BC") == 0)

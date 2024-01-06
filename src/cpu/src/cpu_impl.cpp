@@ -98,9 +98,13 @@ void cpu::cpu_impl::tick()
     m_cur_instr = instruction_lookup(m_op.m_mnemonic);
     m_T_states = wait_cycles(*this);
 
+    // previous opcode was from prefixed table
+    // turn this of to get next opcode from non prefixed table
     if (m_pref)
         m_pref = false;
 
+    // fill data needed by opcode
+    // only for opcodes which size is greater than 1B
     for (auto i = 0; i < m_op.m_bytes - 1; ++i)
         m_op.m_data[i] = read_byte();
 

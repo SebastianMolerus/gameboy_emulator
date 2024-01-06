@@ -47,3 +47,9 @@ set_property(TARGET json_spirit PROPERTY INTERFACE_INCLUDE_DIRECTORIES
 add_subdirectory(src)
 
 add_executable(RM_GB_Emu_App src/main.cpp)
+
+target_compile_definitions(
+  RM_GB_Emu_App
+  PRIVATE BOOT_ROM_FILE="${CMAKE_CURRENT_LIST_DIR}/src/res/dmg_boot_rom.gb")
+
+target_link_libraries(RM_GB_Emu_App PRIVATE decoder cpu)

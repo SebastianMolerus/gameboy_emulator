@@ -1,6 +1,7 @@
 #ifndef DECODER_HPP
 #define DECODER_HPP
 
+#include <algorithm>
 #include <array>
 #include <cstdint>
 #include <string_view>
@@ -29,6 +30,12 @@ struct opcode
     std::array<uint8_t, 2> m_data{};
     std::array<uint8_t, 2> m_cycles{};
     std::array<operand, 3> m_operands{};
+
+    size_t operands_size() const
+    {
+        return std::count_if(m_operands.begin(), m_operands.end(), [](auto &op) { return op.m_name != nullptr; });
+    }
+
     // Z, N, H, C
     std::array<const char *, 4> m_flags;
     bool m_immediate;
