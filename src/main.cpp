@@ -55,42 +55,60 @@ void cpu_cb(registers const &reg, opcode const &op)
     print_op(reg, op);
 }
 
+// range == <begin, end>
+template <uint16_t begin, uint16_t end = begin> struct memory_block
+{
+    static constexpr uint16_t m_begin{begin};
+    static constexpr uint16_t m_end{end};
+    std::vector<uint8_t> m_block;
+    memory_block() : m_block(m_end - m_begin + 1, {})
+    {
+    }
+
+    uint8_t &operator[](int index)
+    {
+        assert(index >= m_begin && index <= m_end);
+        return m_block[index - m_begin];
+    }
+
+    bool in_range(uint16_t addr)
+    {
+        return addr >= m_begin && addr <= m_end;
+    }
+};
+
 struct dmg : public rw_device
 {
-    static constexpr uint16_t VRAM_BEGIN{0x8000};
-    static constexpr uint16_t VRAM_END{0x9FFF};
-    std::vector<uint8_t> m_VRAM; // 8KiB
-
-    static constexpr uint16_t BOOT_ROM_END{0xFF};
-    std::array<uint8_t, 256> m_boot_rom;
+    memory_block<0, 0xFF> m_BOOT_ROM;
+    memory_block<0x8000, 0x9fff> m_VRAM;
+    memory_block<0xFF26> m_AUDIO_MASTER_CTRL;
 
     cpu m_cpu;
-    dmg() : m_cpu{*this, cpu_cb}, m_boot_rom{load_boot_rom()}, m_VRAM(8192, {})
+    dmg() : m_cpu{*this, cpu_cb}
     {
+        auto const rom{load_boot_rom()};
+        for (int i = 0; i < m_BOOT_ROM.m_block.size(); ++i)
+            m_BOOT_ROM.m_block[i] = rom[i];
     }
 
     uint8_t read(uint16_t addr) override
     {
         uint8_t ret_value{0xFF};
 
-        if (addr <= BOOT_ROM_END)
-            ret_value = m_boot_rom[addr];
-        else if (addr >= 0x8000 && addr <= 0x9FFF)
-        {
-            addr -= 0x8000;
+        if (m_BOOT_ROM.in_range(addr))
+            ret_value = m_BOOT_ROM[addr];
+        else if (m_VRAM.in_range(addr))
             ret_value = m_VRAM[addr];
-        }
 
         return ret_value;
     }
 
     void write(uint16_t addr, uint8_t data) override
     {
-        if (addr >= VRAM_BEGIN && addr <= VRAM_END)
-        {
-            addr -= VRAM_BEGIN;
+        if (m_VRAM.in_range(addr))
             m_VRAM[addr] = data;
-        }
+        else if (m_AUDIO_MASTER_CTRL.in_range(addr))
+            m_AUDIO_MASTER_CTRL[addr] = data;
     }
 
     void start()
