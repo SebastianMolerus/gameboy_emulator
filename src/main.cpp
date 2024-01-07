@@ -36,7 +36,7 @@ void swap_rom()
     std::swap(DMG_MEMORY[0].m_end, DMG_MEMORY[1].m_end);
 }
 
-uint8_t &dmg_memory_access(uint16_t addr)
+uint8_t dmg_memory_read(uint16_t addr)
 {
     for (auto &area : DMG_MEMORY)
         if (addr >= area.m_beg && addr <= area.m_end)
@@ -44,6 +44,20 @@ uint8_t &dmg_memory_access(uint16_t addr)
 
     static uint8_t def{0xFF};
     return def;
+}
+
+void dmg_memory_write(uint16_t addr, uint8_t data)
+{
+    for (auto &area : DMG_MEMORY)
+        if (addr >= area.m_beg && addr <= area.m_end)
+        {
+            area.m_mem[addr - area.m_beg] = data;
+
+            if (addr == 0xFF50 && data == 0x1)
+                swap_rom();
+
+            return;
+        }
 }
 
 template <uint16_t beg, uint16_t end = beg> struct memory_block
@@ -62,6 +76,7 @@ struct dmg : public rw_device
 {
     memory_block<0, 0xFF> m_BOOT_ROM; // swappable with m_ROM
     memory_block<0, 0x7FFF> m_ROM;    // swappable with m_BOOT_ROM
+
     memory_block<0x8000, 0x9fff> m_VRAM;
     memory_block<0xFF11> m_CH1_T_D;           // Channel 1 length timer & duty cycle
     memory_block<0xFF12> m_CH1_V_E;           // Channel 1 volume & envelope
@@ -73,29 +88,30 @@ struct dmg : public rw_device
     memory_block<0xFF50> m_BOOT_ROM_DISABLE;  // 0x1 hex here and boot rom is disabled
 
     cpu m_cpu;
+
     dmg() : m_cpu{*this, cpu_cb}
     {
         std::array<uint8_t, 256> const boot_rom{load_boot_rom()};
         for (int i = 0; i < boot_rom.size(); ++i)
-            dmg_memory_access(i) = boot_rom[i];
+            dmg_memory_write(i, boot_rom[i]);
 
         std::vector<uint8_t> const room{load_rom()};
         // to propagate cart ROM
         swap_rom();
         for (int i = 0; i < room.size(); ++i)
-            dmg_memory_access(i) = room[i];
+            dmg_memory_write(i, room[i]);
         // switch to boot ROM
         swap_rom();
     }
 
     uint8_t read(uint16_t addr) override
     {
-        return dmg_memory_access(addr);
+        return dmg_memory_read(addr);
     }
 
     void write(uint16_t addr, uint8_t data) override
     {
-        dmg_memory_access(addr) = data;
+        dmg_memory_write(addr, data);
     }
 
     void start()
