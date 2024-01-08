@@ -2,6 +2,7 @@
     "dependencies": [
         "gtest",
         "json-spirit",
-        "boost-algorithm"
+        "boost-algorithm",
+        "wxwidgets"
     ]
 }

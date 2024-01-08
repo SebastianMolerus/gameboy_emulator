@@ -9,14 +9,14 @@
 
 extern std::vector<uint8_t> load_rom();
 extern std::array<uint8_t, 256> load_boot_rom();
-extern void print_op(registers const &reg, opcode const &op);
+extern std::stringstream debug_ss(registers const &reg, opcode const &op);
 
 namespace
 {
 
 void cpu_cb(registers const &reg, opcode const &op)
 {
-    print_op(reg, op);
+    std::cerr << debug_ss(reg, op).str();
 }
 
 struct memory_area
