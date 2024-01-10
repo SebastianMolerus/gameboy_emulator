@@ -9,12 +9,11 @@ set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 find_package(GTest CONFIG REQUIRED)
-
 find_package(Boost REQUIRED)
-
-find_package(wxWidgets CONFIG REQUIRED)
-
+find_package(glad CONFIG REQUIRED)
+find_package(glfw3 CONFIG REQUIRED)
 find_package(Git REQUIRED)
+
 message(STATUS "Submodule update in Progress")
 execute_process(COMMAND ${GIT_EXECUTABLE} submodule update --init)
 

@@ -3,6 +3,7 @@
         "gtest",
         "json-spirit",
         "boost-algorithm",
-        "wxwidgets"
+        "glad",
+        "glfw3"
     ]
 }
