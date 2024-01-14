@@ -16,7 +16,7 @@ enum class KEY
 
 struct color
 {
-    float R, G, B;
+    float R{}, G{}, B{};
 };
 
 struct GLFWwindow;
@@ -33,9 +33,9 @@ class lcd
   public:
     lcd(std::function<void(KEY)> on_key_cb);
 
-    void before_draw();
+    void before_frame(color background = {});
     void draw_pixel(int x, int y, color c);
-    void after_draw();
+    void after_frame();
 };
 
 #endif

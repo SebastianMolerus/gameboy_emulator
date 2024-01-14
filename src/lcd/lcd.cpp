@@ -154,7 +154,7 @@ lcd::lcd(std::function<void(KEY)> on_key_cb) : m_on_key_cb{on_key_cb}
     set_uniforms_locations(shaderProgram);
 }
 
-void lcd::before_draw()
+void lcd::before_frame(color background)
 {
     if (glfwGetKey(m_window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
         m_on_key_cb(KEY::ESC);
@@ -171,7 +171,7 @@ void lcd::before_draw()
     if (glfwGetKey(m_window, GLFW_KEY_S) == GLFW_PRESS)
         m_on_key_cb(KEY::S);
 
-    glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
+    glClearColor(background.R, background.G, background.B, 1.0f);
     glClear(GL_COLOR_BUFFER_BIT);
 }
 
@@ -187,7 +187,7 @@ void lcd::draw_pixel(int x, int y, color c)
     glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
 }
 
-void lcd::after_draw()
+void lcd::after_frame()
 {
     glfwSwapBuffers(m_window);
     glfwPollEvents();

@@ -112,12 +112,12 @@ struct dmg : public rw_device
         swap_rom();
     }
 
-    uint8_t read(uint16_t addr) override
+    uint8_t read(uint16_t addr, device d) override
     {
         return dmg_memory_read(addr);
     }
 
-    void write(uint16_t addr, uint8_t data) override
+    void write(uint16_t addr, uint8_t data, device d) override
     {
         dmg_memory_write(addr, data);
     }
@@ -128,7 +128,7 @@ struct dmg : public rw_device
 
         while (!should_end)
         {
-            lcd.before_draw();
+            lcd.before_frame();
             m_cpu.tick();
 
             for (int x = 0; x < 160; ++x)
@@ -141,7 +141,7 @@ struct dmg : public rw_device
                     lcd.draw_pixel(x, y, c);
                 }
 
-            lcd.after_draw();
+            lcd.after_frame();
         }
     }
 };

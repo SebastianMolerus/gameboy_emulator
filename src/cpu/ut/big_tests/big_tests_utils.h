@@ -61,12 +61,12 @@ struct bus : public rw_device
             m_ram[i] = opcodes[i];
     }
 
-    virtual uint8_t read(uint16_t addr)
+    virtual uint8_t read(uint16_t addr, device d)
     {
         m_saved_cycles.push_back({addr, m_ram[addr], "read"});
         return m_ram[addr];
     }
-    virtual void write(uint16_t addr, uint8_t data)
+    virtual void write(uint16_t addr, uint8_t data, device d)
     {
         m_saved_cycles.push_back({addr, data, "write"});
         m_ram[addr] = data;
