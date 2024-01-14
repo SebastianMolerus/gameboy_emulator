@@ -3,6 +3,10 @@
 
 #include <cstdint>
 
+#define checkbit(byte, nbit) ((byte) & (1 << (nbit)))
+#define setbit(byte, nbit) ((byte) |= (1 << (nbit)))
+#define clearbit(byte, nbit) ((byte) &= ~(1 << (nbit)))
+
 enum class device
 {
     CPU,

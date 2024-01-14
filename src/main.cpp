@@ -115,6 +115,9 @@ struct dmg : public rw_device
 
     uint8_t read(uint16_t addr, device d) override
     {
+        if (d == device::PPU)
+            return 0;
+
         return dmg_memory_read(addr);
     }
 
