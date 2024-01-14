@@ -6,7 +6,7 @@
 #include <fstream>
 #include <iostream>
 #include <vector>
-#include <lcd.hpp>
+#include <ppu.hpp>
 
 extern std::vector<uint8_t> load_rom();
 extern std::array<uint8_t, 256> load_boot_rom();
@@ -15,12 +15,12 @@ extern std::stringstream debug_ss(registers const &reg, opcode const &op);
 namespace
 {
 
-bool should_end{};
-void on_key(KEY k)
-{
-    if (k == KEY::ESC)
-        should_end = true;
-}
+// bool should_end{};
+// void on_key(KEY k)
+// {
+//     if (k == KEY::ESC)
+//         should_end = true;
+// }
 
 void cpu_cb(registers const &reg, opcode const &op)
 {
@@ -96,8 +96,9 @@ struct dmg : public rw_device
     memory_block<0xFF50> m_BOOT_ROM_DISABLE;  // 0x1 hex here and boot rom is disabled
 
     cpu m_cpu;
+    ppu m_ppu;
 
-    dmg() : m_cpu{*this, cpu_cb}
+    dmg() : m_cpu{*this, cpu_cb}, m_ppu{*this}
     {
         std::array<uint8_t, 256> const boot_rom{load_boot_rom()};
         for (int i = 0; i < boot_rom.size(); ++i)
@@ -124,24 +125,9 @@ struct dmg : public rw_device
 
     void start()
     {
-        lcd lcd{on_key};
-
-        while (!should_end)
+        while (m_ppu.dot())
         {
-            lcd.before_frame();
             m_cpu.tick();
-
-            for (int x = 0; x < 160; ++x)
-                for (int y = 0; y < 144; ++y)
-                {
-                    color c;
-                    c.R = (rand() % 100) / 100.0f;
-                    c.G = (rand() % 100) / 100.0f;
-                    c.B = (rand() % 100) / 100.0f;
-                    lcd.draw_pixel(x, y, c);
-                }
-
-            lcd.after_frame();
         }
     }
 };
