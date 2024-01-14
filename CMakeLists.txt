@@ -13,6 +13,7 @@ find_package(Boost REQUIRED)
 find_package(glad CONFIG REQUIRED)
 find_package(glfw3 CONFIG REQUIRED)
 find_package(Git REQUIRED)
+find_package(glm CONFIG REQUIRED)
 
 message(STATUS "Submodule update in Progress")
 execute_process(COMMAND ${GIT_EXECUTABLE} submodule update --init)
@@ -54,4 +55,4 @@ target_compile_definitions(
   PRIVATE BOOT_ROM_FILE="${CMAKE_CURRENT_LIST_DIR}/src/res/dmg_boot_rom.gb"
           ROM_FILE="${CMAKE_CURRENT_LIST_DIR}/src/res/TetrisJUEV1.1.gb")
 
-target_link_libraries(RM_GB_Emu_App PRIVATE decoder cpu)
+target_link_libraries(RM_GB_Emu_App PRIVATE decoder cpu lcd)

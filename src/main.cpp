@@ -6,6 +6,7 @@
 #include <fstream>
 #include <iostream>
 #include <vector>
+#include <lcd.hpp>
 
 extern std::vector<uint8_t> load_rom();
 extern std::array<uint8_t, 256> load_boot_rom();
@@ -13,6 +14,13 @@ extern std::stringstream debug_ss(registers const &reg, opcode const &op);
 
 namespace
 {
+
+bool should_end{};
+void on_key(KEY k)
+{
+    if (k == KEY::ESC)
+        should_end = true;
+}
 
 void cpu_cb(registers const &reg, opcode const &op)
 {
@@ -116,9 +124,24 @@ struct dmg : public rw_device
 
     void start()
     {
-        while (1)
+        lcd lcd{on_key};
+
+        while (!should_end)
         {
+            lcd.before_draw();
             m_cpu.tick();
+
+            for (int x = 0; x < 160; ++x)
+                for (int y = 0; y < 144; ++y)
+                {
+                    color c;
+                    c.R = (rand() % 100) / 100.0f;
+                    c.G = (rand() % 100) / 100.0f;
+                    c.B = (rand() % 100) / 100.0f;
+                    lcd.draw_pixel(x, y, c);
+                }
+
+            lcd.after_draw();
         }
     }
 };
