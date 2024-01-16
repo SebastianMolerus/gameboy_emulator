@@ -15,13 +15,6 @@ extern std::stringstream debug_ss(registers const &reg, opcode const &op);
 namespace
 {
 
-// bool should_end{};
-// void on_key(KEY k)
-// {
-//     if (k == KEY::ESC)
-//         should_end = true;
-// }
-
 void cpu_cb(registers const &reg, opcode const &op)
 {
     std::cerr << debug_ss(reg, op).str();
@@ -50,6 +43,7 @@ uint8_t dmg_memory_read(uint16_t addr)
         if (addr >= area.m_beg && addr <= area.m_end)
             return area.m_mem[addr - area.m_beg];
 
+    assert(false);
     static uint8_t def{0xFF};
     return def;
 }
@@ -66,6 +60,8 @@ void dmg_memory_write(uint16_t addr, uint8_t data)
 
             return;
         }
+
+    assert(false);
 }
 
 template <uint16_t beg, uint16_t end = beg> struct memory_block
@@ -91,14 +87,17 @@ struct dmg : public rw_device
     memory_block<0xFF24> m_MASTER_VOLUME;     // Master volume & VIN panning
     memory_block<0xFF25> m_SOUND_PANNING;     // Sound panning
     memory_block<0xFF26> m_AUDIO_MASTER_CTRL; // Audio master control
+    memory_block<0xFF40> m_LCD_CTRL;          // LCD Control
     memory_block<0xFF44> m_LY;                // LCD Y coordinate
     memory_block<0xFF47> m_BGP;               // BG palette data
     memory_block<0xFF50> m_BOOT_ROM_DISABLE;  // 0x1 hex here and boot rom is disabled
 
+    memory_block<0xff51, 0xffff> m_RANDOM;
+
     cpu m_cpu;
     ppu m_ppu;
 
-    dmg() : m_cpu{*this, cpu_cb}, m_ppu{*this}
+    dmg() : m_cpu{*this, cpu_cb, {0x1D, 0xFFFE}}, m_ppu{*this}
     {
         std::array<uint8_t, 256> const boot_rom{load_boot_rom()};
         for (int i = 0; i < boot_rom.size(); ++i)
@@ -115,9 +114,6 @@ struct dmg : public rw_device
 
     uint8_t read(uint16_t addr, device d) override
     {
-        if (d == device::PPU)
-            return 0;
-
         return dmg_memory_read(addr);
     }
 
