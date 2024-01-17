@@ -16,8 +16,11 @@ extern void lcd_control_settings(uint8_t lcd_ctrl_value);
 
 namespace
 {
-constexpr uint16_t SCY{0xFF42};
-constexpr uint16_t SCX{0xFF43};
+
+constexpr color WHITE{1.f, 1.f, 1.f};
+constexpr color LIGHT_GRAY{0.867f, 0.706f, 0.71f};
+constexpr color DARK_GRAY{0.38f, 0.31f, 0.302f};
+constexpr color BLACK{};
 
 bool should_exit{};
 
@@ -45,12 +48,8 @@ bool ppu::ppu_impl::dot()
 
     if (!LCD_PPU_ENABLE)
     {
-        // LCD is turned off, draw something not related with dmg
         return true;
     }
-
-    lcd_off_drawing();
-    return true;
 
     if (!BG_WINDOW_ENABLE)
     {
@@ -58,21 +57,47 @@ bool ppu::ppu_impl::dot()
         return true;
     }
 
-    // Drawing
+    if (m_current_line == -1)
+    {
+        m_lcd->before_frame();
+        m_current_line = 0;
+    }
+
+    if (m_current_dot < 80) // OAM SCAN
+    {
+        // EMPTY for NOW
+        ++m_current_dot;
+    }
+    else if (m_current_dot >= 80 && m_current_dot < 456)
+    {
+        if (((m_current_dot - 80) < 160) && m_current_line < 144)
+            m_lcd->draw_pixel(m_current_dot - 80, m_current_line, DARK_GRAY);
+        ++m_current_dot;
+    }
+    else
+    {
+        // Whole pixel line is ready, increment line
+        m_rw_device.write(0xFF44, m_current_line++, device::PPU);
+        m_current_dot = 0;
+
+        // whole screen was drawn
+        if (m_current_line == 154)
+        {
+            m_lcd->after_frame();
+            m_current_line = -1;
+        }
+    }
 
     return true;
 }
 
 void ppu::ppu_impl::lcd_off_drawing()
 {
-    static int pos{3};
     m_lcd->before_frame();
-    m_lcd->draw_pixel((pos - 3) % 160, 72, {0, 0.4f, 0});
-    m_lcd->draw_pixel((pos - 2) % 160, 72, {0, 0.6f, 0});
-    m_lcd->draw_pixel((pos - 1) % 160, 72, {0, 0.8f, 0});
-    m_lcd->draw_pixel(pos % 160, 72, {0, 1.0f, 0});
+    for (int i = 0; i < 160; ++i)
+        m_lcd->draw_pixel(i, 72, {0.7f, 0, 0});
+
     m_lcd->after_frame();
-    ++pos;
 }
 
 void ppu::ppu_impl::empty_frame()

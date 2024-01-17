@@ -88,6 +88,7 @@ struct dmg : public rw_device
     memory_block<0xFF25> m_SOUND_PANNING;     // Sound panning
     memory_block<0xFF26> m_AUDIO_MASTER_CTRL; // Audio master control
     memory_block<0xFF40> m_LCD_CTRL;          // LCD Control
+    memory_block<0xFF42> m_SCY;               // Viewport Y position
     memory_block<0xFF44> m_LY;                // LCD Y coordinate
     memory_block<0xFF47> m_BGP;               // BG palette data
     memory_block<0xFF50> m_BOOT_ROM_DISABLE;  // 0x1 hex here and boot rom is disabled
@@ -119,14 +120,24 @@ struct dmg : public rw_device
 
     void write(uint16_t addr, uint8_t data, device d) override
     {
+        if (addr == 0xFF44)
+            assert(d == device::PPU && data >= 0 && data <= 153);
+
         dmg_memory_write(addr, data);
     }
 
     void start()
     {
+        // 1 CPU tick == 4 PPU dots
+        int cc{4};
         while (m_ppu.dot())
         {
-            m_cpu.tick();
+            --cc;
+            if (!cc)
+            {
+                m_cpu.tick();
+                cc = 4;
+            }
         }
     }
 };

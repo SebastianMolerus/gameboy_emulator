@@ -11,6 +11,9 @@ struct ppu::ppu_impl
     std::unique_ptr<lcd> m_lcd;
     bool dot();
 
+    int m_current_dot{0};
+    int m_current_line{-1};
+
     void lcd_off_drawing();
     void lcd_white();
     void empty_frame();

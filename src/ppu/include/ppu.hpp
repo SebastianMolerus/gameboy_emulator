@@ -11,7 +11,6 @@ class ppu
     ppu(rw_device &rw_device);
     ~ppu();
 
-    // One "dot" is equal to 4x ticks in CPU
     bool dot();
     struct ppu_impl;
 

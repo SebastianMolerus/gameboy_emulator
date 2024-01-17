@@ -81,6 +81,7 @@ lcd::lcd(std::function<void(KEY)> on_key_cb) : m_on_key_cb{on_key_cb}
         glfwTerminate();
     }
     glfwMakeContextCurrent(m_window);
+    glfwSwapInterval(0);
     glfwSetFramebufferSizeCallback(m_window, framebuffer_size_callback);
 
     if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress))
