@@ -53,7 +53,6 @@ bool ppu::ppu_impl::dot()
 
     if (!BG_WINDOW_ENABLE)
     {
-        lcd_white();
         return true;
     }
 
@@ -63,56 +62,54 @@ bool ppu::ppu_impl::dot()
         m_current_line = 0;
     }
 
-    if (m_current_dot < 80) // OAM SCAN
+    switch (m_current_state)
     {
-        // EMPTY for NOW
-        ++m_current_dot;
-    }
-    else if (m_current_dot >= 80 && m_current_dot < 456)
-    {
-        if (((m_current_dot - 80) < 160) && m_current_line < 144)
-            m_lcd->draw_pixel(m_current_dot - 80, m_current_line, DARK_GRAY);
-        ++m_current_dot;
-    }
-    else
-    {
-        // Whole pixel line is ready, increment line
-        m_rw_device.write(0xFF44, m_current_line++, device::PPU);
-        m_current_dot = 0;
+    case STATE::OAM_SCAN:
+        if (m_current_dot == 80)
+        {
+            m_current_state = STATE::DRAWING_PIXELS;
+            return true;
+        }
+        break;
 
-        // whole screen was drawn
+    case STATE::DRAWING_PIXELS:
+    case STATE::HORIZONTAL_BLANK:
+        if (m_current_dot == 456)
+        {
+            // whole line is complete
+            // update LY
+            m_rw_device.write(0xFF44, m_current_line++, device::PPU);
+
+            if (m_current_line == 144)
+                m_current_state = STATE::VERTICAL_BLANK;
+            else
+                m_current_state = STATE::OAM_SCAN;
+
+            m_current_dot = 0;
+        }
+        break;
+
+    case STATE::VERTICAL_BLANK:
+        if (m_current_dot == 456)
+        {
+            m_rw_device.write(0xFF44, m_current_line++, device::PPU);
+            m_current_dot = 0;
+        }
+
+        // Whole screen was drawn
         if (m_current_line == 154)
         {
             m_lcd->after_frame();
             m_current_line = -1;
+            m_current_dot = 0;
+            m_current_state = STATE::OAM_SCAN;
         }
+        break;
     }
 
+    ++m_current_dot;
+
     return true;
-}
-
-void ppu::ppu_impl::lcd_off_drawing()
-{
-    m_lcd->before_frame();
-    for (int i = 0; i < 160; ++i)
-        m_lcd->draw_pixel(i, 72, {0.7f, 0, 0});
-
-    m_lcd->after_frame();
-}
-
-void ppu::ppu_impl::empty_frame()
-{
-    m_lcd->before_frame();
-    m_lcd->after_frame();
-}
-
-void ppu::ppu_impl::lcd_white()
-{
-    m_lcd->before_frame();
-    for (int x = 0; x < 160; ++x)
-        for (int y = 0; y < 144; ++y)
-            m_lcd->draw_pixel(x, y, {1.0f, 1.0f, 1.0f});
-    m_lcd->after_frame();
 }
 
 // ******************************************

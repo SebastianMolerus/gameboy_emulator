@@ -11,12 +11,18 @@ struct ppu::ppu_impl
     std::unique_ptr<lcd> m_lcd;
     bool dot();
 
+    enum class STATE
+    {
+        OAM_SCAN,
+        DRAWING_PIXELS,
+        HORIZONTAL_BLANK,
+        VERTICAL_BLANK
+    };
+
+    STATE m_current_state{STATE::OAM_SCAN};
+
     int m_current_dot{0};
     int m_current_line{-1};
-
-    void lcd_off_drawing();
-    void lcd_white();
-    void empty_frame();
 };
 
 #endif
