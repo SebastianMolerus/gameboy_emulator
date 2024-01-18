@@ -155,7 +155,7 @@ lcd::lcd(std::function<void(KEY)> on_key_cb) : m_on_key_cb{on_key_cb}
     set_uniforms_locations(shaderProgram);
 }
 
-void lcd::before_frame(color background)
+void lcd::before_frame()
 {
     if (glfwGetKey(m_window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
         m_on_key_cb(KEY::ESC);
@@ -172,14 +172,14 @@ void lcd::before_frame(color background)
     if (glfwGetKey(m_window, GLFW_KEY_S) == GLFW_PRESS)
         m_on_key_cb(KEY::S);
 
-    glClearColor(background.R, background.G, background.B, 1.0f);
+    glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
     glClear(GL_COLOR_BUFFER_BIT);
 }
 
 void lcd::draw_pixel(int x, int y, color c)
 {
-    assert(x >= 0 && x <= 159);
-    assert(y >= 0 && y <= 143);
+    // assert(x >= 0 && x <= 159);
+    // assert(y >= 0 && y <= 143);
     glm::vec3 v{c.R, c.G, c.B};
     glm::mat4 transform = glm::mat4(1.0f);
     transform = glm::translate(transform, glm::vec3(6.0f * x, 6.0f * y, 0.0f));

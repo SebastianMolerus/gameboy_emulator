@@ -6,9 +6,9 @@
 
 struct ppu::ppu_impl
 {
-    ppu_impl(rw_device &rw_device);
+    ppu_impl(rw_device &rw_device, drawing_device &drawing_device);
     rw_device &m_rw_device;
-    std::unique_ptr<lcd> m_lcd;
+    drawing_device &m_lcd;
     bool dot();
 
     enum class STATE
@@ -21,7 +21,7 @@ struct ppu::ppu_impl
 
     STATE m_current_state{STATE::OAM_SCAN};
 
-    int m_current_dot{0};
+    int m_current_dot{1};
     int m_current_line{-1};
 };
 

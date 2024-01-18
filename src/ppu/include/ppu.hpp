@@ -4,11 +4,12 @@
 #include <memory>
 
 struct rw_device;
+struct drawing_device;
 
 class ppu
 {
   public:
-    ppu(rw_device &rw_device);
+    ppu(rw_device &rw_device, drawing_device &drawing_device);
     ~ppu();
 
     bool dot();

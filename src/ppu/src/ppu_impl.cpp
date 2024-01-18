@@ -33,7 +33,8 @@ void on_key_callback(KEY k)
 
 } // namespace
 
-ppu::ppu_impl::ppu_impl(rw_device &rw_device) : m_rw_device{rw_device}, m_lcd{std::make_unique<lcd>(on_key_callback)}
+ppu::ppu_impl::ppu_impl(rw_device &rw_device, drawing_device &drawing_device)
+    : m_rw_device{rw_device}, m_lcd{drawing_device}
 {
 }
 
@@ -51,63 +52,76 @@ bool ppu::ppu_impl::dot()
         return true;
     }
 
-    if (!BG_WINDOW_ENABLE)
-    {
-        return true;
-    }
-
     if (m_current_line == -1)
     {
-        m_lcd->before_frame();
+        m_lcd.before_frame();
         m_current_line = 0;
     }
+
+    // assert(m_current_line < 154);
+    // assert(m_current_dot < 456);
 
     switch (m_current_state)
     {
     case STATE::OAM_SCAN:
-        if (m_current_dot == 80)
+        if (m_current_dot < 81)
         {
+            // TODO
+            ++m_current_dot;
+            break;
+        }
+        else
+        {
+            assert(m_current_dot == 81);
             m_current_state = STATE::DRAWING_PIXELS;
             return true;
         }
-        break;
 
     case STATE::DRAWING_PIXELS:
     case STATE::HORIZONTAL_BLANK:
-        if (m_current_dot == 456)
+        if (m_current_dot < 457)
         {
-            // whole line is complete
-            // update LY
-            m_rw_device.write(0xFF44, m_current_line++, device::PPU);
-
-            if (m_current_line == 144)
-                m_current_state = STATE::VERTICAL_BLANK;
-            else
-                m_current_state = STATE::OAM_SCAN;
-
-            m_current_dot = 0;
+            // TODO Drawing
+            ++m_current_dot;
+            break;
         }
-        break;
+        else
+        {
+            // Last dot but not last drawable line
+            if (m_current_line < 143)
+                m_current_state = STATE::OAM_SCAN;
+            // Last dot and last drawable line
+            else
+                m_current_state = STATE::VERTICAL_BLANK;
+
+            ++m_current_line;
+            m_current_dot = 1;
+            return true;
+        }
 
     case STATE::VERTICAL_BLANK:
-        if (m_current_dot == 456)
+        if (m_current_dot < 457)
         {
-            m_rw_device.write(0xFF44, m_current_line++, device::PPU);
-            m_current_dot = 0;
+            ++m_current_dot;
+            break;
         }
-
-        // Whole screen was drawn
-        if (m_current_line == 154)
+        else
         {
-            m_lcd->after_frame();
-            m_current_line = -1;
-            m_current_dot = 0;
-            m_current_state = STATE::OAM_SCAN;
+            if (m_current_line < 153)
+            {
+                ++m_current_line;
+                m_current_dot = 1;
+                break;
+            }
+            else
+            {
+                m_current_state = STATE::OAM_SCAN;
+                m_current_dot = 1;
+                m_current_line = -1;
+                m_lcd.after_frame();
+            }
         }
-        break;
     }
-
-    ++m_current_dot;
 
     return true;
 }
@@ -115,7 +129,8 @@ bool ppu::ppu_impl::dot()
 // ******************************************
 //                  PPU PART
 // ******************************************
-ppu::ppu(rw_device &rw_device) : m_pimpl{std::make_unique<ppu::ppu_impl>(rw_device)}
+ppu::ppu(rw_device &rw_device, drawing_device &drawing_device)
+    : m_pimpl{std::make_unique<ppu::ppu_impl>(rw_device, drawing_device)}
 {
 }
 
