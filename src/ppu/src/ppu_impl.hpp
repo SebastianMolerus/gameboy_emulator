@@ -21,7 +21,7 @@ struct ppu::ppu_impl
 
     STATE m_current_state{STATE::OAM_SCAN};
 
-    int m_current_dot{1};
+    int m_current_dot{0};
     int m_current_line{-1};
 };
 

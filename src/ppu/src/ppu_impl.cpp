@@ -58,66 +58,42 @@ bool ppu::ppu_impl::dot()
         m_current_line = 0;
     }
 
-    // assert(m_current_line < 154);
-    // assert(m_current_dot < 456);
-
     switch (m_current_state)
     {
     case STATE::OAM_SCAN:
-        if (m_current_dot < 81)
-        {
-            // TODO
-            ++m_current_dot;
-            break;
-        }
-        else
-        {
-            assert(m_current_dot == 81);
+        // TODO
+        ++m_current_dot;
+        if (m_current_dot == 80)
             m_current_state = STATE::DRAWING_PIXELS;
-            return true;
-        }
+        break;
 
     case STATE::DRAWING_PIXELS:
     case STATE::HORIZONTAL_BLANK:
-        if (m_current_dot < 457)
-        {
-            // TODO Drawing
-            ++m_current_dot;
-            break;
-        }
-        else
-        {
-            // Last dot but not last drawable line
-            if (m_current_line < 143)
-                m_current_state = STATE::OAM_SCAN;
-            // Last dot and last drawable line
-            else
-                m_current_state = STATE::VERTICAL_BLANK;
+        // TODO Drawing
+        ++m_current_dot;
 
-            ++m_current_line;
-            m_current_dot = 1;
-            return true;
+        if (m_current_dot == 456)
+        {
+            m_current_dot = 0;
+            m_rw_device.write(0xFF44, m_current_line++, device::PPU);
+            if (m_current_line == 144)
+                m_current_state = STATE::VERTICAL_BLANK;
+            else
+                m_current_state = STATE::OAM_SCAN;
         }
+        break;
 
     case STATE::VERTICAL_BLANK:
-        if (m_current_dot < 457)
+
+        ++m_current_dot;
+        if (m_current_dot == 456)
         {
-            ++m_current_dot;
-            break;
-        }
-        else
-        {
-            if (m_current_line < 153)
+            m_current_dot = 0;
+            m_rw_device.write(0xFF44, m_current_line++, device::PPU);
+            if (m_current_line == 154)
             {
-                ++m_current_line;
-                m_current_dot = 1;
-                break;
-            }
-            else
-            {
-                m_current_state = STATE::OAM_SCAN;
-                m_current_dot = 1;
                 m_current_line = -1;
+                m_current_state = STATE::OAM_SCAN;
                 m_lcd.after_frame();
             }
         }

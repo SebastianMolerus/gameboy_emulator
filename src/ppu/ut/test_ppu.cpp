@@ -44,15 +44,11 @@ TEST(ppu_tests, LCD_is_disabled)
 
     ppu::ppu_impl p{memory_mock, drawing_mock};
 
-    ASSERT_EQ(p.m_current_dot, 0);
-
     for (int i = 0; i < dot_count; ++i)
     {
         ASSERT_TRUE(p.dot());
         ASSERT_EQ(p.m_current_state, ppu::ppu_impl::STATE::OAM_SCAN);
     }
-
-    ASSERT_EQ(p.m_current_dot, 0);
 }
 
 TEST(ppu_tests, full_line_draw)
@@ -66,27 +62,23 @@ TEST(ppu_tests, full_line_draw)
     EXPECT_CALL(memory_mock, write(LY, LINE_0, device::PPU)).Times(1);
 
     ppu::ppu_impl p{memory_mock, drawing_mock};
+    ASSERT_EQ(p.m_current_line, -1);
 
-    ASSERT_EQ(p.m_current_dot, 1);
-
-    for (int i = 0; i < 80; ++i)
+    for (int i = 0; i < 79; ++i)
         ASSERT_TRUE(p.dot());
 
-    // OAM SCAN has always 80 dots
-    ASSERT_EQ(p.m_current_dot, 80);
+    // After 79 dots, Still OAM_SCAN
     ASSERT_EQ(p.m_current_state, ppu::ppu_impl::STATE::OAM_SCAN);
 
-    // 81st dot is part of DRAWING_PIXELS
+    // After 80 dots: DRAWING_PIXELS
     ASSERT_TRUE(p.dot());
-    ASSERT_EQ(p.m_current_dot, 81);
     ASSERT_EQ(p.m_current_state, ppu::ppu_impl::STATE::DRAWING_PIXELS);
 
-    // Remaining dots = 375
-    for (int i = 0; i < 375; ++i)
+    // Remaining dots = 376
+    for (int i = 0; i < 376; ++i)
         ASSERT_TRUE(p.dot());
 
     ASSERT_EQ(p.m_current_state, ppu::ppu_impl::STATE::OAM_SCAN);
-    ASSERT_EQ(p.m_current_dot, 1);
     ASSERT_EQ(p.m_current_line, 1);
 }
 
@@ -100,8 +92,6 @@ TEST(ppu_tests, vblank_reach)
     constexpr int dot_count{144 * 456}; // 144 lines of LCD screen, each 456 dots
     ppu::ppu_impl p{memory_mock, drawing_mock};
 
-    ASSERT_EQ(p.m_current_dot, 1);
-
     // Draw almost all 144 lines ( without 1 dot )
     for (int i = 0; i < (dot_count - 1); ++i)
         ASSERT_TRUE(p.dot());
@@ -109,7 +99,6 @@ TEST(ppu_tests, vblank_reach)
     // check state
     ASSERT_NE(p.m_current_state, ppu::ppu_impl::STATE::VERTICAL_BLANK);
     ASSERT_EQ(p.m_current_line, 143); // last drawable line ( 0 - 143 )
-    ASSERT_EQ(p.m_current_dot, 455);
 
     // go to Vblank
     ASSERT_TRUE(p.dot());
@@ -117,7 +106,6 @@ TEST(ppu_tests, vblank_reach)
     // Vblank Begin
     ASSERT_EQ(p.m_current_state, ppu::ppu_impl::STATE::VERTICAL_BLANK);
     ASSERT_EQ(p.m_current_line, 144);
-    ASSERT_EQ(p.m_current_dot, 1);
 
     // Vblank has always 10 scan lines ( 144 - 153 )
     for (int i = 0; i < (10 * 456) - 1; ++i)
@@ -126,12 +114,10 @@ TEST(ppu_tests, vblank_reach)
     // Vblank end
     ASSERT_EQ(p.m_current_state, ppu::ppu_impl::STATE::VERTICAL_BLANK);
     ASSERT_EQ(p.m_current_line, 153);
-    ASSERT_EQ(p.m_current_dot, 455);
 
     // Go to next frame
     ASSERT_TRUE(p.dot());
 
     ASSERT_EQ(p.m_current_state, ppu::ppu_impl::STATE::OAM_SCAN);
-    ASSERT_EQ(p.m_current_line, 0);
-    ASSERT_EQ(p.m_current_dot, 1);
+    ASSERT_EQ(p.m_current_line, -1);
 }
