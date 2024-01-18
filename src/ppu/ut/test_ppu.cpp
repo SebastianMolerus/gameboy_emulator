@@ -46,7 +46,7 @@ TEST(ppu_tests, LCD_is_disabled)
 
     for (int i = 0; i < dot_count; ++i)
     {
-        ASSERT_TRUE(p.dot());
+        p.dot();
         ASSERT_EQ(p.m_current_state, ppu::ppu_impl::STATE::OAM_SCAN);
     }
 }
@@ -65,18 +65,18 @@ TEST(ppu_tests, full_line_draw)
     ASSERT_EQ(p.m_current_line, -1);
 
     for (int i = 0; i < 79; ++i)
-        ASSERT_TRUE(p.dot());
+        p.dot();
 
     // After 79 dots, Still OAM_SCAN
     ASSERT_EQ(p.m_current_state, ppu::ppu_impl::STATE::OAM_SCAN);
 
     // After 80 dots: DRAWING_PIXELS
-    ASSERT_TRUE(p.dot());
+    p.dot();
     ASSERT_EQ(p.m_current_state, ppu::ppu_impl::STATE::DRAWING_PIXELS);
 
     // Remaining dots = 376
     for (int i = 0; i < 376; ++i)
-        ASSERT_TRUE(p.dot());
+        p.dot();
 
     ASSERT_EQ(p.m_current_state, ppu::ppu_impl::STATE::OAM_SCAN);
     ASSERT_EQ(p.m_current_line, 1);
@@ -94,14 +94,14 @@ TEST(ppu_tests, vblank_reach)
 
     // Draw almost all 144 lines ( without 1 dot )
     for (int i = 0; i < (dot_count - 1); ++i)
-        ASSERT_TRUE(p.dot());
+        p.dot();
 
     // check state
     ASSERT_NE(p.m_current_state, ppu::ppu_impl::STATE::VERTICAL_BLANK);
     ASSERT_EQ(p.m_current_line, 143); // last drawable line ( 0 - 143 )
 
     // go to Vblank
-    ASSERT_TRUE(p.dot());
+    p.dot();
 
     // Vblank Begin
     ASSERT_EQ(p.m_current_state, ppu::ppu_impl::STATE::VERTICAL_BLANK);
@@ -109,14 +109,14 @@ TEST(ppu_tests, vblank_reach)
 
     // Vblank has always 10 scan lines ( 144 - 153 )
     for (int i = 0; i < (10 * 456) - 1; ++i)
-        ASSERT_TRUE(p.dot());
+        p.dot();
 
     // Vblank end
     ASSERT_EQ(p.m_current_state, ppu::ppu_impl::STATE::VERTICAL_BLANK);
     ASSERT_EQ(p.m_current_line, 153);
 
     // Go to next frame
-    ASSERT_TRUE(p.dot());
+    p.dot();
 
     ASSERT_EQ(p.m_current_state, ppu::ppu_impl::STATE::OAM_SCAN);
     ASSERT_EQ(p.m_current_line, -1);

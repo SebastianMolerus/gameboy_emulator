@@ -20,4 +20,17 @@ struct rw_device
     virtual void write(uint16_t addr, uint8_t data, device d = device::CPU) = 0;
 };
 
+struct color
+{
+    float R{}, G{}, B{};
+};
+
+struct drawing_device
+{
+    virtual ~drawing_device() = default;
+    virtual void before_frame() = 0;
+    virtual void after_frame() = 0;
+    virtual void draw_pixel(int x, int y, color c) = 0;
+};
+
 #endif

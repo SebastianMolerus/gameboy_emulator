@@ -3,6 +3,7 @@
 
 #include <functional>
 #include <string>
+#include <common.hpp>
 
 enum class KEY
 {
@@ -15,20 +16,7 @@ enum class KEY
     S
 };
 
-struct color
-{
-    float R{}, G{}, B{};
-};
-
 struct GLFWwindow;
-
-struct drawing_device
-{
-    virtual ~drawing_device() = default;
-    virtual void before_frame() = 0;
-    virtual void after_frame() = 0;
-    virtual void draw_pixel(int x, int y, color c) = 0;
-};
 
 // Screen has resolution 960x864
 // It can draw 6x6 pixels

@@ -22,39 +22,27 @@ constexpr color LIGHT_GRAY{0.867f, 0.706f, 0.71f};
 constexpr color DARK_GRAY{0.38f, 0.31f, 0.302f};
 constexpr color BLACK{};
 
-bool should_exit{};
-
-// This is called due to user input
-void on_key_callback(KEY k)
-{
-    if (k == KEY::ESC)
-        should_exit = true;
-}
-
 } // namespace
 
 ppu::ppu_impl::ppu_impl(rw_device &rw_device, drawing_device &drawing_device)
-    : m_rw_device{rw_device}, m_lcd{drawing_device}
+    : m_rw_device{rw_device}, m_drawing_device{drawing_device}
 {
 }
 
 // return false to end work
-bool ppu::ppu_impl::dot()
+void ppu::ppu_impl::dot()
 {
-    if (should_exit)
-        return false;
-
     const uint8_t lcd_ctrl = m_rw_device.read(LCD_CTRL, device::PPU);
     lcd_control_settings(lcd_ctrl);
 
     if (!LCD_PPU_ENABLE)
     {
-        return true;
+        return;
     }
 
     if (m_current_line == -1)
     {
-        m_lcd.before_frame();
+        m_drawing_device.before_frame();
         m_current_line = 0;
     }
 
@@ -70,8 +58,9 @@ bool ppu::ppu_impl::dot()
     case STATE::DRAWING_PIXELS:
     case STATE::HORIZONTAL_BLANK:
         // TODO Drawing
-        ++m_current_dot;
+        // m_drawing_device.draw_pixel(x, y, {});
 
+        ++m_current_dot;
         if (m_current_dot == 456)
         {
             m_current_dot = 0;
@@ -94,12 +83,10 @@ bool ppu::ppu_impl::dot()
             {
                 m_current_line = -1;
                 m_current_state = STATE::OAM_SCAN;
-                m_lcd.after_frame();
+                m_drawing_device.after_frame();
             }
         }
     }
-
-    return true;
 }
 
 // ******************************************
@@ -112,8 +99,8 @@ ppu::ppu(rw_device &rw_device, drawing_device &drawing_device)
 
 ppu::~ppu() = default;
 
-bool ppu::dot()
+void ppu::dot()
 {
     assert(m_pimpl);
-    return m_pimpl->dot();
+    m_pimpl->dot();
 }

@@ -12,7 +12,7 @@ class ppu
     ppu(rw_device &rw_device, drawing_device &drawing_device);
     ~ppu();
 
-    bool dot();
+    void dot();
     struct ppu_impl;
 
   private:

@@ -8,8 +8,8 @@ struct ppu::ppu_impl
 {
     ppu_impl(rw_device &rw_device, drawing_device &drawing_device);
     rw_device &m_rw_device;
-    drawing_device &m_lcd;
-    bool dot();
+    drawing_device &m_drawing_device;
+    void dot();
 
     enum class STATE
     {

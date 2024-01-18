@@ -7,6 +7,7 @@
 #include <iostream>
 #include <vector>
 #include <ppu.hpp>
+#include <lcd.hpp>
 
 extern std::vector<uint8_t> load_rom();
 extern std::array<uint8_t, 256> load_boot_rom();
@@ -14,6 +15,12 @@ extern std::stringstream debug_ss(registers const &reg, opcode const &op);
 
 namespace
 {
+
+bool on_key_cb(KEY k)
+{
+    if (k == KEY::ESC)
+        return true;
+}
 
 void cpu_cb(registers const &reg, opcode const &op)
 {
@@ -95,10 +102,11 @@ struct dmg : public rw_device
 
     memory_block<0xff51, 0xffff> m_RANDOM;
 
+    lcd m_lcd;
     cpu m_cpu;
     ppu m_ppu;
 
-    dmg() : m_cpu{*this, cpu_cb, {0x1D, 0xFFFE}}, m_ppu{*this}
+    dmg() : m_cpu{*this, cpu_cb, {0x1D, 0xFFFE}}, m_lcd{on_key_cb}, m_ppu{*this, m_lcd}
     {
         std::array<uint8_t, 256> const boot_rom{load_boot_rom()};
         for (int i = 0; i < boot_rom.size(); ++i)
@@ -130,8 +138,9 @@ struct dmg : public rw_device
     {
         // 1 CPU tick == 4 PPU dots
         int cc{4};
-        while (m_ppu.dot())
+        while (1)
         {
+            m_ppu.dot();
             --cc;
             if (!cc)
             {
