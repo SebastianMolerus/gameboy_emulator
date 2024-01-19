@@ -2,7 +2,6 @@
 #define PPU_IMPL_HPP
 
 #include <ppu.hpp>
-#include <lcd.hpp>
 
 struct ppu::ppu_impl
 {
@@ -10,6 +9,7 @@ struct ppu::ppu_impl
     rw_device &m_rw_device;
     drawing_device &m_drawing_device;
     void dot();
+    void draw();
 
     enum class STATE
     {

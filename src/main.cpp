@@ -16,10 +16,12 @@ extern std::stringstream debug_ss(registers const &reg, opcode const &op);
 namespace
 {
 
-bool on_key_cb(KEY k)
+bool quit{};
+
+void on_key_cb(KEY k)
 {
     if (k == KEY::ESC)
-        return true;
+        quit = true;
 }
 
 void cpu_cb(registers const &reg, opcode const &op)
@@ -138,7 +140,7 @@ struct dmg : public rw_device
     {
         // 1 CPU tick == 4 PPU dots
         int cc{4};
-        while (1)
+        while (!quit)
         {
             m_ppu.dot();
             --cc;
