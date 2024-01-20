@@ -121,3 +121,17 @@ TEST(ppu_tests, vblank_reach)
     ASSERT_EQ(p.m_current_state, ppu::ppu_impl::STATE::OAM_SCAN);
     ASSERT_EQ(p.m_current_line, -1);
 }
+
+TEST(ppu_tests, line_to_ids)
+{
+    auto res = convert_line_to_ids(0x3C7E);
+
+    ASSERT_EQ(res[0], 0);
+    ASSERT_EQ(res[1], 2);
+    ASSERT_EQ(res[2], 3);
+    ASSERT_EQ(res[3], 3);
+    ASSERT_EQ(res[4], 3);
+    ASSERT_EQ(res[5], 3);
+    ASSERT_EQ(res[6], 2);
+    ASSERT_EQ(res[7], 0);
+}

@@ -2,6 +2,9 @@
 #define PPU_IMPL_HPP
 
 #include <ppu.hpp>
+#include <array>
+
+std::array<uint8_t, 8> convert_line_to_ids(uint16_t line);
 
 struct ppu::ppu_impl
 {

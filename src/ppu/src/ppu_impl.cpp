@@ -24,7 +24,7 @@ constexpr color LIGHT_GRAY{0.867f, 0.706f, 0.71f};
 constexpr color DARK_GRAY{0.38f, 0.31f, 0.302f};
 constexpr color BLACK{};
 
-// 8x8 Pixels
+// 8 Lines X 8 Pixels
 struct tile
 {
     std::array<uint16_t, 8> m_lines;
@@ -100,7 +100,6 @@ tile read_tile(uint16_t offset, rw_device &d)
 {
     const uint16_t tile_addr = BG_WINDOW_TILE_DATA_AREA + (offset * sizeof(tile));
     tile result{};
-
     uint16_t new_line{};
     for (int i = 0; i < 8; ++i)
     {
@@ -113,22 +112,23 @@ tile read_tile(uint16_t offset, rw_device &d)
     return result;
 }
 
-uint8_t convert_line_to_ids(uint16_t line)
+std::array<uint8_t, 8> convert_line_to_ids(uint16_t line)
 {
-    uint8_t const l = line >> 8; // a b c
-    uint8_t const r = line;      // i j k
+    uint8_t const l = line >> 8; // a b c d ...
+    uint8_t const r = line;      // i j k l ...
 
-    // ia jb kc
-    uint8_t id{};
-
-    for (int i = 0; i < 8; i += 2)
+    // result[i] = ia jb kc
+    std::array<uint8_t, 8> result{};
+    for (int i = 0; i < 8; ++i)
     {
+        uint8_t id{};
         if (checkbit(r, i))
-            setbit(id, i);
+            setbit(id, 1);
         if (checkbit(l, i))
-            setbit(id, i + 1);
+            setbit(id, 0);
+        result[i] = id;
     }
-    return id;
+    return result;
 }
 
 void draw_ids(int x, int y, drawing_device &d, uint8_t ids)
@@ -137,21 +137,10 @@ void draw_ids(int x, int y, drawing_device &d, uint8_t ids)
 
 void draw_tile(int x, int y, drawing_device &d, tile const &t)
 {
-
-    for (int j = y; j < y + 8; ++j)
-        for (int i = x; i < x + 8; ++i)
-        {
-            uint8_t ids = convert_line_to_ids(t.m_lines[j]);
-        }
 }
 
 void ppu::ppu_impl::draw()
 {
-    for (int offset = 0; offset < 384; ++offset)
-    {
-        // uint8_t const tile_idx = m_rw_device.read(WINDOW_TILE_MAP_AREA + offset, device::PPU);
-        tile t = read_tile(offset, m_rw_device);
-    }
 }
 
 // ******************************************
