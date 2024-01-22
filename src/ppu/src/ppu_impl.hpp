@@ -4,7 +4,14 @@
 #include <ppu.hpp>
 #include <array>
 
+// 8 Lines X 8 Pixels
+struct tile
+{
+    std::array<uint16_t, 8> m_lines;
+};
+
 std::array<uint8_t, 8> convert_line_to_ids(uint16_t line);
+tile read_tile(uint16_t offset, rw_device &d);
 
 struct ppu::ppu_impl
 {

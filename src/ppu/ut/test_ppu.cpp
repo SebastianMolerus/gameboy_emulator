@@ -125,7 +125,6 @@ TEST(ppu_tests, vblank_reach)
 TEST(ppu_tests, line_to_ids)
 {
     auto res = convert_line_to_ids(0x3C7E);
-
     ASSERT_EQ(res[0], 0);
     ASSERT_EQ(res[1], 2);
     ASSERT_EQ(res[2], 3);
@@ -134,4 +133,10 @@ TEST(ppu_tests, line_to_ids)
     ASSERT_EQ(res[5], 3);
     ASSERT_EQ(res[6], 2);
     ASSERT_EQ(res[7], 0);
+}
+
+TEST(ppu_tests, read_tile)
+{
+    mock_rw_device memory_mock;
+    tile t = read_tile(0, memory_mock);
 }

@@ -24,12 +24,6 @@ constexpr color LIGHT_GRAY{0.867f, 0.706f, 0.71f};
 constexpr color DARK_GRAY{0.38f, 0.31f, 0.302f};
 constexpr color BLACK{};
 
-// 8 Lines X 8 Pixels
-struct tile
-{
-    std::array<uint16_t, 8> m_lines;
-};
-
 } // namespace
 
 ppu::ppu_impl::ppu_impl(rw_device &rw_device, drawing_device &drawing_device)
@@ -96,22 +90,6 @@ void ppu::ppu_impl::dot()
     }
 }
 
-tile read_tile(uint16_t offset, rw_device &d)
-{
-    const uint16_t tile_addr = BG_WINDOW_TILE_DATA_AREA + (offset * sizeof(tile));
-    tile result{};
-    uint16_t new_line{};
-    for (int i = 0; i < 8; ++i)
-    {
-        new_line = d.read(tile_addr, device::PPU);
-        new_line <<= 8;
-        new_line |= d.read(tile_addr + 1 + i, device::PPU);
-        result.m_lines[i] = new_line;
-    }
-
-    return result;
-}
-
 std::array<uint8_t, 8> convert_line_to_ids(uint16_t line)
 {
     uint8_t const l = line >> 8; // a b c d ...
@@ -127,6 +105,23 @@ std::array<uint8_t, 8> convert_line_to_ids(uint16_t line)
         if (checkbit(l, i))
             setbit(id, 0);
         result[i] = id;
+    }
+    return result;
+}
+
+// Read tile ( 16B ) from
+// BG_WINDOW_TILE_DATA_AREA + offset
+tile read_tile(uint16_t offset, rw_device &d)
+{
+    const uint16_t tile_addr = BG_WINDOW_TILE_DATA_AREA + (offset * sizeof(tile));
+    tile result{};
+    uint16_t new_line{};
+    for (int i = 0; i < 8; i += 2)
+    {
+        new_line = d.read(tile_addr, device::PPU);
+        new_line <<= 8;
+        new_line |= d.read(tile_addr + 1 + i, device::PPU);
+        result.m_lines[i] = new_line;
     }
     return result;
 }
