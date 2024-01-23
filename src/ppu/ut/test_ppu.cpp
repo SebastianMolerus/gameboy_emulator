@@ -133,10 +133,49 @@ TEST(ppu_tests, line_to_ids)
     ASSERT_EQ(res[5], 3);
     ASSERT_EQ(res[6], 2);
     ASSERT_EQ(res[7], 0);
+
+    res = convert_line_to_ids(0x7e5e);
+    ASSERT_EQ(res[0], 0);
+    ASSERT_EQ(res[1], 3);
+    ASSERT_EQ(res[2], 1);
+    ASSERT_EQ(res[3], 3);
+    ASSERT_EQ(res[4], 3);
+    ASSERT_EQ(res[5], 3);
+    ASSERT_EQ(res[6], 3);
+    ASSERT_EQ(res[7], 0);
 }
 
 TEST(ppu_tests, read_tile)
 {
     mock_rw_device memory_mock;
+
+    EXPECT_CALL(memory_mock, read(_, device::PPU))
+        .WillOnce(Return(0x3C))
+        .WillOnce(Return(0x7E))
+        .WillOnce(Return(0x42))
+        .WillOnce(Return(0x42))
+        .WillOnce(Return(0x42))
+        .WillOnce(Return(0x42))
+        .WillOnce(Return(0x42))
+        .WillOnce(Return(0x42))
+        .WillOnce(Return(0x7E))
+        .WillOnce(Return(0x5E))
+        .WillOnce(Return(0x7E))
+        .WillOnce(Return(0x0A))
+        .WillOnce(Return(0x7C))
+        .WillOnce(Return(0x56))
+        .WillOnce(Return(0x38))
+        .WillOnce(Return(0x7C));
+
     tile t = read_tile(0, memory_mock);
+
+    ASSERT_EQ(t.m_lines.size(), 8);
+    ASSERT_EQ(t.m_lines[0], 0x3c7e);
+    ASSERT_EQ(t.m_lines[1], 0x4242);
+    ASSERT_EQ(t.m_lines[2], 0x4242);
+    ASSERT_EQ(t.m_lines[3], 0x4242);
+    ASSERT_EQ(t.m_lines[4], 0x7e5e);
+    ASSERT_EQ(t.m_lines[5], 0x7e0a);
+    ASSERT_EQ(t.m_lines[6], 0x7c56);
+    ASSERT_EQ(t.m_lines[7], 0x387c);
 }

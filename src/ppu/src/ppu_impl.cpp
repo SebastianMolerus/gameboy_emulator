@@ -15,7 +15,7 @@ extern bool OBJ_ENABLE;                   // BIT1
 extern bool BG_WINDOW_ENABLE;             // BIT0
 extern void lcd_control_settings(uint8_t lcd_ctrl_value);
 
-static constexpr uint16_t BGP{0xFF47}; // pallete
+uint16_t BGP{}; // pallete
 
 namespace
 {
@@ -23,6 +23,8 @@ constexpr color WHITE{1.f, 1.f, 1.f};
 constexpr color LIGHT_GRAY{0.867f, 0.706f, 0.71f};
 constexpr color DARK_GRAY{0.38f, 0.31f, 0.302f};
 constexpr color BLACK{};
+
+constexpr int TILE_MAP_SIZE{1024};
 
 } // namespace
 
@@ -35,6 +37,8 @@ void ppu::ppu_impl::dot()
 {
     const uint8_t lcd_ctrl = m_rw_device.read(LCD_CTRL, device::PPU);
     lcd_control_settings(lcd_ctrl);
+    // BGP = m_rw_device.read(0xFF47, device::PPU);
+    BGP = 0b11100100;
 
     if (!LCD_PPU_ENABLE)
     {
@@ -100,30 +104,72 @@ std::array<uint8_t, 8> convert_line_to_ids(uint16_t line)
     for (int i = 0; i < 8; ++i)
     {
         uint8_t id{};
-        if (checkbit(r, i))
+        if (checkbit(r, 7 - i))
             setbit(id, 1);
-        if (checkbit(l, i))
+        if (checkbit(l, 7 - i))
             setbit(id, 0);
         result[i] = id;
     }
     return result;
 }
 
-// Read tile ( 16B ) from
-// BG_WINDOW_TILE_DATA_AREA + offset
-tile read_tile(uint16_t offset, rw_device &d)
+// Read tile ( 16B ) from addr
+tile read_tile(uint16_t addr, rw_device &d)
 {
-    const uint16_t tile_addr = BG_WINDOW_TILE_DATA_AREA + (offset * sizeof(tile));
     tile result{};
     uint16_t new_line{};
-    for (int i = 0; i < 8; i += 2)
+    int idx{};
+    for (int i = 0; i < 16; i += 2)
     {
-        new_line = d.read(tile_addr, device::PPU);
+        new_line = d.read(addr + i, device::PPU);
         new_line <<= 8;
-        new_line |= d.read(tile_addr + 1 + i, device::PPU);
-        result.m_lines[i] = new_line;
+        new_line |= d.read(addr + 1 + i, device::PPU);
+        result.m_lines[idx++] = new_line;
     }
     return result;
+}
+
+color get_color_pallete_based(uint8_t id)
+{
+    uint8_t val{};
+    switch (id)
+    {
+    case 3:
+        if (checkbit(BGP, 7))
+            setbit(val, 1);
+        if (checkbit(BGP, 6))
+            setbit(val, 0);
+        break;
+    case 2:
+        if (checkbit(BGP, 5))
+            setbit(val, 1);
+        if (checkbit(BGP, 4))
+            setbit(val, 0);
+        break;
+    case 1:
+        if (checkbit(BGP, 3))
+            setbit(val, 1);
+        if (checkbit(BGP, 2))
+            setbit(val, 0);
+        break;
+    case 0:
+        if (checkbit(BGP, 1))
+            setbit(val, 1);
+        if (checkbit(BGP, 0))
+            setbit(val, 0);
+        break;
+    default:
+        assert(false);
+    }
+
+    if (val == 0)
+        return WHITE;
+    else if (val == 1)
+        return LIGHT_GRAY;
+    else if (val == 2)
+        return DARK_GRAY;
+    else
+        return BLACK;
 }
 
 void draw_ids(int x, int y, drawing_device &d, uint8_t ids)
@@ -136,6 +182,40 @@ void draw_tile(int x, int y, drawing_device &d, tile const &t)
 
 void ppu::ppu_impl::draw()
 {
+    static int offset{};
+    static int cord_x{};
+    static int cord_y{};
+
+    int const index = m_rw_device.read(WINDOW_TILE_MAP_AREA + offset, device::PPU);
+
+    if (index != 0)
+    {
+
+        tile t = read_tile((index * sizeof(tile)) + BG_WINDOW_TILE_DATA_AREA, m_rw_device);
+        for (int y = 0; y < 8; ++y)
+        {
+            auto ids = convert_line_to_ids(t.m_lines[y]);
+
+            for (int i = 0; i < 8; ++i)
+            {
+                m_drawing_device.draw_pixel(i + cord_x, y + cord_y, get_color_pallete_based(ids[i]));
+            }
+        }
+
+        cord_x += 8;
+        if (cord_x == 152)
+        {
+            cord_y += 8;
+            cord_x = 0;
+        }
+    }
+
+    ++offset;
+    if (offset == TILE_MAP_SIZE)
+    {
+        offset = 0;
+        cord_x = cord_y = 0;
+    }
 }
 
 // ******************************************
