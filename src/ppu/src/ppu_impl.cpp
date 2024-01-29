@@ -2,6 +2,7 @@
 #include "ppu_impl.hpp"
 #include <cassert>
 #include <array>
+#include "pixel_fetcher.hpp"
 
 // FF40 — LCDC: LCD control
 static constexpr uint16_t LCD_CTRL_ADDR{0xFF40};
@@ -43,7 +44,7 @@ void ppu::ppu_impl::dot()
 
     if (m_current_line == -1)
     {
-        m_drawing_device.before_frame();
+        // m_drawing_device.before_frame();
         m_current_line = 0;
     }
 
@@ -84,29 +85,10 @@ void ppu::ppu_impl::dot()
             {
                 m_current_line = -1;
                 m_current_state = STATE::OAM_SCAN;
-                m_drawing_device.after_frame();
+                // m_drawing_device.after_frame();
             }
         }
     }
-}
-
-std::array<uint8_t, 8> convert_line_to_ids(uint16_t line)
-{
-    uint8_t const l = line >> 8; // a b c d ...
-    uint8_t const r = line;      // i j k l ...
-
-    // result[i] = ia jb kc
-    std::array<uint8_t, 8> result{};
-    for (int i = 0; i < 8; ++i)
-    {
-        uint8_t id{};
-        if (checkbit(r, 7 - i))
-            setbit(id, 1);
-        if (checkbit(l, 7 - i))
-            setbit(id, 0);
-        result[i] = id;
-    }
-    return result;
 }
 
 // Read tile ( 16B ) from addr
@@ -125,56 +107,11 @@ tile read_tile(uint16_t addr, rw_device &d)
     return result;
 }
 
-color get_color_pallete_based(uint8_t id)
-{
-    constexpr color WHITE{1.f, 1.f, 1.f};
-    constexpr color LIGHT_GRAY{0.867f, 0.706f, 0.71f};
-    constexpr color DARK_GRAY{0.38f, 0.31f, 0.302f};
-    constexpr color BLACK{};
-
-    uint8_t val{};
-    switch (id)
-    {
-    case 3:
-        if (checkbit(BGP, 7))
-            setbit(val, 1);
-        if (checkbit(BGP, 6))
-            setbit(val, 0);
-        break;
-    case 2:
-        if (checkbit(BGP, 5))
-            setbit(val, 1);
-        if (checkbit(BGP, 4))
-            setbit(val, 0);
-        break;
-    case 1:
-        if (checkbit(BGP, 3))
-            setbit(val, 1);
-        if (checkbit(BGP, 2))
-            setbit(val, 0);
-        break;
-    case 0:
-        if (checkbit(BGP, 1))
-            setbit(val, 1);
-        if (checkbit(BGP, 0))
-            setbit(val, 0);
-        break;
-    default:
-        assert(false);
-    }
-
-    if (val == 0)
-        return WHITE;
-    else if (val == 1)
-        return LIGHT_GRAY;
-    else if (val == 2)
-        return DARK_GRAY;
-    else
-        return BLACK;
-}
-
 void ppu::ppu_impl::draw()
 {
+    pixel_fetcher pf{m_rw_device, m_drawing_device};
+
+    pf.dot();
 }
 
 // ******************************************
