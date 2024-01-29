@@ -1,4 +1,4 @@
-add_library(ppu STATIC src/ppu_impl.cpp src/lcd_ctrl.cpp src/pixel_fetcher.cpp)
+add_library(ppu STATIC src/ppu_impl.cpp src/pixel_fetcher.cpp)
 
 target_include_directories(ppu PUBLIC ${CMAKE_CURRENT_LIST_DIR}/include)
 

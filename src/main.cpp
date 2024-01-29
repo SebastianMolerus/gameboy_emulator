@@ -26,10 +26,6 @@ void on_key_cb(KEY k)
 
 void cpu_cb(registers const &reg, opcode const &op)
 {
-    if (reg.m_PC.m_u16 == 0x40)
-    {
-        int a = 10;
-    }
     std::cerr << debug_ss(reg, op).str();
 }
 
@@ -54,10 +50,7 @@ uint8_t dmg_memory_read(uint16_t addr)
 {
     for (auto &area : DMG_MEMORY)
         if (addr >= area.m_beg && addr <= area.m_end)
-        {
-            auto a = addr - area.m_beg;
-            return area.m_mem[a];
-        }
+            return area.m_mem[addr - area.m_beg];
 
     assert(false);
     static uint8_t def{0xFF};
@@ -132,8 +125,7 @@ struct dmg : public rw_device
 
     uint8_t read(uint16_t addr, device d) override
     {
-        auto val = dmg_memory_read(addr);
-        return val;
+        return dmg_memory_read(addr);
     }
 
     void write(uint16_t addr, uint8_t data, device d) override

@@ -2,15 +2,6 @@
 #define PPU_IMPL_HPP
 
 #include <ppu.hpp>
-#include <array>
-
-// 8 Lines X 8 Pixels
-struct tile
-{
-    std::array<uint16_t, 8> m_lines;
-};
-
-tile read_tile(uint16_t offset, rw_device &d);
 
 struct ppu::ppu_impl
 {

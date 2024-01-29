@@ -6,7 +6,6 @@
 #include <array>
 
 size_t get_tile_offset(int pix_x, int pix_y);
-size_t get_tile_data_offset(int pix_x, int pix_y);
 uint16_t get_tile_line(rw_device &r, int pix_x, int pix_y);
 std::array<uint8_t, 8> convert_line_to_ids(uint16_t line);
 

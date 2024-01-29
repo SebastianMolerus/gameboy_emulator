@@ -10,6 +10,7 @@ constexpr uint16_t LCD_CTRL_addr{0xFF40};
 
 uint16_t bg_tile_map_addr{};
 uint16_t tile_data_addr{};
+uint8_t bgp{};
 
 void update_addr(rw_device &r)
 {
@@ -23,6 +24,8 @@ void update_addr(rw_device &r)
         tile_data_addr = 0x8000;
     else
         tile_data_addr = 0x8800;
+
+    bgp = r.read(0xFF47, device::PPU);
 }
 
 color get_color_pallete_based(uint8_t id)
@@ -32,33 +35,31 @@ color get_color_pallete_based(uint8_t id)
     constexpr color DARK_GRAY{0.38f, 0.31f, 0.302f};
     constexpr color BLACK{};
 
-    auto BGP = 0xfc;
-
     uint8_t val{};
     switch (id)
     {
     case 3:
-        if (checkbit(BGP, 7))
+        if (checkbit(bgp, 7))
             setbit(val, 1);
-        if (checkbit(BGP, 6))
+        if (checkbit(bgp, 6))
             setbit(val, 0);
         break;
     case 2:
-        if (checkbit(BGP, 5))
+        if (checkbit(bgp, 5))
             setbit(val, 1);
-        if (checkbit(BGP, 4))
+        if (checkbit(bgp, 4))
             setbit(val, 0);
         break;
     case 1:
-        if (checkbit(BGP, 3))
+        if (checkbit(bgp, 3))
             setbit(val, 1);
-        if (checkbit(BGP, 2))
+        if (checkbit(bgp, 2))
             setbit(val, 0);
         break;
     case 0:
-        if (checkbit(BGP, 1))
+        if (checkbit(bgp, 1))
             setbit(val, 1);
-        if (checkbit(BGP, 0))
+        if (checkbit(bgp, 0))
             setbit(val, 0);
         break;
     default:
@@ -103,11 +104,6 @@ size_t get_tile_offset(int pix_x, int pix_y)
     return pix_x / 8.0f + static_cast<int>(pix_y / 8.0f) * 32;
 }
 
-size_t get_tile_data_offset(int pix_y)
-{
-    return (pix_y % 8) * 2;
-}
-
 uint16_t get_tile_line(rw_device &r, int pix_x, int pix_y)
 {
     size_t const tile_offset{get_tile_offset(pix_x, pix_y)};
@@ -115,7 +111,7 @@ uint16_t get_tile_line(rw_device &r, int pix_x, int pix_y)
     size_t const tile_index{r.read(bg_tile_map_addr + tile_offset, device::PPU)};
 
     constexpr size_t tile_size{16};
-    size_t tile_line_addr = get_tile_data_offset(pix_y) + (tile_index * tile_size) + tile_data_addr;
+    size_t tile_line_addr = ((pix_y % 8) * 2) + (tile_index * tile_size) + tile_data_addr;
     uint8_t lo = r.read(tile_line_addr++, device::PPU);
     uint8_t hi = r.read(tile_line_addr, device::PPU);
 
