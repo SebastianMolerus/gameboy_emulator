@@ -4,7 +4,7 @@
 #include <array>
 
 // FF40 — LCDC: LCD control
-static constexpr uint16_t LCD_CTRL{0xFF40};
+static constexpr uint16_t LCD_CTRL_ADDR{0xFF40};
 extern bool LCD_PPU_ENABLE;               // BIT7
 extern uint16_t WINDOW_TILE_MAP_AREA;     // BIT6
 extern bool WINDOW_ENABLE;                // BIT5
@@ -19,10 +19,6 @@ uint16_t BGP{}; // pallete
 
 namespace
 {
-constexpr color WHITE{1.f, 1.f, 1.f};
-constexpr color LIGHT_GRAY{0.867f, 0.706f, 0.71f};
-constexpr color DARK_GRAY{0.38f, 0.31f, 0.302f};
-constexpr color BLACK{};
 
 constexpr int TILE_MAP_SIZE{1024};
 
@@ -35,7 +31,7 @@ ppu::ppu_impl::ppu_impl(rw_device &rw_device, drawing_device &drawing_device)
 
 void ppu::ppu_impl::dot()
 {
-    const uint8_t lcd_ctrl = m_rw_device.read(LCD_CTRL, device::PPU);
+    const uint8_t lcd_ctrl = m_rw_device.read(LCD_CTRL_ADDR, device::PPU);
     lcd_control_settings(lcd_ctrl);
     // BGP = m_rw_device.read(0xFF47, device::PPU);
     BGP = 0b11100100;
@@ -131,6 +127,11 @@ tile read_tile(uint16_t addr, rw_device &d)
 
 color get_color_pallete_based(uint8_t id)
 {
+    constexpr color WHITE{1.f, 1.f, 1.f};
+    constexpr color LIGHT_GRAY{0.867f, 0.706f, 0.71f};
+    constexpr color DARK_GRAY{0.38f, 0.31f, 0.302f};
+    constexpr color BLACK{};
+
     uint8_t val{};
     switch (id)
     {
@@ -172,50 +173,8 @@ color get_color_pallete_based(uint8_t id)
         return BLACK;
 }
 
-void draw_ids(int x, int y, drawing_device &d, uint8_t ids)
-{
-}
-
-void draw_tile(int x, int y, drawing_device &d, tile const &t)
-{
-}
-
 void ppu::ppu_impl::draw()
 {
-    static int offset{};
-    static int cord_x{};
-    static int cord_y{};
-
-    int const index = m_rw_device.read(WINDOW_TILE_MAP_AREA + offset, device::PPU);
-
-    if (index != 0)
-    {
-
-        tile t = read_tile((index * sizeof(tile)) + BG_WINDOW_TILE_DATA_AREA, m_rw_device);
-        for (int y = 0; y < 8; ++y)
-        {
-            auto ids = convert_line_to_ids(t.m_lines[y]);
-
-            for (int i = 0; i < 8; ++i)
-            {
-                m_drawing_device.draw_pixel(i + cord_x, y + cord_y, get_color_pallete_based(ids[i]));
-            }
-        }
-
-        cord_x += 8;
-        if (cord_x == 152)
-        {
-            cord_y += 8;
-            cord_x = 0;
-        }
-    }
-
-    ++offset;
-    if (offset == TILE_MAP_SIZE)
-    {
-        offset = 0;
-        cord_x = cord_y = 0;
-    }
 }
 
 // ******************************************

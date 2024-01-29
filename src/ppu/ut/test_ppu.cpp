@@ -1,6 +1,7 @@
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
 #include "../src/ppu_impl.hpp"
+#include "../src/pixel_fetcher.hpp"
 #include <common.hpp>
 
 using ::testing::_;
@@ -178,4 +179,54 @@ TEST(ppu_tests, read_tile)
     ASSERT_EQ(t.m_lines[5], 0x7e0a);
     ASSERT_EQ(t.m_lines[6], 0x7c56);
     ASSERT_EQ(t.m_lines[7], 0x387c);
+}
+
+TEST(ppu_tests, get_tile_offset)
+{
+    ASSERT_EQ(get_tile_offset(0, 0), 0);
+    ASSERT_EQ(get_tile_offset(7, 7), 0);
+    ASSERT_EQ(get_tile_offset(8, 7), 1);
+    ASSERT_EQ(get_tile_offset(15, 7), 1);
+    ASSERT_EQ(get_tile_offset(16, 7), 2);
+    ASSERT_EQ(get_tile_offset(23, 7), 2);
+    ASSERT_EQ(get_tile_offset(24, 7), 3);
+
+    ASSERT_EQ(get_tile_offset(247, 7), 30);
+
+    // last tile in first row
+    ASSERT_EQ(get_tile_offset(248, 7), 31);
+    ASSERT_EQ(get_tile_offset(255, 7), 31);
+
+    // first tile in second row
+    ASSERT_EQ(get_tile_offset(0, 8), 32);
+    ASSERT_EQ(get_tile_offset(7, 8), 32);
+    ASSERT_EQ(get_tile_offset(8, 8), 33);
+
+    // first tile in third row
+    ASSERT_EQ(get_tile_offset(0, 16), 64);
+    ASSERT_EQ(get_tile_offset(7, 16), 64);
+    ASSERT_EQ(get_tile_offset(8, 16), 65);
+
+    // Last pixel
+    ASSERT_EQ(get_tile_offset(255, 255), 32 * 32 - 1);
+}
+
+TEST(ppu_tests, get_tile_data_offset)
+{
+    // Tile : 16B
+    // 8Lines x 2B each
+    ASSERT_EQ(get_tile_data_offset(0, 0), 0);
+    ASSERT_EQ(get_tile_data_offset(0, 1), 2);
+    ASSERT_EQ(get_tile_data_offset(0, 4), 8);
+
+    ASSERT_EQ(get_tile_data_offset(8, 1) + 16, 18);
+    ASSERT_EQ(get_tile_data_offset(8, 2) + 16, 20);
+    ASSERT_EQ(get_tile_data_offset(8, 7) + 16, 30);
+
+    ASSERT_EQ(get_tile_data_offset(16, 0) + 32, 32);
+    ASSERT_EQ(get_tile_data_offset(17, 0) + 32, 32);
+    ASSERT_EQ(get_tile_data_offset(18, 0) + 32, 32);
+
+    ASSERT_EQ(get_tile_data_offset(16, 1) + 32, 34);
+    ASSERT_EQ(get_tile_data_offset(16, 7) + 32, 46);
 }
