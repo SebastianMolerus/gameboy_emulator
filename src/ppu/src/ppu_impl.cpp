@@ -20,7 +20,7 @@ void ppu::ppu_impl::dot()
 
     if (m_current_line == -1)
     {
-        // m_drawing_device.before_frame();
+        m_drawing_device.before_frame();
         m_current_line = 0;
     }
 
@@ -34,7 +34,7 @@ void ppu::ppu_impl::dot()
         break;
 
     case STATE::DRAWING_PIXELS:
-        draw();
+        // draw();
         ++m_current_dot;
         if (m_current_dot == 456)
         {
@@ -61,7 +61,7 @@ void ppu::ppu_impl::dot()
             {
                 m_current_line = -1;
                 m_current_state = STATE::OAM_SCAN;
-                // m_drawing_device.after_frame();
+                m_drawing_device.after_frame();
             }
         }
     }
