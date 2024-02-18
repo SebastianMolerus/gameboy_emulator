@@ -32,6 +32,7 @@ class lcd : public drawing_device
 
     void before_frame();
     void draw_pixel(int x, int y, color c);
+    void push_pixel(color c);
     void after_frame();
 };
 

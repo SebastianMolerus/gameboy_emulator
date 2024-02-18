@@ -2,12 +2,14 @@
 #define PPU_IMPL_HPP
 
 #include <ppu.hpp>
+#include "pixel_fetcher.hpp"
 
 struct ppu::ppu_impl
 {
     ppu_impl(rw_device &rw_device, drawing_device &drawing_device);
     rw_device &m_rw_device;
     drawing_device &m_drawing_device;
+    pixel_fetcher pf;
     void dot();
     void draw();
 

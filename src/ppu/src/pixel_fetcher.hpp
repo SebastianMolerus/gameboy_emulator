@@ -3,27 +3,29 @@
 
 #include <common.hpp>
 #include <queue>
+#include <array>
 
 class pixel_fetcher
 {
   public:
+    enum class LINE_DRAWING_STATUS
+    {
+        IN_PROGRESS,
+        DONE
+    };
+
     explicit pixel_fetcher(rw_device &rw_device, drawing_device &dd);
-    void dot();
+    LINE_DRAWING_STATUS dot(uint8_t screen_line);
 
   private:
-    std::queue<color> q;
+    std::queue<color> pixel_fifo;
+    std::array<color, 8> pixels;
 
     uint8_t x{};
-    uint8_t y{};
 
-    int cc{};
+    uint8_t pushed_px{};
 
-    uint16_t tile_line_addr{};
-    uint8_t tile_lo{};
-    uint8_t tile_hi{};
-
-    uint8_t get_x();
-    uint8_t get_y();
+    int dot_counter{};
 
     drawing_device &dd;
     rw_device &rw;

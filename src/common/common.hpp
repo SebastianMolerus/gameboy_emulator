@@ -31,6 +31,7 @@ struct drawing_device
     virtual void before_frame() = 0;
     virtual void after_frame() = 0;
     virtual void draw_pixel(int x, int y, color c) = 0;
+    virtual void push_pixel(color c) = 0;
 };
 
 #endif

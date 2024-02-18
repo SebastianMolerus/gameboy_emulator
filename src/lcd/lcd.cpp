@@ -21,6 +21,8 @@ const unsigned int SCR_WIDTH = 960;  // 160 * 6
 const unsigned int SCR_HEIGHT = 864; // 144 * 6
 glm::mat4 const projection = glm::ortho<float>(0.0f, SCR_WIDTH, SCR_HEIGHT, 0.0f, -0.1f, 0.1f);
 
+int x, y;
+
 const char *vertexShaderSource =
     "#version 330 core\n"
     "layout (location = 0) in vec3 aPos;\n"
@@ -186,6 +188,19 @@ void lcd::draw_pixel(int x, int y, color c)
     glUniformMatrix4fv(transform_loc, 1, GL_FALSE, glm::value_ptr(transform));
     glUniform3fv(pixel_color_loc, 1, glm::value_ptr(v));
     glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
+}
+
+void lcd::push_pixel(color c)
+{
+    draw_pixel(x, y, c);
+    ++x;
+    if (x == 160)
+    {
+        x = 0;
+        ++y;
+        if (y == 144)
+            y = 0;
+    }
 }
 
 void lcd::after_frame()

@@ -23,6 +23,7 @@ class mock_drawing_device : public drawing_device
     MOCK_METHOD((void), before_frame, (), (override));
     MOCK_METHOD((void), after_frame, (), (override));
     MOCK_METHOD((void), draw_pixel, (int, int, color), (override));
+    MOCK_METHOD((void), push_pixel, (color), (override));
 };
 
 static constexpr uint16_t LCD_CTRL{0xFF40};

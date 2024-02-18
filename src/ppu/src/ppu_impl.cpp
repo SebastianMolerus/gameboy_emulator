@@ -5,7 +5,7 @@
 #include "pixel_fetcher.hpp"
 
 ppu::ppu_impl::ppu_impl(rw_device &rw_device, drawing_device &drawing_device)
-    : m_rw_device{rw_device}, m_drawing_device{drawing_device}
+    : m_rw_device{rw_device}, m_drawing_device{drawing_device}, pf{rw_device, drawing_device}
 {
 }
 
@@ -34,6 +34,12 @@ void ppu::ppu_impl::dot()
         break;
 
     case STATE::DRAWING_PIXELS:
+        if (pf.dot(m_current_line) == pixel_fetcher::LINE_DRAWING_STATUS::DONE)
+            m_current_state = STATE::HORIZONTAL_BLANK;
+        ++m_current_dot;
+        break;
+
+    case STATE::HORIZONTAL_BLANK:
         ++m_current_dot;
         if (m_current_dot == 456)
         {
@@ -44,10 +50,6 @@ void ppu::ppu_impl::dot()
             else
                 m_current_state = STATE::OAM_SCAN;
         }
-        break;
-
-    case STATE::HORIZONTAL_BLANK:
-        // TODO
         break;
     case STATE::VERTICAL_BLANK:
 
