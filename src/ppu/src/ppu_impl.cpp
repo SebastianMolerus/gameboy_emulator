@@ -34,7 +34,6 @@ void ppu::ppu_impl::dot()
         break;
 
     case STATE::DRAWING_PIXELS:
-        // draw();
         ++m_current_dot;
         if (m_current_dot == 456)
         {
@@ -65,12 +64,6 @@ void ppu::ppu_impl::dot()
             }
         }
     }
-}
-
-void ppu::ppu_impl::draw()
-{
-    pixel_fetcher pf{m_rw_device, m_drawing_device};
-    pf.dot();
 }
 
 // ******************************************

@@ -2,9 +2,11 @@
 #include <gmock/gmock.h>
 #include "../src/ppu_impl.hpp"
 #include "../src/pixel_fetcher.hpp"
+#include "../src/tile_info.hpp"
 #include <common.hpp>
 
 using ::testing::_;
+using ::testing::Eq;
 using ::testing::NiceMock;
 using ::testing::Return;
 
@@ -35,7 +37,9 @@ TEST(ppu_tests, LCD_is_disabled)
     constexpr int dot_count{500};
     constexpr uint8_t LDC_DISABLED{0x7F};
 
-    EXPECT_CALL(memory_mock, read(LCD_CTRL, device::PPU)).Times(dot_count).WillRepeatedly(Return(LDC_DISABLED));
+    EXPECT_CALL(memory_mock, read(LCD_CTRL, device::PPU))
+        .Times(dot_count)
+        .WillRepeatedly(Return(LDC_DISABLED));
     // No write to memory
     EXPECT_CALL(memory_mock, write(_, _, _)).Times(0);
     // No Draw
@@ -121,57 +125,4 @@ TEST(ppu_tests, vblank_reach)
 
     ASSERT_EQ(p.m_current_state, ppu::ppu_impl::STATE::OAM_SCAN);
     ASSERT_EQ(p.m_current_line, -1);
-}
-
-TEST(ppu_tests, line_to_ids)
-{
-    auto res = convert_line_to_ids(0x3C7E);
-    ASSERT_EQ(res[0], 0);
-    ASSERT_EQ(res[1], 2);
-    ASSERT_EQ(res[2], 3);
-    ASSERT_EQ(res[3], 3);
-    ASSERT_EQ(res[4], 3);
-    ASSERT_EQ(res[5], 3);
-    ASSERT_EQ(res[6], 2);
-    ASSERT_EQ(res[7], 0);
-
-    res = convert_line_to_ids(0x7e5e);
-    ASSERT_EQ(res[0], 0);
-    ASSERT_EQ(res[1], 3);
-    ASSERT_EQ(res[2], 1);
-    ASSERT_EQ(res[3], 3);
-    ASSERT_EQ(res[4], 3);
-    ASSERT_EQ(res[5], 3);
-    ASSERT_EQ(res[6], 3);
-    ASSERT_EQ(res[7], 0);
-}
-
-TEST(ppu_tests, get_tile_offset)
-{
-    ASSERT_EQ(get_tile_offset(0, 0), 0);
-    ASSERT_EQ(get_tile_offset(7, 7), 0);
-    ASSERT_EQ(get_tile_offset(8, 7), 1);
-    ASSERT_EQ(get_tile_offset(15, 7), 1);
-    ASSERT_EQ(get_tile_offset(16, 7), 2);
-    ASSERT_EQ(get_tile_offset(23, 7), 2);
-    ASSERT_EQ(get_tile_offset(24, 7), 3);
-
-    ASSERT_EQ(get_tile_offset(247, 7), 30);
-
-    // last tile in first row
-    ASSERT_EQ(get_tile_offset(248, 7), 31);
-    ASSERT_EQ(get_tile_offset(255, 7), 31);
-
-    // first tile in second row
-    ASSERT_EQ(get_tile_offset(0, 8), 32);
-    ASSERT_EQ(get_tile_offset(7, 8), 32);
-    ASSERT_EQ(get_tile_offset(8, 8), 33);
-
-    // first tile in third row
-    ASSERT_EQ(get_tile_offset(0, 16), 64);
-    ASSERT_EQ(get_tile_offset(7, 16), 64);
-    ASSERT_EQ(get_tile_offset(8, 16), 65);
-
-    // Last pixel
-    ASSERT_EQ(get_tile_offset(255, 255), 32 * 32 - 1);
 }
