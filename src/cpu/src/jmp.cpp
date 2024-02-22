@@ -130,7 +130,7 @@ void cpu::cpu_impl::RET_CC()
 
 void cpu::cpu_impl::RETI()
 {
-    m_IME = true;
+    m_IME = IME::ENABLED;
     RET();
 }
 

@@ -22,7 +22,18 @@ struct cpu::cpu_impl
     opcode m_op;
     cb m_callback;
     uint8_t m_T_states{1};
-    bool m_IME{};
+    enum class IME
+    {
+        ENABLED,
+        WANT_ENABLE,
+        ENABLING_IN_PROGRESS,
+        DISABLED,
+        WANT_DISABLE,
+        DISABLING_IN_PROGRESS
+    };
+    IME m_IME;
+    void adjust_ime();
+
     bool m_pref{};
 
     void tick();

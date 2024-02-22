@@ -13,21 +13,28 @@ namespace
 using mapper_T = std::unordered_map<const char *, cpu::cpu_impl::instruction>;
 using mapper_const_iter = mapper_T::const_iterator;
 
-const mapper_T mapper{
-    {"LD", &cpu::cpu_impl::ld},         {"LDH", &cpu::cpu_impl::ld},       {"PUSH", &cpu::cpu_impl::ld},
-    {"POP", &cpu::cpu_impl::ld},        {"JP", &cpu::cpu_impl::jmp},       {"JR", &cpu::cpu_impl::jmp},
-    {"ADC", &cpu::cpu_impl::alu},       {"ADD", &cpu::cpu_impl::alu},      {"NOP", &cpu::cpu_impl::misc},
-    {"CALL", &cpu::cpu_impl::jmp},      {"RET", &cpu::cpu_impl::jmp},      {"RETI", &cpu::cpu_impl::jmp},
-    {"RST", &cpu::cpu_impl::jmp},       {"SUB", &cpu::cpu_impl::alu},      {"SBC", &cpu::cpu_impl::alu},
-    {"AND", &cpu::cpu_impl::alu},       {"XOR", &cpu::cpu_impl::alu},      {"OR", &cpu::cpu_impl::alu},
-    {"CP", &cpu::cpu_impl::alu},        {"INC", &cpu::cpu_impl::alu},      {"DEC", &cpu::cpu_impl::alu},
-    {"DAA", &cpu::cpu_impl::alu},       {"SCF", &cpu::cpu_impl::alu},      {"CPL", &cpu::cpu_impl::alu},
-    {"CCF", &cpu::cpu_impl::alu},       {"RLCA", &cpu::cpu_impl::srb},     {"RLA", &cpu::cpu_impl::srb},
-    {"RRCA", &cpu::cpu_impl::srb},      {"RRA", &cpu::cpu_impl::srb},      {"PREFIX", &cpu::cpu_impl::misc},
-    {"RLC", &cpu::cpu_impl::pref_srb},  {"RRC", &cpu::cpu_impl::pref_srb}, {"RL", &cpu::cpu_impl::pref_srb},
-    {"RR", &cpu::cpu_impl::pref_srb},   {"SLA", &cpu::cpu_impl::pref_srb}, {"SRA", &cpu::cpu_impl::pref_srb},
-    {"SWAP", &cpu::cpu_impl::pref_srb}, {"SRL", &cpu::cpu_impl::pref_srb}, {"BIT", &cpu::cpu_impl::pref_srb},
-    {"RES", &cpu::cpu_impl::pref_srb},  {"SET", &cpu::cpu_impl::pref_srb}, {"ILLEGAL_D3", &cpu::cpu_impl::misc}};
+const mapper_T mapper{{"LD", &cpu::cpu_impl::ld},         {"LDH", &cpu::cpu_impl::ld},
+                      {"PUSH", &cpu::cpu_impl::ld},       {"POP", &cpu::cpu_impl::ld},
+                      {"JP", &cpu::cpu_impl::jmp},        {"JR", &cpu::cpu_impl::jmp},
+                      {"ADC", &cpu::cpu_impl::alu},       {"ADD", &cpu::cpu_impl::alu},
+                      {"NOP", &cpu::cpu_impl::misc},      {"CALL", &cpu::cpu_impl::jmp},
+                      {"RET", &cpu::cpu_impl::jmp},       {"RETI", &cpu::cpu_impl::jmp},
+                      {"RST", &cpu::cpu_impl::jmp},       {"SUB", &cpu::cpu_impl::alu},
+                      {"SBC", &cpu::cpu_impl::alu},       {"AND", &cpu::cpu_impl::alu},
+                      {"XOR", &cpu::cpu_impl::alu},       {"OR", &cpu::cpu_impl::alu},
+                      {"CP", &cpu::cpu_impl::alu},        {"INC", &cpu::cpu_impl::alu},
+                      {"DEC", &cpu::cpu_impl::alu},       {"DAA", &cpu::cpu_impl::alu},
+                      {"SCF", &cpu::cpu_impl::alu},       {"CPL", &cpu::cpu_impl::alu},
+                      {"CCF", &cpu::cpu_impl::alu},       {"RLCA", &cpu::cpu_impl::srb},
+                      {"RLA", &cpu::cpu_impl::srb},       {"RRCA", &cpu::cpu_impl::srb},
+                      {"RRA", &cpu::cpu_impl::srb},       {"PREFIX", &cpu::cpu_impl::misc},
+                      {"RLC", &cpu::cpu_impl::pref_srb},  {"RRC", &cpu::cpu_impl::pref_srb},
+                      {"RL", &cpu::cpu_impl::pref_srb},   {"RR", &cpu::cpu_impl::pref_srb},
+                      {"SLA", &cpu::cpu_impl::pref_srb},  {"SRA", &cpu::cpu_impl::pref_srb},
+                      {"SWAP", &cpu::cpu_impl::pref_srb}, {"SRL", &cpu::cpu_impl::pref_srb},
+                      {"BIT", &cpu::cpu_impl::pref_srb},  {"RES", &cpu::cpu_impl::pref_srb},
+                      {"SET", &cpu::cpu_impl::pref_srb},  {"ILLEGAL_D3", &cpu::cpu_impl::misc},
+                      {"DI", &cpu::cpu_impl::misc},       {"EI", &cpu::cpu_impl::misc}};
 
 cpu::cpu_impl::instruction instruction_lookup(const char *mnemonic)
 {
@@ -75,6 +82,18 @@ cpu::cpu_impl::cpu_impl(rw_device &rw_device, cb callback)
 {
 }
 
+void cpu::cpu_impl::adjust_ime()
+{
+    if (m_IME == IME::WANT_DISABLE)
+        m_IME = IME::DISABLING_IN_PROGRESS;
+    if (m_IME == IME::DISABLING_IN_PROGRESS)
+        m_IME = IME::DISABLED;
+    if (m_IME == IME::WANT_ENABLE)
+        m_IME = IME::ENABLING_IN_PROGRESS;
+    if (m_IME == IME::ENABLING_IN_PROGRESS)
+        m_IME = IME::ENABLED;
+}
+
 void cpu::cpu_impl::tick()
 {
     --m_T_states;
@@ -92,6 +111,8 @@ void cpu::cpu_impl::tick()
         if (m_callback)
             std::invoke(m_callback, m_reg, m_op);
     }
+
+    adjust_ime();
 
     // load next instruction
     m_op = get_opcode(read_byte(), m_pref);
@@ -165,7 +186,8 @@ bool cpu::cpu_impl::is_half_carry_on_substraction_byte(uint8_t dest, uint8_t src
 void cpu::cpu_impl::no_op_defined(std::string module_name)
 {
     std::stringstream ss;
-    ss << module_name << ": No operation defined for opcode 0x" << std::hex << (int)m_op.m_hex << "\n";
+    ss << module_name << ": No operation defined for opcode 0x" << std::hex << (int)m_op.m_hex
+       << "\n";
     throw std::runtime_error(ss.str());
 }
 

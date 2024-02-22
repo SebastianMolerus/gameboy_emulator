@@ -26,7 +26,7 @@ void on_key_cb(KEY k)
 
 void cpu_cb(registers const &reg, opcode const &op)
 {
-    std::cerr << debug_ss(reg, op).str();
+    // std::cerr << debug_ss(reg, op).str();
 }
 
 struct memory_area
@@ -88,11 +88,13 @@ template <uint16_t beg, uint16_t end = beg> struct memory_block
 struct dmg : public rw_device
 {
     memory_block<0, 0xFF> m_BOOT_ROM; // swappable with m_ROM
-    memory_block<0, 0x7FFF> m_ROM;    // swappable with m_BOOT_ROM
+    memory_block<0, 0xDFFF> m_ROM;    // swappable with m_BOOT_ROM
 
     memory_block<0x8000, 0x9fff> m_VRAM;
     memory_block<0xFF11> m_CH1_T_D;           // Channel 1 length timer & duty cycle
     memory_block<0xFF12> m_CH1_V_E;           // Channel 1 volume & envelope
+    memory_block<0xFF13> m_CH1_P_L;           // Sound channel 1 period low
+    memory_block<0xFF14> m_CH1_P_H_C;         // Sound channel 1 period high & control
     memory_block<0xFF24> m_MASTER_VOLUME;     // Master volume & VIN panning
     memory_block<0xFF25> m_SOUND_PANNING;     // Sound panning
     memory_block<0xFF26> m_AUDIO_MASTER_CTRL; // Audio master control
@@ -126,6 +128,11 @@ struct dmg : public rw_device
 
     uint8_t read(uint16_t addr, device d) override
     {
+        if (d == device::PPU)
+        {
+            m_cpu.tick();
+            m_cpu.tick();
+        }
         return dmg_memory_read(addr);
     }
 
