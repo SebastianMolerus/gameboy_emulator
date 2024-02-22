@@ -14,14 +14,12 @@ struct cpu::cpu_impl
     cpu_impl(rw_device &rw_device, cb callback = nullptr);
     ~cpu_impl() = default;
 
-    using instruction = void (cpu::cpu_impl::*)();
-    instruction m_cur_instr;
-
     registers m_reg;
     rw_device &m_rw_device;
     opcode m_op;
     cb m_callback;
     uint8_t m_T_states{1};
+
     enum class IME
     {
         ENABLED,
@@ -35,6 +33,8 @@ struct cpu::cpu_impl
     void adjust_ime();
 
     bool m_pref{};
+
+    void push_PC();
 
     void tick();
 
@@ -162,8 +162,6 @@ struct cpu::cpu_impl
     // Main entry for misc
     void misc();
     void NOP();
-
-    void ILLEGAL();
 };
 
 #endif

@@ -88,9 +88,14 @@ template <uint16_t beg, uint16_t end = beg> struct memory_block
 struct dmg : public rw_device
 {
     memory_block<0, 0xFF> m_BOOT_ROM; // swappable with m_ROM
-    memory_block<0, 0xDFFF> m_ROM;    // swappable with m_BOOT_ROM
+    memory_block<0, 0x7FFF> m_ROM;    // swappable with m_BOOT_ROM
 
     memory_block<0x8000, 0x9fff> m_VRAM;
+    memory_block<0xA000, 0xBFFF> m_EXTERNAL_RAM;
+    memory_block<0xC000, 0xCFFF> m_RAM;
+    memory_block<0xD000, 0xDFFF> m_RAM_2;
+    memory_block<0xFF01> m_SERIAL_DATA;       // Serial transfer data
+    memory_block<0xFF02> m_SERIAL_CTRL;       // Serial transfer control
     memory_block<0xFF11> m_CH1_T_D;           // Channel 1 length timer & duty cycle
     memory_block<0xFF12> m_CH1_V_E;           // Channel 1 volume & envelope
     memory_block<0xFF13> m_CH1_P_L;           // Sound channel 1 period low
@@ -98,14 +103,15 @@ struct dmg : public rw_device
     memory_block<0xFF24> m_MASTER_VOLUME;     // Master volume & VIN panning
     memory_block<0xFF25> m_SOUND_PANNING;     // Sound panning
     memory_block<0xFF26> m_AUDIO_MASTER_CTRL; // Audio master control
-    memory_block<0xFF40> m_LCD_CTRL;          // LCD Control
+    memory_block<0xFF40, 0xFF4B> m_LCD_CTRL;  // LCD Control
     memory_block<0xFF42> m_SCY;               // Viewport Y position
     memory_block<0xFF43> m_SCX;               // Viewport X position
     memory_block<0xFF44> m_LY;                // LCD Y coordinate
     memory_block<0xFF47> m_BGP;               // BG palette data
     memory_block<0xFF50> m_BOOT_ROM_DISABLE;  // 0x1 hex here and boot rom is disabled
 
-    memory_block<0xff51, 0xffff> m_RANDOM;
+    memory_block<0xFF0F> m_IF; // Interrupt FLAG : 4: Joypad, 3: Serial, 2: Timer, 1: LCD, 0: Vblank
+    memory_block<0xFFFF> m_IE; // Interrupt Enable
 
     lcd m_lcd;
     cpu m_cpu;

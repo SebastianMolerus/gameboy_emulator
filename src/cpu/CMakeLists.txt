@@ -6,7 +6,8 @@ add_library(
   src/misc.cpp
   src/cpu_impl.cpp
   src/cpu_impl.hpp
-  src/srb.cpp)
+  src/srb.cpp
+  src/int.cpp)
 
 target_include_directories(cpu PUBLIC ${CMAKE_CURRENT_LIST_DIR}/include)
 

@@ -4,13 +4,16 @@
 #include <stdexcept>
 #include <unordered_map>
 
+extern void check_interrupt(cpu::cpu_impl &cpu);
+
 // ******************************************
 //               CPU_IMPL PART
 // ******************************************
 namespace
 {
 
-using mapper_T = std::unordered_map<const char *, cpu::cpu_impl::instruction>;
+using instruction = void (cpu::cpu_impl::*)();
+using mapper_T = std::unordered_map<const char *, instruction>;
 using mapper_const_iter = mapper_T::const_iterator;
 
 const mapper_T mapper{{"LD", &cpu::cpu_impl::ld},         {"LDH", &cpu::cpu_impl::ld},
@@ -36,7 +39,7 @@ const mapper_T mapper{{"LD", &cpu::cpu_impl::ld},         {"LDH", &cpu::cpu_impl
                       {"SET", &cpu::cpu_impl::pref_srb},  {"ILLEGAL_D3", &cpu::cpu_impl::misc},
                       {"DI", &cpu::cpu_impl::misc},       {"EI", &cpu::cpu_impl::misc}};
 
-cpu::cpu_impl::instruction instruction_lookup(const char *mnemonic)
+instruction instruction_lookup(const char *mnemonic)
 {
     auto iter = mapper.find(mnemonic);
     if (iter == mapper.end())
@@ -78,7 +81,7 @@ uint8_t wait_cycles(cpu::cpu_impl &c)
 } // namespace
 
 cpu::cpu_impl::cpu_impl(rw_device &rw_device, cb callback)
-    : m_rw_device{rw_device}, m_callback{callback}, m_cur_instr{nullptr}
+    : m_rw_device{rw_device}, m_callback{callback}
 {
 }
 
@@ -94,6 +97,13 @@ void cpu::cpu_impl::adjust_ime()
         m_IME = IME::ENABLED;
 }
 
+void cpu::cpu_impl::push_PC()
+{
+    assert(m_reg.SP() > 0x1);
+    m_rw_device.write(--m_reg.SP(), m_reg.PC() >> 8);
+    m_rw_device.write(--m_reg.SP(), m_reg.PC());
+}
+
 void cpu::cpu_impl::tick()
 {
     --m_T_states;
@@ -104,30 +114,26 @@ void cpu::cpu_impl::tick()
         return;
     }
 
-    // execute previously instruction & callback
-    if (m_cur_instr)
-    {
-        std::invoke(m_cur_instr, *this);
-        if (m_callback)
-            std::invoke(m_callback, m_reg, m_op);
-    }
+    check_interrupt(*this);
 
     adjust_ime();
 
-    // load next instruction
     m_op = get_opcode(read_byte(), m_pref);
-    m_cur_instr = instruction_lookup(m_op.m_mnemonic);
+    std::invoke(instruction_lookup(m_op.m_mnemonic), *this);
     m_T_states = wait_cycles(*this);
-
-    // previous opcode was from prefixed table
-    // turn this of to get next opcode from non prefixed table
-    if (m_pref)
-        m_pref = false;
 
     // fill data needed by opcode
     // only for opcodes which size is greater than 1B
     for (auto i = 0; i < m_op.m_bytes - 1; ++i)
         m_op.m_data[i] = read_byte();
+
+    if (m_callback)
+        std::invoke(m_callback, m_reg, m_op);
+
+    // previous opcode was from prefixed table
+    // turn this of to get next opcode from non prefixed table
+    if (m_pref)
+        m_pref = false;
 
     if (std::strcmp(m_op.m_mnemonic, "PREFIX") == 0)
         m_pref = true;

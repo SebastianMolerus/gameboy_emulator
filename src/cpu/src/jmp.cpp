@@ -4,13 +4,6 @@
 namespace
 {
 
-void push_PC(cpu::cpu_impl &c)
-{
-    assert(c.m_reg.SP() > 0x1);
-    c.m_rw_device.write(--c.m_reg.SP(), c.m_reg.PC() >> 8);
-    c.m_rw_device.write(--c.m_reg.SP(), c.m_reg.PC());
-}
-
 void pop_PC(cpu::cpu_impl &c)
 {
     assert(c.m_reg.SP() < 0xFFFE);
@@ -112,7 +105,7 @@ void cpu::cpu_impl::CALL_CC_a16()
 
 void cpu::cpu_impl::CALL_a16()
 {
-    push_PC(*this);
+    push_PC();
     JP_nn();
 }
 
@@ -137,6 +130,6 @@ void cpu::cpu_impl::RETI()
 void cpu::cpu_impl::RST_nn()
 {
     assert(m_op.m_operands[0].m_name);
-    push_PC(*this);
+    push_PC();
     m_reg.PC() = std::stoi({m_op.m_operands[0].m_name + 1}, nullptr, 16);
 }
