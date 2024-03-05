@@ -62,7 +62,7 @@ void ppu::ppu_impl::HORIZONTAL_BLANK()
     if (m_current_dot == LAST_DOT_IN_LINE)
     {
         m_current_dot = 0;
-        m_rw_device.write(LCD_Y_COORDINATE, m_current_line++, device::PPU);
+        ++m_current_line;
         if (m_current_line == 144)
         {
             m_current_state = STATE::VERTICAL_BLANK;
@@ -81,7 +81,7 @@ void ppu::ppu_impl::VERTICAL_BLANK()
     if (m_current_dot == 456)
     {
         m_current_dot = 0;
-        m_rw_device.write(LCD_Y_COORDINATE, m_current_line++, device::PPU);
+        ++m_current_line;
         if (m_current_line == 154)
         {
             m_current_line = 0;

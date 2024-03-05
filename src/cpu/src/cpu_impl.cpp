@@ -127,25 +127,14 @@ void cpu::cpu_impl::tick()
         return;
     }
 
-    if (m_callback)
-    {
-        std::invoke(m_callback, m_reg, m_op);
-    }
-
-    auto const saved_pc = m_reg.PC();
-
     adjust_ime();
     check_interrupt(*this);
 
-    if (m_reg.PC() != saved_pc)
+    m_op = get_opcode(read_byte(), false);
+    if (std::strcmp(m_op.m_mnemonic, "PREFIX") == 0)
     {
-        if (m_callback)
-        {
-            std::invoke(m_callback, m_reg, m_op);
-        }
+        m_op = get_opcode(read_byte(), true);
     }
-
-    m_op = get_opcode(read_byte(), m_pref);
 
     m_T_states = wait_cycles(*this);
 
@@ -153,6 +142,13 @@ void cpu::cpu_impl::tick()
     // only for opcodes which size is greater than 1B
     for (auto i = 0; i < m_op.m_bytes - 1; ++i)
         m_op.m_data[i] = read_byte();
+
+    if (m_callback)
+    {
+        registers to_fix_pc = m_reg;
+        to_fix_pc.PC() -= (m_op.m_bytes);
+        std::invoke(m_callback, to_fix_pc, m_op);
+    }
 
     // Execute opcode
     std::invoke(instruction_lookup(m_op.m_mnemonic), *this);

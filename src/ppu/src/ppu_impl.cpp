@@ -20,6 +20,8 @@ void ppu::ppu_impl::dot()
         return;
     }
 
+    m_rw_device.write(LCD_Y_COORDINATE, m_current_line, device::PPU);
+
     switch (m_current_state)
     {
     case STATE::OAM_SCAN:
@@ -39,7 +41,7 @@ void ppu::ppu_impl::dot()
 
 void ppu::ppu_impl::dma(uint8_t src_addr)
 {
-    // 0x[Src_addr]00
+    // dma_source ==  0x[src_addr]00
     dma_source = 0;
     dma_source = src_addr;
     dma_source <<= 8;

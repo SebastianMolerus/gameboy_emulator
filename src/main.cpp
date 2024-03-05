@@ -30,6 +30,8 @@ void quit_cb()
 bool step{};
 void step_button();
 
+bool logging{};
+
 void continue_button()
 {
     step = false;
@@ -37,39 +39,43 @@ void continue_button()
 
 std::stringstream debug_ss(registers const &reg, opcode const &op)
 {
-    static int curr_line{};
     std::stringstream ss;
-    ss << "0x" << std::setw(4) << std::setfill('0') << std::hex << curr_line << ": "
+    ss << "0x" << std::setw(4) << std::setfill('0') << std::hex << (int)reg.PC() << " "
        << op.m_mnemonic << " ";
     for (auto i = 0; i < op.operands_size(); ++i)
-
     {
         auto const &oper = op.m_operands[i];
         auto const oper_name = oper.m_name;
         if (!std::strcmp(oper_name, "n8") || !std::strcmp(oper_name, "a8") ||
             !std::strcmp(oper_name, "e8"))
-            ss << "0x" << std::setw(3) << std::setfill('0') << std::hex
-               << static_cast<int>(op.m_data[0]);
+            ss << "0x" << std::hex << static_cast<int>(op.m_data[0]);
         else if (!std::strcmp(oper_name, "n16") || !std::strcmp(oper_name, "a16"))
-            ss << "0x" << std::setw(3) << std::setfill('0') << std::hex
-               << static_cast<int>(op.m_data[1]) << static_cast<int>(op.m_data[0]);
+            ss << "0x" << std::setw(2) << std::setfill('0') << std::hex
+               << static_cast<int>(op.m_data[1]) << std::setw(2) << std::setfill('0') << std::hex
+               << static_cast<int>(op.m_data[0]);
         else
             ss << oper_name;
         if (!i && op.operands_size() > 1)
             ss << ", ";
     }
     ss << " \n";
-    curr_line = reg.get_pc();
     return ss;
 }
 
+sm::log log{"output.txt"};
+
 void cpu_cb(registers const &reg, opcode const &op)
 {
+    if (!logging)
+        return;
+
+    std::string s = debug_ss(reg, op).str();
+    log.save(s);
 }
 
-constexpr uint16_t pc_value{0x1D};
-constexpr uint16_t sp_value{0xFFFE};
-const registers startup_value{pc_value, sp_value};
+// constexpr uint16_t pc_value{0x1D};
+// constexpr uint16_t sp_value{0xFFFE};
+// const registers startup_value{pc_value, sp_value};
 
 struct dmg : public rw_device
 {
@@ -79,19 +85,12 @@ struct dmg : public rw_device
     ppu m_ppu;
     int cc{4};
 
-    dmg()
-        : m_lcd{quit_cb, step_button, continue_button}, m_cpu{*this, cpu_cb, startup_value},
-          m_ppu{*this, m_lcd}
+    dmg() : m_lcd{quit_cb, step_button, continue_button}, m_cpu{*this, cpu_cb}, m_ppu{*this, m_lcd}
     {
     }
 
     uint8_t read(uint16_t addr, device d) override
     {
-        if (addr == 0xFF41)
-        {
-            int a = 10;
-        }
-
         if (d == device::PPU)
             m_cpu.tick();
         return mem.read(addr, d);
@@ -99,26 +98,12 @@ struct dmg : public rw_device
 
     void write(uint16_t addr, uint8_t data, device d) override
     {
-        if (addr == 0xFF40)
-        {
-            std::cout << "Writing to FF40: " << std::hex << (int)data << std::endl;
-        }
-
-        if (addr == 0xFF07)
-        {
-            std::cout << "TIMER\n";
-        }
-
         // DMA
         if (addr == 0xFF46)
-        {
-
             m_ppu.dma(data);
-            return;
-        }
 
         if (addr == 0xFF50 && data == 0x1)
-            ::step = true;
+            logging = true;
 
         mem.write(addr, data, d);
     }

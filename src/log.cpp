@@ -4,15 +4,18 @@
 namespace sm
 {
 
-log::log(std::string file_name) : file{std::move(file_name)}
+log::log(std::string file_name) : file{std::move(file_name)}, ofs{file}
 {
 }
 
-void log::save(std::span<uint8_t> data)
+log::~log()
 {
-    std::ofstream ofs{file, std::ofstream::out | std::ofstream::binary};
-    for (auto &d : data)
-        ofs << d;
+    ofs << ss.str();
+}
+
+void log::save(std::string s)
+{
+    ss << s;
 }
 
 } // namespace sm

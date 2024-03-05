@@ -2,7 +2,8 @@
 #define __LOG_HPP__
 
 #include <string>
-#include <span>
+#include <fstream>
+#include <sstream>
 
 namespace sm
 {
@@ -10,11 +11,13 @@ class log
 {
   public:
     log(std::string file_name);
-
-    void save(std::span<uint8_t> data);
+    ~log();
+    void save(std::string s);
 
   private:
     std::string file;
+    std::ofstream ofs;
+    std::stringstream ss;
 };
 } // namespace sm
 
