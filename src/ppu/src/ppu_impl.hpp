@@ -10,8 +10,19 @@ struct ppu::ppu_impl
     rw_device &m_rw_device;
     drawing_device &m_drawing_device;
     pixel_fetcher pf;
+
+    // temporary value of 0xFF40 ( lcd control )
+    uint8_t lcd_ctrl{};
+
+    // temporary value of visible sprites in each drawing line
+    std::array<sprite, 10> visible_sprites{};
+
     void dot();
-    void draw();
+
+    int dma_counter{};
+    uint16_t dma_source{};
+    void dma(uint8_t src_addr);
+    void execute_dma();
 
     enum class STATE
     {
@@ -23,8 +34,13 @@ struct ppu::ppu_impl
 
     STATE m_current_state{STATE::OAM_SCAN};
 
-    int m_current_dot{0};
-    int m_current_line{-1};
+    void OAM_SCAN();
+    void DRAWING_PIXELS();
+    void HORIZONTAL_BLANK();
+    void VERTICAL_BLANK();
+
+    int m_current_dot{};
+    int m_current_line{};
 };
 
 #endif

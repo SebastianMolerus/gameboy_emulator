@@ -63,8 +63,9 @@ int main()
     add_item(3, "XOR A");
     add_item(0x0051, "LD L, 0x0f");
 
-    hwnd = CreateWindow(szAppName, TEXT("Test"), WS_OVERLAPPEDWINDOW | WS_VISIBLE | WS_VSCROLL, CW_USEDEFAULT,
-                        CW_USEDEFAULT, WND_WIDTH, WND_HEIGTH, NULL, NULL, instance, NULL);
+    hwnd = CreateWindow(szAppName, TEXT("Test"), WS_OVERLAPPEDWINDOW | WS_VISIBLE | WS_VSCROLL,
+                        CW_USEDEFAULT, CW_USEDEFAULT, WND_WIDTH, WND_HEIGTH, NULL, NULL, instance,
+                        NULL);
 
     set_execution_index(0);
 
@@ -132,7 +133,8 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
             break;
         }
 
-        scroll_pos = std::max<int>(0, std::min<int>(scroll_pos, items.size() - (client_y / text_y)));
+        scroll_pos =
+            std::max<int>(0, std::min<int>(scroll_pos, items.size() - (client_y / text_y)));
 
         if (scroll_pos != GetScrollPos(hwnd, SB_VERT))
         {
@@ -173,14 +175,17 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
         for (auto const &[idx, text] : items)
         {
             auto const s = std::to_string(idx) + ": ";
-            ::TextOut(hdc, text_y + 4, offset * text_y - (scroll_pos * text_y), s.c_str(), s.size());
-            ::TextOut(hdc, text_y + 40, offset * text_y - (scroll_pos * text_y), text.c_str(), text.size());
+            ::TextOut(hdc, text_y + 4, offset * text_y - (scroll_pos * text_y), s.c_str(),
+                      s.size());
+            ::TextOut(hdc, text_y + 40, offset * text_y - (scroll_pos * text_y), text.c_str(),
+                      text.size());
             ++offset;
         }
         // break points
         auto old_brush = SelectObject(hdc, red_brush);
         for (int bp : break_points)
-            Ellipse(hdc, 0, bp * text_y - (scroll_pos * text_y), text_y, bp * text_y + text_y - (scroll_pos * text_y));
+            Ellipse(hdc, 0, bp * text_y - (scroll_pos * text_y), text_y,
+                    bp * text_y + text_y - (scroll_pos * text_y));
         SelectObject(hdc, old_brush);
 
         // execution arrow

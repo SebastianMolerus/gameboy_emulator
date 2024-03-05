@@ -13,6 +13,9 @@ class ppu
     ~ppu();
 
     void dot();
+
+    // src_addr can be 0x00 to 0xDF
+    void dma(uint8_t src_addr);
     struct ppu_impl;
 
   private:

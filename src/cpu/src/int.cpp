@@ -1,5 +1,6 @@
 #include "cpu_impl.hpp"
 #include "common.hpp"
+#include <iostream>
 
 namespace
 {
@@ -48,6 +49,7 @@ void check_interrupt(cpu::cpu_impl &cpu)
 
     if (checkbit(IF & IE, VBLANK_BIT))
     {
+        std::cout << "INT: Vblank\n";
         int_handler(VBLANK_BIT, VBLANK_JUMP_ADDR);
     }
     else if (checkbit(IF & IE, STAT_BIT))

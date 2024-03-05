@@ -94,6 +94,11 @@ struct registers
         return m_PC.m_u16;
     }
 
+    uint16_t const &PC() const
+    {
+        return m_PC.m_u16;
+    }
+
     uint16_t get_pc() const
     {
         return m_PC.m_u16;

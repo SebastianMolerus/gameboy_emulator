@@ -1,5 +1,6 @@
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
+#include <windows.h>
 
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
@@ -7,21 +8,61 @@
 
 #include <iostream>
 #include <lcd.hpp>
+#include <sstream>
+#include <string>
+
+#pragma comment(lib, "opengl32.lib")
 
 namespace
 {
+HGLRC rendering_context;
+HDC device_context;
+constexpr int STEP_BUTTON_ID = 1;
+constexpr int CONTINUE_BUTTON_ID = 2;
 
-void framebuffer_size_callback(GLFWwindow *window, int width, int height)
-{
-    glViewport(0, 0, width, height);
-}
+HWND PC_EDIT;
 
-// Pixel 6x6
-const unsigned int SCR_WIDTH = 960;  // 160 * 6
-const unsigned int SCR_HEIGHT = 864; // 144 * 6
+std::function<void()> quit_button_cb;
+std::function<void()> step_button_cb;
+std::function<void()> continue_button_cb;
+
+const unsigned int PIXEL_SIZE = 5;
+const unsigned int SCR_WIDTH = 160 * PIXEL_SIZE;
+const unsigned int SCR_HEIGHT = 144 * PIXEL_SIZE;
+const unsigned int DEBUGGER_WND_WIDTH = 200;
 glm::mat4 const projection = glm::ortho<float>(0.0f, SCR_WIDTH, SCR_HEIGHT, 0.0f, -0.1f, 0.1f);
 
-int x, y;
+PIXELFORMATDESCRIPTOR get_pixelformat()
+{
+    PIXELFORMATDESCRIPTOR pfd = {sizeof(PIXELFORMATDESCRIPTOR),
+                                 1,
+                                 PFD_DRAW_TO_WINDOW | PFD_SUPPORT_OPENGL |
+                                     PFD_DOUBLEBUFFER, // Flags
+                                 PFD_TYPE_RGBA,        // The kind of framebuffer. RGBA or palette.
+                                 32,                   // Colordepth of the framebuffer.
+                                 0,
+                                 0,
+                                 0,
+                                 0,
+                                 0,
+                                 0,
+                                 0,
+                                 0,
+                                 0,
+                                 0,
+                                 0,
+                                 0,
+                                 0,
+                                 24, // Number of bits for the depthbuffer
+                                 8,  // Number of bits for the stencilbuffer
+                                 0,  // Number of Aux buffers in the framebuffer.
+                                 PFD_MAIN_PLANE,
+                                 0,
+                                 0,
+                                 0,
+                                 0};
+    return pfd;
+}
 
 const char *vertexShaderSource =
     "#version 330 core\n"
@@ -41,10 +82,10 @@ const char *fragmentShaderSource = "#version 330 core\n"
                                    "}\n\0";
 
 float const vertices[] = {
-    6.f, 6.f, 0.0f, // top right
-    6.f, 0.f, 0.0f, // bottom right
-    0.f, 0.f, 0.0f, // bottom left
-    0.f, 6.f, 0.0f  // top left
+    PIXEL_SIZE, PIXEL_SIZE, 0.0f, // top right
+    PIXEL_SIZE, 0.f,        0.0f, // bottom right
+    0.f,        0.f,        0.0f, // bottom left
+    0.f,        PIXEL_SIZE, 0.0f  // top left
 };
 unsigned int const indices[] = {
     // note that we start from 0!
@@ -66,36 +107,63 @@ void set_uniforms_locations(unsigned shared_program)
 
 } // namespace
 
-lcd::lcd(std::function<void(KEY)> on_key_cb) : m_on_key_cb{on_key_cb}
+LRESULT CALLBACK main_window_proc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 {
-    glfwInit();
-    glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
-    glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
-    glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
-
-#ifdef __APPLE__
-    glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
-#endif
-
-    m_window = glfwCreateWindow(SCR_WIDTH, SCR_HEIGHT, "Gameboy (DMG) emulator, press ESC to exit.",
-                                NULL, NULL);
-    if (m_window == nullptr)
+    switch (message)
     {
-        std::cout << "Failed to create GLFW window" << std::endl;
-        glfwTerminate();
+    case WM_KEYDOWN: {
+        switch (wParam)
+        {
+        case VK_ESCAPE:
+            ::PostQuitMessage(0);
+            break;
+        }
     }
-    glfwMakeContextCurrent(m_window);
-    glfwSwapInterval(0);
-    glfwSetFramebufferSizeCallback(m_window, framebuffer_size_callback);
+        return 0;
+    case WM_DESTROY:
+        ::PostQuitMessage(0);
+        return 0;
+    default:
+        return DefWindowProc(hWnd, message, wParam, lParam);
+    }
+}
 
-    if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress))
+LRESULT CALLBACK debugger_window_proc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
+{
+    PAINTSTRUCT ps;
+    switch (message)
     {
-        std::cout << "Failed to initialize GLAD" << std::endl;
+    case WM_COMMAND: {
+        auto const button_id = LOWORD(wParam);
+        if (button_id == STEP_BUTTON_ID)
+            step_button_cb();
+        else
+            continue_button_cb();
+        return 0;
     }
+    case WM_CREATE:
+        ::CreateWindow(TEXT("button"), TEXT("STEP"), WS_VISIBLE | WS_CHILD, 0, 0, 50, 50, hWnd,
+                       (HMENU)STEP_BUTTON_ID, ((LPCREATESTRUCT)lParam)->hInstance, nullptr);
 
-    // build and compile our shader program
-    // ------------------------------------
-    // vertex shader
+        ::CreateWindow(TEXT("button"), TEXT("CONTINUE"), WS_VISIBLE | WS_CHILD, 52, 0, 80, 50, hWnd,
+                       (HMENU)CONTINUE_BUTTON_ID, ((LPCREATESTRUCT)lParam)->hInstance, nullptr);
+
+        ::CreateWindow(TEXT("static"), TEXT("PC:"), WS_VISIBLE | WS_CHILD | SS_SUNKEN | SS_SIMPLE,
+                       0, 52, 30, 20, hWnd, (HMENU)3, ((LPCREATESTRUCT)lParam)->hInstance, nullptr);
+
+        PC_EDIT = ::CreateWindow(TEXT("static"), TEXT(""), WS_VISIBLE | WS_CHILD, 32, 52, 100, 20,
+                                 hWnd, (HMENU)3, ((LPCREATESTRUCT)lParam)->hInstance, nullptr);
+        return 0;
+    case WM_DESTROY:
+        ::PostQuitMessage(0);
+        return 0;
+    default:
+        return DefWindowProc(hWnd, message, wParam, lParam);
+    }
+}
+
+void init_opengl_components()
+{
     unsigned int vertexShader = glCreateShader(GL_VERTEX_SHADER);
     glShaderSource(vertexShader, 1, &vertexShaderSource, NULL);
     glCompileShader(vertexShader);
@@ -159,32 +227,104 @@ lcd::lcd(std::function<void(KEY)> on_key_cb) : m_on_key_cb{on_key_cb}
     set_uniforms_locations(shaderProgram);
 }
 
-void lcd::before_frame()
+LRESULT CALLBACK opengl_window_proc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 {
-    if (glfwGetKey(m_window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
-        m_on_key_cb(KEY::ESC);
-    if (glfwGetKey(m_window, GLFW_KEY_UP) == GLFW_PRESS)
-        m_on_key_cb(KEY::UP);
-    if (glfwGetKey(m_window, GLFW_KEY_DOWN) == GLFW_PRESS)
-        m_on_key_cb(KEY::DOWN);
-    if (glfwGetKey(m_window, GLFW_KEY_RIGHT) == GLFW_PRESS)
-        m_on_key_cb(KEY::RIGHT);
-    if (glfwGetKey(m_window, GLFW_KEY_LEFT) == GLFW_PRESS)
-        m_on_key_cb(KEY::LEFT);
-    if (glfwGetKey(m_window, GLFW_KEY_A) == GLFW_PRESS)
-        m_on_key_cb(KEY::A);
-    if (glfwGetKey(m_window, GLFW_KEY_S) == GLFW_PRESS)
-        m_on_key_cb(KEY::S);
+    switch (message)
+    {
+    case WM_CREATE: {
+        auto pf = get_pixelformat();
+        device_context = GetDC(hWnd);
+        int let_window_choose_this_pixel_format = ::ChoosePixelFormat(device_context, &pf);
+        ::SetPixelFormat(device_context, let_window_choose_this_pixel_format, &pf);
+        rendering_context = ::wglCreateContext(device_context);
 
-    glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
-    glClear(GL_COLOR_BUFFER_BIT);
+        glfwInit();
+        ::wglMakeCurrent(device_context, rendering_context);
+        glfwSwapInterval(0);
+
+        if (!gladLoadGL())
+            throw std::runtime_error("Failed to initialzie Glad\n");
+
+        init_opengl_components();
+
+        return 0;
+    }
+    case WM_DESTROY:
+        ::PostQuitMessage(0);
+        return 0;
+    default:
+        return DefWindowProc(hWnd, message, wParam, lParam);
+    }
+}
+
+lcd::lcd(std::function<void()> quit_cb, std::function<void()> step_cb,
+         std::function<void()> continue_cb)
+{
+    quit_button_cb = quit_cb;
+    step_button_cb = step_cb;
+    continue_button_cb = continue_cb;
+    HINSTANCE hInstance = GetModuleHandle(NULL);
+
+    // ******************************************
+    //              Main Window
+    // ******************************************
+    WNDCLASS wc{};
+    wc.lpfnWndProc = main_window_proc;
+    wc.hInstance = hInstance;
+    wc.hbrBackground = (HBRUSH)GetStockObject(WHITE_BRUSH);
+    wc.lpszClassName = "main_window";
+    wc.hCursor = LoadCursor(NULL, IDC_ARROW);
+    if (!RegisterClass(&wc))
+        throw std::runtime_error("Cannot register main window\n");
+
+    RECT lcd_rect;
+    lcd_rect.left = 0;
+    lcd_rect.top = 0;
+    lcd_rect.right = SCR_WIDTH;
+    lcd_rect.bottom = SCR_HEIGHT;
+
+    // No resieable main window
+    auto const main_wnd_style =
+        ((WS_OVERLAPPEDWINDOW ^ WS_THICKFRAME) ^ WS_MAXIMIZEBOX) | WS_VISIBLE;
+
+    ::AdjustWindowRect(&lcd_rect, main_wnd_style, wc.lpszMenuName != nullptr);
+
+    HWND main_hwnd =
+        CreateWindow(wc.lpszClassName, "Gameboy (DMG) Emulator. SM.", main_wnd_style, CW_USEDEFAULT,
+                     CW_USEDEFAULT, lcd_rect.right - lcd_rect.left + DEBUGGER_WND_WIDTH,
+                     lcd_rect.bottom - lcd_rect.top, nullptr, nullptr, hInstance, 0);
+
+    // ******************************************
+    //              Opengl Window
+    // ******************************************
+    wc.lpfnWndProc = opengl_window_proc;
+    wc.lpszClassName = "opengl_window";
+    wc.hbrBackground = (HBRUSH)GetStockObject(WHITE_BRUSH);
+    if (!RegisterClass(&wc))
+        throw std::runtime_error("Cannot register opengl window\n");
+
+    CreateWindow(wc.lpszClassName, nullptr, WS_CHILDWINDOW | WS_VISIBLE, 0, 0, SCR_WIDTH,
+                 SCR_HEIGHT, main_hwnd, nullptr, hInstance, nullptr);
+
+    // ******************************************
+    //              Debugger Window
+    // ******************************************
+    wc.lpfnWndProc = debugger_window_proc;
+    wc.lpszClassName = "debugger_window";
+    wc.hbrBackground = (HBRUSH)GetStockObject(WHITE_BRUSH);
+    if (!RegisterClass(&wc))
+        throw std::runtime_error("Cannot register debugger window\n");
+
+    CreateWindow(wc.lpszClassName, nullptr,
+                 WS_CHILDWINDOW | WS_VISIBLE | SS_ETCHEDFRAME | SS_WHITEFRAME, SCR_WIDTH, 0,
+                 DEBUGGER_WND_WIDTH, SCR_HEIGHT, main_hwnd, nullptr, hInstance, nullptr);
 }
 
 void lcd::draw_pixel(int x, int y, color c)
 {
     glm::vec3 v{c.R, c.G, c.B};
     glm::mat4 transform = glm::mat4(1.0f);
-    transform = glm::translate(transform, glm::vec3(6.0f * x, 6.0f * y, 0.0f));
+    transform = glm::translate(transform, glm::vec3(PIXEL_SIZE * x, PIXEL_SIZE * y, 0.0f));
     glUniformMatrix4fv(transform_loc, 1, GL_FALSE, glm::value_ptr(transform));
     glUniform3fv(pixel_color_loc, 1, glm::value_ptr(v));
     glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
@@ -192,6 +332,9 @@ void lcd::draw_pixel(int x, int y, color c)
 
 void lcd::push_pixel(color c)
 {
+    static int x{};
+    static int y{};
+
     draw_pixel(x, y, c);
     ++x;
     if (x == 160)
@@ -205,6 +348,18 @@ void lcd::push_pixel(color c)
 
 void lcd::after_frame()
 {
-    glfwSwapBuffers(m_window);
-    glfwPollEvents();
+    MSG msg{};
+    while (::PeekMessage(&msg, nullptr, 0, 0, PM_REMOVE))
+    {
+        if (msg.message == WM_QUIT)
+            quit_button_cb();
+        ::TranslateMessage(&msg);
+        ::DispatchMessage(&msg);
+    }
+    ::SwapBuffers(device_context);
+}
+
+void lcd::display_pc(std::string s)
+{
+    ::SetWindowText(PC_EDIT, s.c_str());
 }

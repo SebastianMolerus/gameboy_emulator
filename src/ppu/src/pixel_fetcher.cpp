@@ -59,7 +59,7 @@ color get_color_pallete_based(uint8_t id)
         return BLACK;
 }
 
-std::array<color, 8> convert_tile_line_to_colors(uint16_t line)
+constexpr std::array<color, 8> convert_tile_line_to_colors(uint16_t line)
 {
     uint8_t const l = line >> 8; // a b c d ...
     uint8_t const r = line;      // i j k l ...

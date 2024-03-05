@@ -11,6 +11,6 @@ add_library(
 
 target_include_directories(cpu PUBLIC ${CMAKE_CURRENT_LIST_DIR}/include)
 
-target_link_libraries(cpu PUBLIC decoder common)
+target_link_libraries(cpu PUBLIC decoder common assembler)
 
 add_subdirectory(ut)

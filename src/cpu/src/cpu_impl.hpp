@@ -29,7 +29,7 @@ struct cpu::cpu_impl
         WANT_DISABLE,
         DISABLING_IN_PROGRESS
     };
-    IME m_IME;
+    IME m_IME{IME::DISABLED};
     void adjust_ime();
 
     bool m_pref{};

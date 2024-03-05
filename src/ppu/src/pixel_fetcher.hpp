@@ -22,9 +22,7 @@ class pixel_fetcher
     std::array<color, 8> pixels;
 
     uint8_t x{};
-
     uint8_t pushed_px{};
-
     int dot_counter{};
 
     drawing_device &dd;

@@ -3,6 +3,7 @@
 #include <sstream>
 #include <stdexcept>
 #include <unordered_map>
+#include <iostream>
 
 extern void check_interrupt(cpu::cpu_impl &cpu);
 
@@ -87,14 +88,26 @@ cpu::cpu_impl::cpu_impl(rw_device &rw_device, cb callback)
 
 void cpu::cpu_impl::adjust_ime()
 {
-    if (m_IME == IME::WANT_DISABLE)
+    if (m_IME == IME::ENABLED || m_IME == IME::DISABLED)
+        return;
+
+    switch (m_IME)
+    {
+    case IME::WANT_DISABLE:
         m_IME = IME::DISABLING_IN_PROGRESS;
-    if (m_IME == IME::DISABLING_IN_PROGRESS)
+        break;
+    case IME::DISABLING_IN_PROGRESS:
         m_IME = IME::DISABLED;
-    if (m_IME == IME::WANT_ENABLE)
+        break;
+    case IME::WANT_ENABLE:
         m_IME = IME::ENABLING_IN_PROGRESS;
-    if (m_IME == IME::ENABLING_IN_PROGRESS)
+        break;
+    case IME::ENABLING_IN_PROGRESS:
         m_IME = IME::ENABLED;
+        break;
+    default:
+        break;
+    }
 }
 
 void cpu::cpu_impl::push_PC()
@@ -114,12 +127,26 @@ void cpu::cpu_impl::tick()
         return;
     }
 
-    check_interrupt(*this);
+    if (m_callback)
+    {
+        std::invoke(m_callback, m_reg, m_op);
+    }
+
+    auto const saved_pc = m_reg.PC();
 
     adjust_ime();
+    check_interrupt(*this);
+
+    if (m_reg.PC() != saved_pc)
+    {
+        if (m_callback)
+        {
+            std::invoke(m_callback, m_reg, m_op);
+        }
+    }
 
     m_op = get_opcode(read_byte(), m_pref);
-    std::invoke(instruction_lookup(m_op.m_mnemonic), *this);
+
     m_T_states = wait_cycles(*this);
 
     // fill data needed by opcode
@@ -127,8 +154,8 @@ void cpu::cpu_impl::tick()
     for (auto i = 0; i < m_op.m_bytes - 1; ++i)
         m_op.m_data[i] = read_byte();
 
-    if (m_callback)
-        std::invoke(m_callback, m_reg, m_op);
+    // Execute opcode
+    std::invoke(instruction_lookup(m_op.m_mnemonic), *this);
 
     // previous opcode was from prefixed table
     // turn this of to get next opcode from non prefixed table

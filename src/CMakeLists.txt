@@ -1,6 +1,6 @@
 add_subdirectory(cpu)
 add_subdirectory(decoder)
-add_subdirectory(assembler)
 add_subdirectory(lcd)
 add_subdirectory(common)
 add_subdirectory(ppu)
+add_subdirectory(assembler)
