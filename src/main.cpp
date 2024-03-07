@@ -1,11 +1,4 @@
-#include <array>
-#include <cassert>
 #include <cpu.hpp>
-#include <decoder.hpp>
-#include <filesystem>
-#include <fstream>
-#include <iostream>
-#include <vector>
 #include <ppu.hpp>
 #include <lcd.hpp>
 #include "mem.hpp"
@@ -36,6 +29,10 @@ struct dmg : public rw_device
 
     uint8_t read(uint16_t addr, device d) override
     {
+        if (d == device::PPU)
+            m_cpu.tick();
+
+        // Simulation of Joypad ( 0xFF means nothing is pressed )
         if (addr == 0xFF00)
         {
             return 0xFF;
@@ -57,8 +54,6 @@ struct dmg : public rw_device
             return 0xFF;
         }
 
-        if (d == device::PPU)
-            m_cpu.tick();
         return mem.read(addr, d);
     }
 
