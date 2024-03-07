@@ -17,29 +17,21 @@ namespace
 {
 HGLRC rendering_context;
 HDC device_context;
-constexpr int STEP_BUTTON_ID = 1;
-constexpr int CONTINUE_BUTTON_ID = 2;
-
-HWND PC_EDIT;
 
 std::function<void()> quit_button_cb;
-std::function<void()> step_button_cb;
-std::function<void()> continue_button_cb;
 
-const unsigned int PIXEL_SIZE = 4;
+const unsigned int PIXEL_SIZE = 5;
 const unsigned int SCR_WIDTH = 160 * PIXEL_SIZE;
 const unsigned int SCR_HEIGHT = 144 * PIXEL_SIZE;
-const unsigned int DEBUGGER_WND_WIDTH = 0;
 glm::mat4 const projection = glm::ortho<float>(0.0f, SCR_WIDTH, SCR_HEIGHT, 0.0f, -0.1f, 0.1f);
 
 PIXELFORMATDESCRIPTOR get_pixelformat()
 {
     PIXELFORMATDESCRIPTOR pfd = {sizeof(PIXELFORMATDESCRIPTOR),
                                  1,
-                                 PFD_DRAW_TO_WINDOW | PFD_SUPPORT_OPENGL |
-                                     PFD_DOUBLEBUFFER, // Flags
-                                 PFD_TYPE_RGBA,        // The kind of framebuffer. RGBA or palette.
-                                 32,                   // Colordepth of the framebuffer.
+                                 PFD_DRAW_TO_WINDOW | PFD_SUPPORT_OPENGL | PFD_DOUBLEBUFFER, // Flags
+                                 PFD_TYPE_RGBA,                                              // The kind of framebuffer. RGBA or palette.
+                                 32,                                                         // Colordepth of the framebuffer.
                                  0,
                                  0,
                                  0,
@@ -64,15 +56,14 @@ PIXELFORMATDESCRIPTOR get_pixelformat()
     return pfd;
 }
 
-const char *vertexShaderSource =
-    "#version 330 core\n"
-    "layout (location = 0) in vec3 aPos;\n"
-    "uniform mat4 transform;\n"
-    "uniform mat4 projection;\n"
-    "void main()\n"
-    "{\n"
-    "   gl_Position = projection * transform * vec4(aPos.x, aPos.y, aPos.z, 1.0);\n"
-    "}\0";
+const char *vertexShaderSource = "#version 330 core\n"
+                                 "layout (location = 0) in vec3 aPos;\n"
+                                 "uniform mat4 transform;\n"
+                                 "uniform mat4 projection;\n"
+                                 "void main()\n"
+                                 "{\n"
+                                 "   gl_Position = projection * transform * vec4(aPos.x, aPos.y, aPos.z, 1.0);\n"
+                                 "}\0";
 const char *fragmentShaderSource = "#version 330 core\n"
                                    "uniform vec3 pixel_color;\n"
                                    "out vec4 FragColor;\n"
@@ -119,40 +110,6 @@ LRESULT CALLBACK main_window_proc(HWND hWnd, UINT message, WPARAM wParam, LPARAM
             break;
         }
     }
-        return 0;
-    case WM_DESTROY:
-        ::PostQuitMessage(0);
-        return 0;
-    default:
-        return DefWindowProc(hWnd, message, wParam, lParam);
-    }
-}
-
-LRESULT CALLBACK debugger_window_proc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
-{
-    PAINTSTRUCT ps;
-    switch (message)
-    {
-    case WM_COMMAND: {
-        auto const button_id = LOWORD(wParam);
-        if (button_id == STEP_BUTTON_ID)
-            step_button_cb();
-        else
-            continue_button_cb();
-        return 0;
-    }
-    case WM_CREATE:
-        ::CreateWindow(TEXT("button"), TEXT("STEP"), WS_VISIBLE | WS_CHILD, 0, 0, 50, 50, hWnd,
-                       (HMENU)STEP_BUTTON_ID, ((LPCREATESTRUCT)lParam)->hInstance, nullptr);
-
-        ::CreateWindow(TEXT("button"), TEXT("CONTINUE"), WS_VISIBLE | WS_CHILD, 52, 0, 80, 50, hWnd,
-                       (HMENU)CONTINUE_BUTTON_ID, ((LPCREATESTRUCT)lParam)->hInstance, nullptr);
-
-        ::CreateWindow(TEXT("static"), TEXT("PC:"), WS_VISIBLE | WS_CHILD | SS_SUNKEN | SS_SIMPLE,
-                       0, 52, 30, 20, hWnd, (HMENU)3, ((LPCREATESTRUCT)lParam)->hInstance, nullptr);
-
-        PC_EDIT = ::CreateWindow(TEXT("static"), TEXT(""), WS_VISIBLE | WS_CHILD, 32, 52, 100, 20,
-                                 hWnd, (HMENU)3, ((LPCREATESTRUCT)lParam)->hInstance, nullptr);
         return 0;
     case WM_DESTROY:
         ::PostQuitMessage(0);
@@ -257,12 +214,9 @@ LRESULT CALLBACK opengl_window_proc(HWND hWnd, UINT message, WPARAM wParam, LPAR
     }
 }
 
-lcd::lcd(std::function<void()> quit_cb, std::function<void()> step_cb,
-         std::function<void()> continue_cb)
+lcd::lcd(std::function<void()> quit_cb)
 {
     quit_button_cb = quit_cb;
-    step_button_cb = step_cb;
-    continue_button_cb = continue_cb;
     HINSTANCE hInstance = GetModuleHandle(NULL);
 
     // ******************************************
@@ -284,15 +238,12 @@ lcd::lcd(std::function<void()> quit_cb, std::function<void()> step_cb,
     lcd_rect.bottom = SCR_HEIGHT;
 
     // No resieable main window
-    auto const main_wnd_style =
-        ((WS_OVERLAPPEDWINDOW ^ WS_THICKFRAME) ^ WS_MAXIMIZEBOX) | WS_VISIBLE;
+    auto const main_wnd_style = ((WS_OVERLAPPEDWINDOW ^ WS_THICKFRAME) ^ WS_MAXIMIZEBOX) | WS_VISIBLE;
 
     ::AdjustWindowRect(&lcd_rect, main_wnd_style, wc.lpszMenuName != nullptr);
 
-    HWND main_hwnd =
-        CreateWindow(wc.lpszClassName, "Gameboy (DMG) Emulator. SM.", main_wnd_style, CW_USEDEFAULT,
-                     CW_USEDEFAULT, lcd_rect.right - lcd_rect.left + DEBUGGER_WND_WIDTH,
-                     lcd_rect.bottom - lcd_rect.top, nullptr, nullptr, hInstance, 0);
+    HWND main_hwnd = CreateWindow(wc.lpszClassName, "Gameboy (DMG) Emulator. SM.", main_wnd_style, CW_USEDEFAULT, CW_USEDEFAULT,
+                                  lcd_rect.right - lcd_rect.left, lcd_rect.bottom - lcd_rect.top, nullptr, nullptr, hInstance, 0);
 
     // ******************************************
     //              Opengl Window
@@ -303,21 +254,7 @@ lcd::lcd(std::function<void()> quit_cb, std::function<void()> step_cb,
     if (!RegisterClass(&wc))
         throw std::runtime_error("Cannot register opengl window\n");
 
-    CreateWindow(wc.lpszClassName, nullptr, WS_CHILDWINDOW | WS_VISIBLE, 0, 0, SCR_WIDTH,
-                 SCR_HEIGHT, main_hwnd, nullptr, hInstance, nullptr);
-
-    // ******************************************
-    //              Debugger Window
-    // ******************************************
-    wc.lpfnWndProc = debugger_window_proc;
-    wc.lpszClassName = "debugger_window";
-    wc.hbrBackground = (HBRUSH)GetStockObject(WHITE_BRUSH);
-    if (!RegisterClass(&wc))
-        throw std::runtime_error("Cannot register debugger window\n");
-
-    CreateWindow(wc.lpszClassName, nullptr,
-                 WS_CHILDWINDOW | WS_VISIBLE | SS_ETCHEDFRAME | SS_WHITEFRAME, SCR_WIDTH, 0,
-                 DEBUGGER_WND_WIDTH, SCR_HEIGHT, main_hwnd, nullptr, hInstance, nullptr);
+    CreateWindow(wc.lpszClassName, nullptr, WS_CHILDWINDOW | WS_VISIBLE, 0, 0, SCR_WIDTH, SCR_HEIGHT, main_hwnd, nullptr, hInstance, nullptr);
 }
 
 void lcd::draw_pixel(int x, int y, color c)
@@ -357,9 +294,4 @@ void lcd::after_frame()
         ::DispatchMessage(&msg);
     }
     ::SwapBuffers(device_context);
-}
-
-void lcd::display_pc(std::string s)
-{
-    ::SetWindowText(PC_EDIT, s.c_str());
 }

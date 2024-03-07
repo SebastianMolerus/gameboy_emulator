@@ -8,14 +8,12 @@
 class lcd : public drawing_device
 {
   public:
-    lcd(std::function<void()> quit_cb, std::function<void()> step_cb = nullptr,
-        std::function<void()> continue_cb = nullptr);
-    void draw_pixel(int x, int y, color c);
+    lcd(std::function<void()> quit_cb);
     void push_pixel(color c);
     void after_frame();
-    void display_pc(std::string s);
 
   private:
+    void draw_pixel(int x, int y, color c);
 };
 
 #endif
