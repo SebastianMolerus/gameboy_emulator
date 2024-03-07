@@ -6,6 +6,14 @@
 struct rw_device;
 struct drawing_device;
 
+enum class STATE
+{
+    OAM_SCAN,
+    DRAWING_PIXELS,
+    HORIZONTAL_BLANK,
+    VERTICAL_BLANK
+};
+
 class ppu
 {
   public:
@@ -16,6 +24,7 @@ class ppu
 
     // src_addr can be 0x00 to 0xDF
     void dma(uint8_t src_addr);
+    STATE current_state() const;
     struct ppu_impl;
 
   private:

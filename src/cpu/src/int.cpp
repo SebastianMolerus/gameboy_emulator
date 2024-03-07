@@ -5,8 +5,6 @@
 namespace
 {
 cpu::cpu_impl *g_cpu{};
-uint8_t IE{};
-uint8_t IF{};
 
 constexpr uint16_t IF_ADDR{0xFF0F};
 
@@ -30,7 +28,9 @@ using im = cpu::cpu_impl::IME;
 void int_handler(uint8_t bit_to_clear, uint16_t addr_to_jump)
 {
     g_cpu->m_IME = im::DISABLED;
-    g_cpu->m_rw_device.write(IF_ADDR, clearbit(IF, bit_to_clear));
+    uint8_t IF = g_cpu->m_rw_device.read(0xFF0F);
+    clearbit(IF, bit_to_clear);
+    g_cpu->m_rw_device.write(IF_ADDR, IF);
     g_cpu->push_PC();
     g_cpu->m_reg.PC() = addr_to_jump;
 }
@@ -44,12 +44,11 @@ void check_interrupt(cpu::cpu_impl &cpu)
     if (cpu.m_IME != cpu::cpu_impl::IME::ENABLED)
         return;
 
-    IE = cpu.m_rw_device.read(0xFFFF);
-    IF = cpu.m_rw_device.read(0xFF0F);
+    uint8_t IE = cpu.m_rw_device.read(0xFFFF);
+    uint8_t IF = cpu.m_rw_device.read(0xFF0F);
 
     if (checkbit(IF & IE, VBLANK_BIT))
     {
-        std::cout << "INT: Vblank\n";
         int_handler(VBLANK_BIT, VBLANK_JUMP_ADDR);
     }
     else if (checkbit(IF & IE, STAT_BIT))

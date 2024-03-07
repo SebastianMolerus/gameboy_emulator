@@ -49,8 +49,7 @@ set_property(TARGET json_spirit PROPERTY INTERFACE_INCLUDE_DIRECTORIES
 add_subdirectory(src)
 add_subdirectory(temp)
 
-add_executable(RM_GB_Emu_App src/main.cpp src/load.cpp src/mem.cpp src/log.cpp
-                             src/print.cpp)
+add_executable(RM_GB_Emu_App src/main.cpp src/load.cpp src/mem.cpp)
 
 target_compile_definitions(
   RM_GB_Emu_App

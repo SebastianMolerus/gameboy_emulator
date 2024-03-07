@@ -9,17 +9,9 @@
 #include <ppu.hpp>
 #include <lcd.hpp>
 #include "mem.hpp"
-#include "log.hpp"
-#include <windows.h>
 
 namespace
 {
-
-struct dmg;
-dmg *dmg_ptr{nullptr};
-
-registers curr_regs;
-opcode curr_op;
 
 bool quit{};
 void quit_cb()
@@ -27,55 +19,9 @@ void quit_cb()
     quit = true;
 }
 
-bool step{};
-void step_button();
-
-bool logging{};
-
-void continue_button()
-{
-    step = false;
-}
-
-std::stringstream debug_ss(registers const &reg, opcode const &op)
-{
-    std::stringstream ss;
-    ss << "0x" << std::setw(4) << std::setfill('0') << std::hex << (int)reg.PC() << " "
-       << op.m_mnemonic << " ";
-    for (auto i = 0; i < op.operands_size(); ++i)
-    {
-        auto const &oper = op.m_operands[i];
-        auto const oper_name = oper.m_name;
-        if (!std::strcmp(oper_name, "n8") || !std::strcmp(oper_name, "a8") ||
-            !std::strcmp(oper_name, "e8"))
-            ss << "0x" << std::hex << static_cast<int>(op.m_data[0]);
-        else if (!std::strcmp(oper_name, "n16") || !std::strcmp(oper_name, "a16"))
-            ss << "0x" << std::setw(2) << std::setfill('0') << std::hex
-               << static_cast<int>(op.m_data[1]) << std::setw(2) << std::setfill('0') << std::hex
-               << static_cast<int>(op.m_data[0]);
-        else
-            ss << oper_name;
-        if (!i && op.operands_size() > 1)
-            ss << ", ";
-    }
-    ss << " \n";
-    return ss;
-}
-
-sm::log log{"output.txt"};
-
 void cpu_cb(registers const &reg, opcode const &op)
 {
-    if (!logging)
-        return;
-
-    std::string s = debug_ss(reg, op).str();
-    log.save(s);
 }
-
-// constexpr uint16_t pc_value{0x1D};
-// constexpr uint16_t sp_value{0xFFFE};
-// const registers startup_value{pc_value, sp_value};
 
 struct dmg : public rw_device
 {
@@ -83,14 +29,34 @@ struct dmg : public rw_device
     lcd m_lcd;
     cpu m_cpu;
     ppu m_ppu;
-    int cc{4};
 
-    dmg() : m_lcd{quit_cb, step_button, continue_button}, m_cpu{*this, cpu_cb}, m_ppu{*this, m_lcd}
+    dmg() : m_lcd{quit_cb}, m_cpu{*this, cpu_cb}, m_ppu{*this, m_lcd}
     {
     }
 
     uint8_t read(uint16_t addr, device d) override
     {
+        if (addr == 0xFF00)
+        {
+            return 0xFF;
+        }
+
+        if (d == device::CPU && addr >= 0x8000 && addr <= 0x9FFF &&
+            (m_ppu.current_state() == STATE::DRAWING_PIXELS))
+        {
+            // ignore VRAM read during Pixel Drawing
+            return 0xFF;
+        }
+
+        // OAM $FE00-FE9F
+        if (d == device::CPU && addr >= 0xFE00 && addr <= 0xFE9F &&
+            ((m_ppu.current_state() == STATE::OAM_SCAN) ||
+             (m_ppu.current_state() == STATE::DRAWING_PIXELS)))
+        {
+            // ignore OAM read during Pixel Drawing & OAM SCAN
+            return 0xFF;
+        }
+
         if (d == device::PPU)
             m_cpu.tick();
         return mem.read(addr, d);
@@ -98,59 +64,61 @@ struct dmg : public rw_device
 
     void write(uint16_t addr, uint8_t data, device d) override
     {
-        // DMA
-        if (addr == 0xFF46)
-            m_ppu.dma(data);
+        if (d == device::CPU && addr == 0xff40 && !checkbit(data, 7) &&
+            m_ppu.current_state() != STATE::VERTICAL_BLANK)
+        {
+            // Cpu can disable LCD only while Vertical Blank
+            return;
+        }
 
-        if (addr == 0xFF50 && data == 0x1)
-            logging = true;
+        if (d == device::CPU && addr >= 0x8000 && addr <= 0x9FFF &&
+            (m_ppu.current_state() == STATE::DRAWING_PIXELS))
+        {
+            // ignore CPUs VRAM write during Pixel Drawing
+            return;
+        }
+
+        // OAM $FE00-FE9F
+        if (d == device::CPU && addr >= 0xFE00 && addr <= 0xFE9F &&
+            ((m_ppu.current_state() == STATE::OAM_SCAN) ||
+             (m_ppu.current_state() == STATE::DRAWING_PIXELS)))
+        {
+            // ignore CPUs OAM write during Pixel Drawing & OAM SCAN
+            return;
+        }
+
+        // DMA
+        if (addr == 0xFF46 && d == device::CPU)
+        {
+            m_ppu.dma(data);
+            return;
+        }
 
         mem.write(addr, data, d);
     }
 
-    void step()
+    void loop()
     {
-        // 1 CPU tick == 4 PPU dots
-        m_ppu.dot();
-        --cc;
-        if (!cc)
+        int cc{4};
+        while (!quit)
         {
-            m_cpu.tick();
-            cc = 4;
+            // 1 CPU tick == 4 PPU dots
+            m_ppu.dot();
+            --cc;
+            if (!cc)
+            {
+                m_cpu.tick();
+                cc = 4;
+            }
         }
     }
 };
-
-void step_button()
-{
-    // registers saved = curr_regs;
-    // while (saved.PC() == curr_regs.PC())
-    //     dmg_ptr->step();
-
-    step = true;
-    // while (step)
-    // {
-    //     MSG msg{};
-    //     if (::PeekMessage(&msg, nullptr, 0, 0, PM_REMOVE))
-    //     {
-    //         if (msg.message == WM_QUIT)
-    //         {
-    //             quit = true;
-    //             return;
-    //         }
-    //         ::TranslateMessage(&msg);
-    //         ::DispatchMessage(&msg);
-    //     }
-    // }
-}
 
 } // namespace
 
 int main()
 {
     dmg gameboy;
-    dmg_ptr = &gameboy;
-    while (!quit)
-        gameboy.step();
+    gameboy.loop();
     return 0;
 }

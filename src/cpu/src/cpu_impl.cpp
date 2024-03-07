@@ -93,12 +93,6 @@ void cpu::cpu_impl::adjust_ime()
 
     switch (m_IME)
     {
-    case IME::WANT_DISABLE:
-        m_IME = IME::DISABLING_IN_PROGRESS;
-        break;
-    case IME::DISABLING_IN_PROGRESS:
-        m_IME = IME::DISABLED;
-        break;
     case IME::WANT_ENABLE:
         m_IME = IME::ENABLING_IN_PROGRESS;
         break;
@@ -128,7 +122,6 @@ void cpu::cpu_impl::tick()
     }
 
     adjust_ime();
-    check_interrupt(*this);
 
     m_op = get_opcode(read_byte(), false);
     if (std::strcmp(m_op.m_mnemonic, "PREFIX") == 0)
@@ -152,6 +145,8 @@ void cpu::cpu_impl::tick()
 
     // Execute opcode
     std::invoke(instruction_lookup(m_op.m_mnemonic), *this);
+
+    check_interrupt(*this);
 
     // previous opcode was from prefixed table
     // turn this of to get next opcode from non prefixed table

@@ -24,15 +24,9 @@ struct ppu::ppu_impl
     void dma(uint8_t src_addr);
     void execute_dma();
 
-    enum class STATE
-    {
-        OAM_SCAN,
-        DRAWING_PIXELS,
-        HORIZONTAL_BLANK,
-        VERTICAL_BLANK
-    };
-
     STATE m_current_state{STATE::OAM_SCAN};
+
+    STATE current_state() const;
 
     void OAM_SCAN();
     void DRAWING_PIXELS();

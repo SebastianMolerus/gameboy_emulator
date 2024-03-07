@@ -13,12 +13,13 @@ ppu::ppu_impl::ppu_impl(rw_device &rw_device, drawing_device &drawing_device)
 
 void ppu::ppu_impl::dot()
 {
-    execute_dma();
     lcd_ctrl = m_rw_device.read(0xFF40, device::PPU);
     if (!checkbit(lcd_ctrl, 7))
     {
         return;
     }
+
+    execute_dma();
 
     m_rw_device.write(LCD_Y_COORDINATE, m_current_line, device::PPU);
 
@@ -45,7 +46,6 @@ void ppu::ppu_impl::dma(uint8_t src_addr)
     dma_source = 0;
     dma_source = src_addr;
     dma_source <<= 8;
-    std::cout << "DMA Requested from addr=" << (int)dma_source << '\n';
     dma_counter = 160;
 }
 
@@ -59,10 +59,12 @@ void ppu::ppu_impl::execute_dma()
         m_rw_device.write(destination, value, device::PPU);
         ++dma_source;
         --dma_counter;
-
-        if (dma_counter == 0)
-            std::cout << "DMA complete\n";
     }
+}
+
+STATE ppu::ppu_impl::current_state() const
+{
+    return m_current_state;
 }
 
 // ******************************************
@@ -84,4 +86,9 @@ void ppu::dot()
 void ppu::dma(uint8_t src_addr)
 {
     m_pimpl->dma(src_addr);
+}
+
+STATE ppu::current_state() const
+{
+    return m_pimpl->current_state();
 }

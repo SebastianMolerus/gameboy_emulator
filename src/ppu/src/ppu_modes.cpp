@@ -43,12 +43,14 @@ void ppu::ppu_impl::OAM_SCAN()
     ++m_current_dot;
     if (m_current_dot == 80)
     {
+        // std::cout << "[OAM_SCAN -> DRAWING_PIXELS] current line:" << m_current_line << "\n";
         m_current_state = STATE::DRAWING_PIXELS;
     }
 }
 
 void ppu::ppu_impl::DRAWING_PIXELS()
 {
+
     if (pf.dot(m_current_line) == pixel_fetcher::LINE_DRAWING_STATUS::DONE)
     {
         m_current_state = STATE::HORIZONTAL_BLANK;
@@ -58,6 +60,7 @@ void ppu::ppu_impl::DRAWING_PIXELS()
 
 void ppu::ppu_impl::HORIZONTAL_BLANK()
 {
+
     ++m_current_dot;
     if (m_current_dot == LAST_DOT_IN_LINE)
     {
@@ -71,7 +74,9 @@ void ppu::ppu_impl::HORIZONTAL_BLANK()
             m_rw_device.write(INTERRUPT_FLAG, interrupt_flag, device::PPU);      // save new if
         }
         else
+        {
             m_current_state = STATE::OAM_SCAN;
+        }
     }
 }
 
@@ -82,10 +87,12 @@ void ppu::ppu_impl::VERTICAL_BLANK()
     {
         m_current_dot = 0;
         ++m_current_line;
+
         if (m_current_line == 154)
         {
             m_current_line = 0;
             m_current_state = STATE::OAM_SCAN;
+
             m_drawing_device.after_frame();
         }
     }
