@@ -50,7 +50,6 @@ void ppu::ppu_impl::OAM_SCAN()
 
 void ppu::ppu_impl::DRAWING_PIXELS()
 {
-
     if (pf.dot(m_current_line) == pixel_fetcher::LINE_DRAWING_STATUS::DONE)
     {
         m_current_state = STATE::HORIZONTAL_BLANK;

@@ -45,7 +45,8 @@ void cb(registers const &reg, opcode const &op)
 
 struct bus : public rw_device
 {
-    std::vector<std::tuple<uint16_t, uint8_t, std::string>> m_saved_cycles;
+    using ADDR_DATA_OP = std::tuple<uint16_t, uint8_t, std::string>;
+    std::vector<ADDR_DATA_OP> m_saved_cycles;
     std::array<uint8_t, 0x10000> m_ram{0x0};
     cpu m_cpu;
 

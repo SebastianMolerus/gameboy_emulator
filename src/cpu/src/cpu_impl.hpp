@@ -38,6 +38,8 @@ struct cpu::cpu_impl
 
     void tick();
 
+    void timer();
+
     // read byte from memory pointed by PC
     // increment PC
     uint8_t read_byte();

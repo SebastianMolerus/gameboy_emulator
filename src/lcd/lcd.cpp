@@ -26,10 +26,10 @@ std::function<void()> quit_button_cb;
 std::function<void()> step_button_cb;
 std::function<void()> continue_button_cb;
 
-const unsigned int PIXEL_SIZE = 5;
+const unsigned int PIXEL_SIZE = 4;
 const unsigned int SCR_WIDTH = 160 * PIXEL_SIZE;
 const unsigned int SCR_HEIGHT = 144 * PIXEL_SIZE;
-const unsigned int DEBUGGER_WND_WIDTH = 200;
+const unsigned int DEBUGGER_WND_WIDTH = 0;
 glm::mat4 const projection = glm::ortho<float>(0.0f, SCR_WIDTH, SCR_HEIGHT, 0.0f, -0.1f, 0.1f);
 
 PIXELFORMATDESCRIPTOR get_pixelformat()

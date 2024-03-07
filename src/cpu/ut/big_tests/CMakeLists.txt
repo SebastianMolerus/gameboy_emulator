@@ -4,9 +4,8 @@ function(create_suite suite_name executable_path)
 
   add_executable(${test_suite_name} ${executable_path})
 
-  target_link_libraries(
-    ${test_suite_name} PRIVATE cpu GTest::gtest GTest::gtest_main assembler
-                               utils)
+  target_link_libraries(${test_suite_name} PRIVATE cpu GTest::gtest
+                                                   GTest::gtest_main utils)
   gtest_add_tests(TARGET ${test_suite_name})
 
   target_link_libraries(${test_suite_name} PRIVATE json_spirit cpu)

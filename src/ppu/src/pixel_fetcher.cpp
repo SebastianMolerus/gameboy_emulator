@@ -105,9 +105,6 @@ pixel_fetcher::LINE_DRAWING_STATUS pixel_fetcher::dot(uint8_t screen_line)
         line <<= 8;
         line |= tile_lo;
 
-        // if (line != 0)
-        //     assert(false);
-
         pixels = convert_tile_line_to_colors(line);
     }
     break;

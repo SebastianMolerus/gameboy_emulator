@@ -17,28 +17,18 @@ using instruction = void (cpu::cpu_impl::*)();
 using mapper_T = std::unordered_map<const char *, instruction>;
 using mapper_const_iter = mapper_T::const_iterator;
 
-const mapper_T mapper{{"LD", &cpu::cpu_impl::ld},         {"LDH", &cpu::cpu_impl::ld},
-                      {"PUSH", &cpu::cpu_impl::ld},       {"POP", &cpu::cpu_impl::ld},
-                      {"JP", &cpu::cpu_impl::jmp},        {"JR", &cpu::cpu_impl::jmp},
-                      {"ADC", &cpu::cpu_impl::alu},       {"ADD", &cpu::cpu_impl::alu},
-                      {"NOP", &cpu::cpu_impl::misc},      {"CALL", &cpu::cpu_impl::jmp},
-                      {"RET", &cpu::cpu_impl::jmp},       {"RETI", &cpu::cpu_impl::jmp},
-                      {"RST", &cpu::cpu_impl::jmp},       {"SUB", &cpu::cpu_impl::alu},
-                      {"SBC", &cpu::cpu_impl::alu},       {"AND", &cpu::cpu_impl::alu},
-                      {"XOR", &cpu::cpu_impl::alu},       {"OR", &cpu::cpu_impl::alu},
-                      {"CP", &cpu::cpu_impl::alu},        {"INC", &cpu::cpu_impl::alu},
-                      {"DEC", &cpu::cpu_impl::alu},       {"DAA", &cpu::cpu_impl::alu},
-                      {"SCF", &cpu::cpu_impl::alu},       {"CPL", &cpu::cpu_impl::alu},
-                      {"CCF", &cpu::cpu_impl::alu},       {"RLCA", &cpu::cpu_impl::srb},
-                      {"RLA", &cpu::cpu_impl::srb},       {"RRCA", &cpu::cpu_impl::srb},
-                      {"RRA", &cpu::cpu_impl::srb},       {"PREFIX", &cpu::cpu_impl::misc},
-                      {"RLC", &cpu::cpu_impl::pref_srb},  {"RRC", &cpu::cpu_impl::pref_srb},
-                      {"RL", &cpu::cpu_impl::pref_srb},   {"RR", &cpu::cpu_impl::pref_srb},
-                      {"SLA", &cpu::cpu_impl::pref_srb},  {"SRA", &cpu::cpu_impl::pref_srb},
-                      {"SWAP", &cpu::cpu_impl::pref_srb}, {"SRL", &cpu::cpu_impl::pref_srb},
-                      {"BIT", &cpu::cpu_impl::pref_srb},  {"RES", &cpu::cpu_impl::pref_srb},
-                      {"SET", &cpu::cpu_impl::pref_srb},  {"ILLEGAL_D3", &cpu::cpu_impl::misc},
-                      {"DI", &cpu::cpu_impl::misc},       {"EI", &cpu::cpu_impl::misc}};
+const mapper_T mapper{
+    {"LD", &cpu::cpu_impl::ld},         {"LDH", &cpu::cpu_impl::ld},          {"PUSH", &cpu::cpu_impl::ld},      {"POP", &cpu::cpu_impl::ld},
+    {"JP", &cpu::cpu_impl::jmp},        {"JR", &cpu::cpu_impl::jmp},          {"ADC", &cpu::cpu_impl::alu},      {"ADD", &cpu::cpu_impl::alu},
+    {"NOP", &cpu::cpu_impl::misc},      {"CALL", &cpu::cpu_impl::jmp},        {"RET", &cpu::cpu_impl::jmp},      {"RETI", &cpu::cpu_impl::jmp},
+    {"RST", &cpu::cpu_impl::jmp},       {"SUB", &cpu::cpu_impl::alu},         {"SBC", &cpu::cpu_impl::alu},      {"AND", &cpu::cpu_impl::alu},
+    {"XOR", &cpu::cpu_impl::alu},       {"OR", &cpu::cpu_impl::alu},          {"CP", &cpu::cpu_impl::alu},       {"INC", &cpu::cpu_impl::alu},
+    {"DEC", &cpu::cpu_impl::alu},       {"DAA", &cpu::cpu_impl::alu},         {"SCF", &cpu::cpu_impl::alu},      {"CPL", &cpu::cpu_impl::alu},
+    {"CCF", &cpu::cpu_impl::alu},       {"RLCA", &cpu::cpu_impl::srb},        {"RLA", &cpu::cpu_impl::srb},      {"RRCA", &cpu::cpu_impl::srb},
+    {"RRA", &cpu::cpu_impl::srb},       {"PREFIX", &cpu::cpu_impl::misc},     {"RLC", &cpu::cpu_impl::pref_srb}, {"RRC", &cpu::cpu_impl::pref_srb},
+    {"RL", &cpu::cpu_impl::pref_srb},   {"RR", &cpu::cpu_impl::pref_srb},     {"SLA", &cpu::cpu_impl::pref_srb}, {"SRA", &cpu::cpu_impl::pref_srb},
+    {"SWAP", &cpu::cpu_impl::pref_srb}, {"SRL", &cpu::cpu_impl::pref_srb},    {"BIT", &cpu::cpu_impl::pref_srb}, {"RES", &cpu::cpu_impl::pref_srb},
+    {"SET", &cpu::cpu_impl::pref_srb},  {"ILLEGAL_D3", &cpu::cpu_impl::misc}, {"DI", &cpu::cpu_impl::misc},      {"EI", &cpu::cpu_impl::misc}};
 
 instruction instruction_lookup(const char *mnemonic)
 {
@@ -81,8 +71,7 @@ uint8_t wait_cycles(cpu::cpu_impl &c)
 
 } // namespace
 
-cpu::cpu_impl::cpu_impl(rw_device &rw_device, cb callback)
-    : m_rw_device{rw_device}, m_callback{callback}
+cpu::cpu_impl::cpu_impl(rw_device &rw_device, cb callback) : m_rw_device{rw_device}, m_callback{callback}
 {
 }
 
@@ -113,6 +102,8 @@ void cpu::cpu_impl::push_PC()
 
 void cpu::cpu_impl::tick()
 {
+    timer();
+
     --m_T_states;
     if (m_T_states > 0)
     {
@@ -136,15 +127,10 @@ void cpu::cpu_impl::tick()
     for (auto i = 0; i < m_op.m_bytes - 1; ++i)
         m_op.m_data[i] = read_byte();
 
-    if (m_callback)
-    {
-        registers to_fix_pc = m_reg;
-        to_fix_pc.PC() -= (m_op.m_bytes);
-        std::invoke(m_callback, to_fix_pc, m_op);
-    }
-
     // Execute opcode
     std::invoke(instruction_lookup(m_op.m_mnemonic), *this);
+
+    std::invoke(m_callback, m_reg, m_op);
 
     check_interrupt(*this);
 
@@ -210,8 +196,7 @@ bool cpu::cpu_impl::is_half_carry_on_substraction_byte(uint8_t dest, uint8_t src
 void cpu::cpu_impl::no_op_defined(std::string module_name)
 {
     std::stringstream ss;
-    ss << module_name << ": No operation defined for opcode 0x" << std::hex << (int)m_op.m_hex
-       << "\n";
+    ss << module_name << ": No operation defined for opcode 0x" << std::hex << (int)m_op.m_hex << "\n";
     throw std::runtime_error(ss.str());
 }
 
@@ -226,8 +211,7 @@ uint16_t cpu::cpu_impl::combined_data()
 // ******************************************
 //                  CPU PART
 // ******************************************
-cpu::cpu(rw_device &rw_device, cb callback, registers start_values)
-    : m_pimpl{std::make_unique<cpu_impl>(rw_device, callback)}
+cpu::cpu(rw_device &rw_device, cb callback, registers start_values) : m_pimpl{std::make_unique<cpu_impl>(rw_device, callback)}
 {
     m_pimpl->m_reg = start_values;
 }
