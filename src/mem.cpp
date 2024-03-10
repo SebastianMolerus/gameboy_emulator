@@ -1,5 +1,6 @@
 #include "mem.hpp"
 #include <iostream>
+#include <vector>
 
 extern std::vector<uint8_t> load_rom();
 extern std::array<uint8_t, 256> load_boot_rom();

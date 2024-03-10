@@ -2,7 +2,6 @@
 #define __MEMORY_HPP__
 
 #include <common.hpp>
-#include <vector>
 #include <array>
 
 class memory : public rw_device

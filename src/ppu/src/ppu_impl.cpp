@@ -1,9 +1,8 @@
 #include <common.hpp>
 #include "ppu_impl.hpp"
-#include <cassert>
 #include <array>
+#include <cassert>
 #include "pixel_fetcher.hpp"
-#include <iostream>
 #include "ppu.hpp"
 
 ppu::ppu_impl::ppu_impl(rw_device &rw_device, drawing_device &drawing_device)
@@ -16,6 +15,8 @@ void ppu::ppu_impl::dot()
     lcd_ctrl = m_rw_device.read(0xFF40, device::PPU);
     if (!checkbit(lcd_ctrl, 7))
     {
+        m_current_dot = m_current_line = 0;
+        m_current_state = STATE::OAM_SCAN;
         return;
     }
 
@@ -38,6 +39,8 @@ void ppu::ppu_impl::dot()
         VERTICAL_BLANK();
         break;
     }
+
+    ++m_current_dot;
 }
 
 void ppu::ppu_impl::dma(uint8_t src_addr)
@@ -70,8 +73,7 @@ STATE ppu::ppu_impl::current_state() const
 // ******************************************
 //                  PPU PART
 // ******************************************
-ppu::ppu(rw_device &rw_device, drawing_device &drawing_device)
-    : m_pimpl{std::make_unique<ppu::ppu_impl>(rw_device, drawing_device)}
+ppu::ppu(rw_device &rw_device, drawing_device &drawing_device) : m_pimpl{std::make_unique<ppu::ppu_impl>(rw_device, drawing_device)}
 {
 }
 
@@ -79,12 +81,12 @@ ppu::~ppu() = default;
 
 void ppu::dot()
 {
-    assert(m_pimpl);
     m_pimpl->dot();
 }
 
 void ppu::dma(uint8_t src_addr)
 {
+    assert(src_addr >= 0 && src_addr <= 0xDF);
     m_pimpl->dma(src_addr);
 }
 
