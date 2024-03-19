@@ -15,13 +15,17 @@ class pixel_fetcher
     };
 
     explicit pixel_fetcher(rw_device &rw_device, drawing_device &dd);
-    LINE_DRAWING_STATUS dot(uint8_t screen_line);
+    LINE_DRAWING_STATUS dot(uint8_t screen_line, std::array<sprite, 10> const &visible_sprites);
+    void prepare_for_draw_one_line();
 
   private:
     std::queue<color> pixel_fifo;
     std::array<color, 8> pixels;
 
-    uint8_t x{};
+    uint8_t x_scroll{};
+    uint8_t y_scroll{};
+
+    uint8_t m_current_x{};
     uint8_t pushed_px{};
     int dot_counter{};
 

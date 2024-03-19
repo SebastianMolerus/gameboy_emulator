@@ -42,12 +42,15 @@ void ppu::ppu_impl::OAM_SCAN()
     }
 
     if (m_current_dot == 80)
+    {
+        pf.prepare_for_draw_one_line();
         m_current_state = STATE::DRAWING_PIXELS;
+    }
 }
 
 void ppu::ppu_impl::DRAWING_PIXELS()
 {
-    if (pf.dot(m_current_line) == pixel_fetcher::LINE_DRAWING_STATUS::DONE)
+    if (pf.dot(m_current_line, visible_sprites) == pixel_fetcher::LINE_DRAWING_STATUS::DONE)
         m_current_state = STATE::HORIZONTAL_BLANK;
 }
 
