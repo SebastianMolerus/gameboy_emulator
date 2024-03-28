@@ -15,7 +15,7 @@ class pixel_fetcher
     };
 
     explicit pixel_fetcher(rw_device &rw_device, drawing_device &dd);
-    LINE_DRAWING_STATUS dot(uint8_t screen_line, std::array<sprite, 10> const &visible_sprites);
+    LINE_DRAWING_STATUS dot(uint8_t screen_line, std::vector<sprite> const &visible_sprites);
     void prepare_for_draw_one_line();
 
   private:

@@ -26,16 +26,16 @@ void ppu::ppu_impl::OAM_SCAN()
     // Do it once for each line
     if (!m_current_dot && checkbit(lcd_ctrl, 1))
     {
+        visible_sprites.clear();
         uint8_t const sprite_high = checkbit(lcd_ctrl, 2) ? 16 : 8;
 
-        int loaded_sprites{};
         for (int addr = OAM_ADDR; addr < OAM_ADDR + (40 * sizeof(sprite)); addr += sizeof(sprite))
         {
             sprite s{load_sprite(m_rw_device, addr)};
             if (m_current_line >= (s.y_pos - 16) && m_current_line <= (s.y_pos - 16 + sprite_high))
             {
-                visible_sprites[loaded_sprites++] = s;
-                if (loaded_sprites == 10)
+                visible_sprites.push_back(s);
+                if (visible_sprites.size() == 10)
                     break;
             }
         }

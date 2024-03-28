@@ -6,16 +6,69 @@ namespace
 {
 
 rw_device *g_rw;
-uint16_t g_bg_tile_map_addr;
-uint16_t g_bg_tile_data_addr;
+
+uint16_t g_background_map_addr;
+uint16_t g_background_data_addr;
+
+uint16_t g_window_map_addr;
+uint16_t g_window_data_addr;
 
 using tile_map_index = size_t;
-using tile_addr = uint16_t;
+using addr = uint16_t;
+using pixel_line = uint16_t;
+
 struct screen_coordinates
 {
     uint8_t x{};
     uint8_t y{};
 };
+
+tile_map_index map_screen_coordinates_to_tile_map(screen_coordinates sc)
+{
+    constexpr size_t TILES_IN_TILEMAP_ROW{32};
+    return static_cast<int>(sc.x / 8.0f) + static_cast<int>(sc.y / 8.0f) * TILES_IN_TILEMAP_ROW;
+}
+
+constexpr uint16_t TILE_SIZE_B{16};
+constexpr uint16_t TILE_LINE_SIZE_B{2};
+
+addr get_background_addr(tile_map_index tmi)
+{
+    auto const tile_index = g_rw->read(tmi + g_background_map_addr, device::PPU);
+    return tile_index * TILE_SIZE_B + g_background_data_addr;
+}
+
+addr get_window_addr(tile_map_index tmi)
+{
+    auto const tile_index = g_rw->read(tmi + g_window_map_addr, device::PPU);
+    return tile_index * TILE_SIZE_B + g_window_data_addr;
+}
+
+pixel_line read_pixel_line(addr a)
+{
+    uint8_t const tile_lo = g_rw->read(a, device::PPU);
+    uint8_t const tile_hi = g_rw->read(a + 1, device::PPU);
+    uint16_t line = tile_hi;
+    line <<= 8;
+    line |= tile_lo;
+    return line;
+}
+
+pixel_line get_background(screen_coordinates sc)
+{
+    tile_map_index const tmi = map_screen_coordinates_to_tile_map(sc);
+    addr const addr = get_background_addr(tmi);
+    auto bg_tile_line_addr = ((sc.y % 8) * TILE_LINE_SIZE_B) + addr;
+    return read_pixel_line(bg_tile_line_addr);
+}
+
+pixel_line get_window(screen_coordinates sc)
+{
+    tile_map_index const tmi = map_screen_coordinates_to_tile_map(sc);
+    addr const addr = get_window_addr(tmi);
+    auto window_tile_line_addr = ((sc.y % 8) * TILE_LINE_SIZE_B) + addr;
+    return read_pixel_line(window_tile_line_addr);
+}
 
 color get_color_pallete_based(uint8_t id)
 {
@@ -67,7 +120,7 @@ color get_color_pallete_based(uint8_t id)
         return BLACK;
 }
 
-constexpr std::array<color, 8> convert_tile_line_to_colors(uint16_t line)
+std::array<color, 8> convert_tile_line_to_colors(uint16_t line)
 {
     uint8_t const l = line >> 8; // a b c d ...
     uint8_t const r = line;      // i j k l ...
@@ -90,50 +143,6 @@ constexpr std::array<color, 8> convert_tile_line_to_colors(uint16_t line)
     return colors;
 }
 
-class fetcher
-{
-  public:
-    fetcher(uint16_t tile_map_addr, uint16_t tile_data_addr) : m_tile_map_addr{tile_map_addr}, m_tile_data_addr{tile_data_addr}
-    {
-    }
-
-    uint16_t get_pixel_line(screen_coordinates sc)
-    {
-        tile_map_index tmi = map_screen_coordinates_to_tile_map({sc.x, sc.y});
-        tile_addr ta = get_tile_addr(tmi);
-
-        constexpr uint16_t TILE_LINE_SIZE_B{2};
-        auto tile_line_addr = ((sc.y % 8) * TILE_LINE_SIZE_B) + ta;
-
-        uint8_t const tile_lo = g_rw->read(tile_line_addr++, device::PPU);
-        uint8_t const tile_hi = g_rw->read(tile_line_addr, device::PPU);
-
-        uint16_t line = tile_hi;
-        line <<= 8;
-        line |= tile_lo;
-        return line;
-    }
-
-  private:
-    uint16_t const m_tile_map_addr;
-    uint16_t const m_tile_data_addr;
-
-    // Convert tile index into address where it is stored in memory
-    tile_addr get_tile_addr(tile_map_index tmi)
-    {
-        constexpr uint16_t TILE_SIZE_B{16};
-        auto const tile_index = g_rw->read(tmi + g_bg_tile_map_addr, device::PPU);
-        return tile_index * TILE_SIZE_B + m_tile_data_addr;
-    }
-
-    // Returns tile_map_index which can be a value from 0 to 1023 ( 32 rows x 32 columns of 1B tiles indexes )
-    tile_map_index map_screen_coordinates_to_tile_map(screen_coordinates sc)
-    {
-        constexpr size_t TILES_IN_TILEMAP_ROW{32};
-        return static_cast<int>(sc.x / 8.0f) + static_cast<int>(sc.y / 8.0f) * TILES_IN_TILEMAP_ROW;
-    }
-};
-
 } // namespace
 
 pixel_fetcher::pixel_fetcher(rw_device &rw_device, drawing_device &dd) : rw{rw_device}, dd{dd}
@@ -141,22 +150,17 @@ pixel_fetcher::pixel_fetcher(rw_device &rw_device, drawing_device &dd) : rw{rw_d
     g_rw = &(this->rw);
 }
 
-pixel_fetcher::LINE_DRAWING_STATUS pixel_fetcher::dot(uint8_t screen_line, std::array<sprite, 10> const &visible_sprites)
+pixel_fetcher::LINE_DRAWING_STATUS pixel_fetcher::dot(uint8_t screen_line, std::vector<sprite> const &visible_sprites)
 {
     switch (dot_counter)
     {
     case 0: {
-        fetcher f{g_bg_tile_map_addr, g_bg_tile_data_addr};
-        auto const pixel_line = f.get_pixel_line({m_current_x, static_cast<uint8_t>(y_scroll + screen_line)});
+        auto pixel_line = get_background({m_current_x, static_cast<uint8_t>(y_scroll + screen_line)});
+        // auto const pixel_line = f.get_pixel_line({m_current_x, static_cast<uint8_t>(y_scroll + screen_line)});
         pixels = convert_tile_line_to_colors(pixel_line);
     }
     break;
-    case 1:
-    case 2:
-    case 3:
-    case 4:
-    case 5:
-    case 6:
+    case 1 - 6:
         break;
     case 7:
         if (pixel_fifo.size() == 8 || pixel_fifo.empty())
@@ -198,8 +202,8 @@ void pixel_fetcher::prepare_for_draw_one_line()
 {
     constexpr uint16_t LCD_CTRL_addr{0xFF40};
     uint8_t const lcd_ctrl = rw.read(LCD_CTRL_addr, device::PPU);
-    g_bg_tile_map_addr = checkbit(lcd_ctrl, 3) ? 0x9C00 : 0x9800;
-    g_bg_tile_data_addr = checkbit(lcd_ctrl, 4) ? 0x8000 : 0x8800;
+    g_background_map_addr = checkbit(lcd_ctrl, 3) ? 0x9C00 : 0x9800;
+    g_background_data_addr = checkbit(lcd_ctrl, 4) ? 0x8000 : 0x8800;
 
     constexpr uint16_t scroll_y_addr{0xFF42};
     constexpr uint16_t scroll_x_addr{0xFF43};

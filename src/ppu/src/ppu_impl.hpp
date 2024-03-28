@@ -15,7 +15,7 @@ struct ppu::ppu_impl
     uint8_t lcd_ctrl{};
 
     // temporary value of visible sprites in each drawing line
-    std::array<sprite, 10> visible_sprites{};
+    std::vector<sprite> visible_sprites{};
 
     void dot();
 
