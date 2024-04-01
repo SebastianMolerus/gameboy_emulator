@@ -13,10 +13,12 @@ struct ppu::ppu_impl
     pixel_fetcher m_pixel_fetcher;
 
     // temporary value of 0xFF40 ( lcd control )
-    uint8_t lcd_ctrl{};
+    uint8_t m_lcd_ctrl{};
 
     // temporary value of visible sprites in each drawing line
     std::vector<sprite> visible_sprites{};
+
+    bool draw_pixel_line();
 
     void dot();
 

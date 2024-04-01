@@ -12,8 +12,8 @@ ppu::ppu_impl::ppu_impl(rw_device &rw_device, drawing_device &drawing_device)
 
 void ppu::ppu_impl::dot()
 {
-    lcd_ctrl = m_rw_device.read(0xFF40, device::PPU);
-    if (!checkbit(lcd_ctrl, 7))
+    m_lcd_ctrl = m_rw_device.read(0xFF40, device::PPU);
+    if (!checkbit(m_lcd_ctrl, 7))
     {
         m_current_dot = m_current_line = 0;
         m_current_state = STATE::OAM_SCAN;

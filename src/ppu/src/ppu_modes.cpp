@@ -23,10 +23,10 @@ void ppu::ppu_impl::OAM_SCAN()
 {
     // when OBJ is enabled in FF40 - LCD Control
     // Do it once for each line
-    if (!m_current_dot && checkbit(lcd_ctrl, 1))
+    if (!m_current_dot && checkbit(m_lcd_ctrl, 1))
     {
         visible_sprites.clear();
-        uint8_t const sprite_high = checkbit(lcd_ctrl, 2) ? 16 : 8;
+        uint8_t const sprite_high = checkbit(m_lcd_ctrl, 2) ? 16 : 8;
 
         for (int addr = OAM_ADDR; addr < OAM_ADDR + (40 * sizeof(sprite)); addr += sizeof(sprite))
         {
@@ -43,14 +43,15 @@ void ppu::ppu_impl::OAM_SCAN()
     if (m_current_dot == 80)
     {
         m_pixel_fetcher.update_addresses();
+        m_pixel_fetcher.set_background_mode();
         m_current_state = STATE::DRAWING_PIXELS;
     }
 }
 
 void ppu::ppu_impl::DRAWING_PIXELS()
 {
-    // if (pf.dot(m_current_line, visible_sprites) == pixel_fetcher::LINE_DRAWING_STATUS::DONE)
-    //   m_current_state = STATE::HORIZONTAL_BLANK;
+    if (draw_pixel_line())
+        m_current_state = STATE::HORIZONTAL_BLANK;
 }
 
 void ppu::ppu_impl::HORIZONTAL_BLANK()
