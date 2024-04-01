@@ -6,7 +6,7 @@
 #include "ppu.hpp"
 
 ppu::ppu_impl::ppu_impl(rw_device &rw_device, drawing_device &drawing_device)
-    : m_rw_device{rw_device}, m_drawing_device{drawing_device}, pf{rw_device, drawing_device}
+    : m_rw_device{rw_device}, m_drawing_device{drawing_device}, m_pixel_fetcher{rw_device}
 {
 }
 

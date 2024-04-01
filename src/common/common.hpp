@@ -23,6 +23,12 @@ struct rw_device
     virtual void write(uint16_t addr, uint8_t data, device d = device::CPU) = 0;
 };
 
+struct screen_coordinates
+{
+    uint8_t m_x{};
+    uint8_t m_y{};
+};
+
 struct sprite
 {
     uint8_t y_pos{};

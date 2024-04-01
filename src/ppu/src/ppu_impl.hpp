@@ -3,13 +3,14 @@
 
 #include <ppu.hpp>
 #include "pixel_fetcher.hpp"
+#include <vector>
 
 struct ppu::ppu_impl
 {
     ppu_impl(rw_device &rw_device, drawing_device &drawing_device);
     rw_device &m_rw_device;
     drawing_device &m_drawing_device;
-    pixel_fetcher pf;
+    pixel_fetcher m_pixel_fetcher;
 
     // temporary value of 0xFF40 ( lcd control )
     uint8_t lcd_ctrl{};

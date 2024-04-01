@@ -2,35 +2,33 @@
 #define PIXEL_FETCHER_HPP
 
 #include <common.hpp>
-#include <queue>
-#include <array>
+#include <optional>
 
 class pixel_fetcher
 {
   public:
-    enum class LINE_DRAWING_STATUS
-    {
-        IN_PROGRESS,
-        DONE
-    };
+    explicit pixel_fetcher(rw_device &rw_device);
 
-    explicit pixel_fetcher(rw_device &rw_device, drawing_device &dd);
-    LINE_DRAWING_STATUS dot(uint8_t screen_line, std::vector<sprite> const &visible_sprites);
-    void prepare_for_draw_one_line();
+    std::optional<uint16_t> fetch_tile_line(screen_coordinates sc);
+    std::optional<uint16_t> fetch_sprite_line(uint8_t sprite_index, uint8_t line);
+
+    void set_background_mode();
+    void set_window_mode();
+
+    void update_addresses();
 
   private:
-    std::queue<color> pixel_fifo;
-    std::array<color, 8> pixels;
+    enum class fetching_mode
+    {
+        background,
+        window
+    } m_mode{fetching_mode::background};
+    rw_device &m_rw;
 
-    uint8_t x_scroll{};
-    uint8_t y_scroll{};
+    static constexpr int delay_value{5};
 
-    uint8_t m_current_x{};
-    uint8_t pushed_px{};
-    int dot_counter{};
-
-    drawing_device &dd;
-    rw_device &rw;
+    int m_delay{delay_value};
+    int m_sprite_delay{delay_value};
 };
 
 #endif

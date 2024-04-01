@@ -1,6 +1,4 @@
 #include "pixel_fetcher.hpp"
-#include <cassert>
-#include "tile_info.hpp"
 
 namespace
 {
@@ -13,20 +11,15 @@ uint16_t g_background_data_addr;
 uint16_t g_window_map_addr;
 uint16_t g_window_data_addr;
 
+uint8_t g_sprite_height;
+
 using tile_map_index = size_t;
 using addr = uint16_t;
-using pixel_line = uint16_t;
-
-struct screen_coordinates
-{
-    uint8_t x{};
-    uint8_t y{};
-};
 
 tile_map_index map_screen_coordinates_to_tile_map(screen_coordinates sc)
 {
     constexpr size_t TILES_IN_TILEMAP_ROW{32};
-    return static_cast<int>(sc.x / 8.0f) + static_cast<int>(sc.y / 8.0f) * TILES_IN_TILEMAP_ROW;
+    return static_cast<int>(sc.m_x / 8.0f) + static_cast<int>(sc.m_y / 8.0f) * TILES_IN_TILEMAP_ROW;
 }
 
 constexpr uint16_t TILE_SIZE_B{16};
@@ -44,7 +37,7 @@ addr get_window_addr(tile_map_index tmi)
     return tile_index * TILE_SIZE_B + g_window_data_addr;
 }
 
-pixel_line read_pixel_line(addr a)
+uint16_t read_two_bytes(addr a)
 {
     uint8_t const tile_lo = g_rw->read(a, device::PPU);
     uint8_t const tile_hi = g_rw->read(a + 1, device::PPU);
@@ -54,159 +47,100 @@ pixel_line read_pixel_line(addr a)
     return line;
 }
 
-pixel_line get_background(screen_coordinates sc)
+uint16_t get_background(screen_coordinates sc)
 {
     tile_map_index const tmi = map_screen_coordinates_to_tile_map(sc);
     addr const addr = get_background_addr(tmi);
-    auto bg_tile_line_addr = ((sc.y % 8) * TILE_LINE_SIZE_B) + addr;
-    return read_pixel_line(bg_tile_line_addr);
+    auto bg_tile_line_addr = ((sc.m_y % 8) * TILE_LINE_SIZE_B) + addr;
+    return read_two_bytes(bg_tile_line_addr);
 }
 
-pixel_line get_window(screen_coordinates sc)
+uint16_t get_window(screen_coordinates sc)
 {
     tile_map_index const tmi = map_screen_coordinates_to_tile_map(sc);
     addr const addr = get_window_addr(tmi);
-    auto window_tile_line_addr = ((sc.y % 8) * TILE_LINE_SIZE_B) + addr;
-    return read_pixel_line(window_tile_line_addr);
-}
-
-color get_color_pallete_based(uint8_t id)
-{
-    constexpr color WHITE{1.f, 1.f, 1.f};
-    constexpr color LIGHT_GRAY{0.867f, 0.706f, 0.71f};
-    constexpr color DARK_GRAY{0.38f, 0.31f, 0.302f};
-    constexpr color BLACK{};
-
-    uint8_t const bg_palette = g_rw->read(0xFF47, device::PPU);
-
-    uint8_t val{};
-    switch (id)
-    {
-    case 3:
-        if (checkbit(bg_palette, 7))
-            setbit(val, 1);
-        if (checkbit(bg_palette, 6))
-            setbit(val, 0);
-        break;
-    case 2:
-        if (checkbit(bg_palette, 5))
-            setbit(val, 1);
-        if (checkbit(bg_palette, 4))
-            setbit(val, 0);
-        break;
-    case 1:
-        if (checkbit(bg_palette, 3))
-            setbit(val, 1);
-        if (checkbit(bg_palette, 2))
-            setbit(val, 0);
-        break;
-    case 0:
-        if (checkbit(bg_palette, 1))
-            setbit(val, 1);
-        if (checkbit(bg_palette, 0))
-            setbit(val, 0);
-        break;
-    default:
-        assert(false);
-    }
-
-    if (val == 0)
-        return WHITE;
-    else if (val == 1)
-        return LIGHT_GRAY;
-    else if (val == 2)
-        return DARK_GRAY;
-    else
-        return BLACK;
-}
-
-std::array<color, 8> convert_tile_line_to_colors(uint16_t line)
-{
-    uint8_t const l = line >> 8; // a b c d ...
-    uint8_t const r = line;      // i j k l ...
-
-    // result[i] = ia jb kc
-    std::array<uint8_t, 8> result{};
-    for (int i = 0; i < 8; ++i)
-    {
-        uint8_t id{};
-        if (checkbit(r, 7 - i))
-            setbit(id, 1);
-        if (checkbit(l, 7 - i))
-            setbit(id, 0);
-        result[i] = id;
-    }
-
-    std::array<color, 8> colors;
-    for (int i = 0; i < 8; ++i)
-        colors[i] = get_color_pallete_based(result[i]);
-    return colors;
+    auto window_tile_line_addr = ((sc.m_y % 8) * TILE_LINE_SIZE_B) + addr;
+    return read_two_bytes(window_tile_line_addr);
 }
 
 } // namespace
 
-pixel_fetcher::pixel_fetcher(rw_device &rw_device, drawing_device &dd) : rw{rw_device}, dd{dd}
+pixel_fetcher::pixel_fetcher(rw_device &rw_device) : m_rw{rw_device}
 {
-    g_rw = &(this->rw);
+    g_rw = &m_rw;
+    update_addresses();
 }
 
-pixel_fetcher::LINE_DRAWING_STATUS pixel_fetcher::dot(uint8_t screen_line, std::vector<sprite> const &visible_sprites)
+std::optional<uint16_t> pixel_fetcher::fetch_tile_line(screen_coordinates sc)
 {
-    switch (dot_counter)
+    if (!m_delay)
     {
-    case 0: {
-        auto pixel_line = get_background({m_current_x, static_cast<uint8_t>(y_scroll + screen_line)});
-        // auto const pixel_line = f.get_pixel_line({m_current_x, static_cast<uint8_t>(y_scroll + screen_line)});
-        pixels = convert_tile_line_to_colors(pixel_line);
-    }
-    break;
-    case 1 - 6:
-        break;
-    case 7:
-        if (pixel_fifo.size() == 8 || pixel_fifo.empty())
-        {
-            for (int i = 0; i < 8; ++i)
-                pixel_fifo.push(pixels[i]);
-
-            dot_counter = -1;
-            m_current_x += 8;
-        }
+        m_delay = delay_value;
+        if (m_mode == fetching_mode::background)
+            return get_background(sc);
         else
-            dot_counter = 6;
-        break;
-    }
-
-    if (pixel_fifo.size() > 8)
-    {
-        ++pushed_px;
-        color c = pixel_fifo.front();
-        pixel_fifo.pop();
-
-        dd.push_pixel(c);
-    }
-
-    ++dot_counter;
-    if (pushed_px == 160)
-    {
-        m_current_x = dot_counter = 0;
-        std::queue<color> empty;
-        swap(pixel_fifo, empty);
-        pushed_px = 0;
-        return LINE_DRAWING_STATUS::DONE;
+            return get_window(sc);
     }
     else
-        return LINE_DRAWING_STATUS::IN_PROGRESS;
+    {
+        --m_delay;
+        return std::nullopt;
+    }
 }
 
-void pixel_fetcher::prepare_for_draw_one_line()
+std::optional<uint16_t> pixel_fetcher::fetch_sprite_line(uint8_t sprite_index, uint8_t line)
+{
+    m_delay = delay_value;
+    if (!m_sprite_delay)
+    {
+        uint16_t sprite_begin_addr = 0x8000 + (sprite_index * 16);
+        m_sprite_delay = delay_value;
+        if (g_sprite_height == 8 || (g_sprite_height == 16 && line <= 7))
+            return read_two_bytes(sprite_begin_addr + (line * 2));
+        else
+        {
+            line -= 8;
+            uint16_t addr = sprite_begin_addr + (line * 2);
+            addr |= 1;
+            return read_two_bytes(addr);
+        }
+    }
+    else
+    {
+        --m_sprite_delay;
+        return std::nullopt;
+    }
+}
+
+void pixel_fetcher::set_background_mode()
+{
+    m_sprite_delay = delay_value;
+    if (m_mode != pixel_fetcher::fetching_mode::background)
+    {
+        m_delay = delay_value;
+        m_mode = pixel_fetcher::fetching_mode::background;
+    }
+}
+
+void pixel_fetcher::set_window_mode()
+{
+    m_sprite_delay = delay_value;
+    if (m_mode != pixel_fetcher::fetching_mode::window)
+    {
+        m_delay = delay_value;
+        m_mode = pixel_fetcher::fetching_mode::window;
+    }
+}
+
+void pixel_fetcher::update_addresses()
 {
     constexpr uint16_t LCD_CTRL_addr{0xFF40};
-    uint8_t const lcd_ctrl = rw.read(LCD_CTRL_addr, device::PPU);
+    uint8_t const lcd_ctrl = m_rw.read(LCD_CTRL_addr, device::PPU);
     g_background_map_addr = checkbit(lcd_ctrl, 3) ? 0x9C00 : 0x9800;
     g_background_data_addr = checkbit(lcd_ctrl, 4) ? 0x8000 : 0x8800;
 
-    constexpr uint16_t scroll_y_addr{0xFF42};
-    constexpr uint16_t scroll_x_addr{0xFF43};
-    y_scroll = rw.read(scroll_y_addr, device::PPU);
-    x_scroll = rw.read(scroll_x_addr, device::PPU);
+    g_window_map_addr = checkbit(lcd_ctrl, 6) ? 0x9C00 : 0x9800;
+    g_window_data_addr = g_background_data_addr;
+
+    g_sprite_height = checkbit(lcd_ctrl, 2) ? 16 : 8;
 }

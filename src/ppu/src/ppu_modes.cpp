@@ -3,7 +3,6 @@
 
 namespace
 {
-constexpr int LAST_DOT_IN_LINE{456};
 
 sprite load_sprite(rw_device &rw, uint16_t addr)
 {
@@ -43,20 +42,20 @@ void ppu::ppu_impl::OAM_SCAN()
 
     if (m_current_dot == 80)
     {
-        pf.prepare_for_draw_one_line();
+        m_pixel_fetcher.update_addresses();
         m_current_state = STATE::DRAWING_PIXELS;
     }
 }
 
 void ppu::ppu_impl::DRAWING_PIXELS()
 {
-    if (pf.dot(m_current_line, visible_sprites) == pixel_fetcher::LINE_DRAWING_STATUS::DONE)
-        m_current_state = STATE::HORIZONTAL_BLANK;
+    // if (pf.dot(m_current_line, visible_sprites) == pixel_fetcher::LINE_DRAWING_STATUS::DONE)
+    //   m_current_state = STATE::HORIZONTAL_BLANK;
 }
 
 void ppu::ppu_impl::HORIZONTAL_BLANK()
 {
-    if (m_current_dot == LAST_DOT_IN_LINE)
+    if (m_current_dot == 456)
     {
         m_current_dot = 0;
         ++m_current_line;
