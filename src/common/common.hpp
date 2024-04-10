@@ -31,10 +31,25 @@ struct screen_coordinates
 
 struct sprite
 {
-    uint8_t y_pos{};
-    uint8_t x_pos{};
-    uint8_t tile_index{};
-    uint8_t flags{};
+    uint8_t m_y_pos{};
+    uint8_t m_x_pos{};
+    uint8_t m_tile_index{};
+    uint8_t m_flags{};
+
+    uint8_t priority() const
+    {
+        return checkbit(m_flags, 7);
+    }
+
+    uint8_t palette() const
+    {
+        return checkbit(m_flags, 4);
+    }
+
+    uint16_t line_addr(uint8_t line) const
+    {
+        return 0x8000 + (m_tile_index * 16) + (line * 2);
+    }
 };
 
 struct color

@@ -1,6 +1,8 @@
 #include "ppu_impl.hpp"
 #include <array>
 #include <cassert>
+#include <deque>
+#include <variant>
 
 namespace
 {
@@ -31,7 +33,7 @@ color get_color(uint8_t color_id, uint8_t palette)
 
 struct sprite_pixel
 {
-    uint8_t m_priority{};   // 0 or 1
+    uint8_t m_priority{};   // 0 or 1 ( BG and Window colors 1–3 are drawn over this OBJ )
     uint8_t m_color_id{};   // 0-3, 0 means transparent
     uint8_t m_palette_id{}; // 0 or 1
 
@@ -78,9 +80,19 @@ std::array<uint8_t, 8> convert_tile_line_to_color_ids(uint16_t line)
     return result;
 }
 
+uint16_t read_two_bytes(rw_device &rw, uint16_t addr)
+{
+    uint8_t const tile_lo = rw.read(addr, device::PPU);
+    uint8_t const tile_hi = rw.read(addr + 1, device::PPU);
+    uint16_t line = tile_hi;
+    line <<= 8;
+    line |= tile_lo;
+    return line;
+}
+
 } // namespace
 
-namespace LOL
+namespace
 {
 uint8_t current_x{};
 uint8_t scroll_x{};
@@ -89,9 +101,17 @@ uint8_t scroll_y{};
 uint8_t pixel_count_to_discard{};
 
 uint8_t pushed_pixels{};
-} // namespace LOL
 
-using namespace LOL;
+enum pixel_type
+{
+    BACKGROUND = 0,
+    SPRITE = 1
+};
+
+using final_pixel = std::variant<bgw_pixel, sprite_pixel>;
+std::deque<final_pixel> pixel_fifo;
+
+} // namespace
 
 bool ppu::ppu_impl::draw_pixel_line()
 {
@@ -100,35 +120,93 @@ bool ppu::ppu_impl::draw_pixel_line()
         scroll_x = m_rw_device.read(0xFF43, device::PPU);
         scroll_y = m_rw_device.read(0xFF42, device::PPU);
         pixel_count_to_discard = scroll_x % 8;
+        m_pixel_fetcher.set_background_mode();
     }
     else
         scroll_x = m_rw_device.read(0xFF43, device::PPU) & 0xF8;
 
     screen_coordinates sc{static_cast<uint8_t>(current_x + scroll_x), static_cast<uint8_t>(m_current_line + scroll_y)};
 
-    if (auto pixels = m_pixel_fetcher.fetch_tile_line(sc); pixels)
+    if (pixel_fifo.size() <= 8)
     {
-        std::array<uint8_t, 8> ids = convert_tile_line_to_color_ids(pixels.value());
+        uint16_t background_line = m_pixel_fetcher.fetch_tile_line(sc).value();
+        auto const colors = convert_tile_line_to_color_ids(background_line);
+        for (auto c : colors)
+            pixel_fifo.push_back(bgw_pixel{c});
+        current_x += 8;
+    }
 
-        for (auto id : ids)
+    if (!visible_sprites.empty())
+    {
+        assert(pixel_fifo.size() >= 8);
+        for (auto const &vs : visible_sprites)
         {
-            if (pixel_count_to_discard)
-                --pixel_count_to_discard;
-            else
+            if (vs.m_x_pos > 0 && (vs.m_x_pos - 8) == pushed_pixels)
             {
-                m_drawing_device.push_pixel(bgw_pixel{id}.color(m_rw_device));
-                ++pushed_pixels;
+                uint8_t const sprite_top_y = vs.m_y_pos - 16;
+                uint8_t const diff = m_current_line - sprite_top_y;
+                uint16_t const line_addr = vs.line_addr(diff);
+                uint16_t const sprite_line = read_two_bytes(m_rw_device, line_addr);
 
-                // End of the line
-                if (pushed_pixels == 160)
+                auto sprite_line_colors = convert_tile_line_to_color_ids(sprite_line);
+
+                for (int i = 0; i < 8; ++i)
                 {
-                    pushed_pixels = current_x = scroll_x = scroll_y = pixel_count_to_discard = 0;
-                    return true;
+                    if (sprite_line_colors[i] == 0) // Transparent case
+                        continue;
+
+                    switch (pixel_fifo[i].index())
+                    {
+                    case BACKGROUND: {
+                        bgw_pixel const &p = std::get<BACKGROUND>(pixel_fifo[i]);
+                        // sprite with priority 0 wins over any background pixel
+                        // sprite with priority 1 wins only over background pixel with color id 0
+                        // in other cases sprite pixel lose
+                        if (vs.priority() == 0 || (vs.priority() == 1 && p.m_color_id == 0))
+                            pixel_fifo[i] = sprite_pixel{0, sprite_line_colors[i], vs.palette()};
+                        break;
+                    }
+                    case SPRITE:
+                        // do nothing with old sprite
+                        break;
+                    default:
+                        assert(false);
+                    }
                 }
             }
         }
+    }
 
-        current_x += 8;
+    if (pixel_fifo.size() >= 8)
+    {
+        if (pixel_count_to_discard)
+        {
+            --pixel_count_to_discard;
+            pixel_fifo.pop_front();
+            return false;
+        }
+
+        if (pixel_fifo.front().index() == BACKGROUND)
+        {
+            bgw_pixel &p = std::get<BACKGROUND>(pixel_fifo.front());
+            m_drawing_device.push_pixel(p.color(m_rw_device));
+        }
+        else
+        {
+            sprite_pixel &sp = std::get<SPRITE>(pixel_fifo.front());
+            m_drawing_device.push_pixel(sp.color(m_rw_device));
+        }
+
+        pixel_fifo.pop_front();
+        ++pushed_pixels;
+
+        if (pushed_pixels == 160)
+        {
+            pushed_pixels = current_x = scroll_x = scroll_y = pixel_count_to_discard = 0;
+            std::deque<final_pixel> empty{};
+            pixel_fifo.swap(empty);
+            return true;
+        }
     }
 
     return false;

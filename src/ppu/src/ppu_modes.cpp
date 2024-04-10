@@ -7,15 +7,17 @@ namespace
 sprite load_sprite(rw_device &rw, uint16_t addr)
 {
     sprite result;
-    result.y_pos = rw.read(addr++, device::PPU);
-    result.x_pos = rw.read(addr++, device::PPU);
-    result.tile_index = rw.read(addr++, device::PPU);
-    result.flags = rw.read(addr, device::PPU);
+    result.m_y_pos = rw.read(addr++, device::PPU);
+    result.m_x_pos = rw.read(addr++, device::PPU);
+    result.m_tile_index = rw.read(addr++, device::PPU);
+    result.m_flags = rw.read(addr, device::PPU);
     return result;
 }
 
 // Address where sprites reside, there are 40x of them
 constexpr uint16_t OAM_ADDR{0xFE00};
+
+bool check_line{};
 
 } // namespace
 
@@ -23,15 +25,16 @@ void ppu::ppu_impl::OAM_SCAN()
 {
     // when OBJ is enabled in FF40 - LCD Control
     // Do it once for each line
-    if (!m_current_dot && checkbit(m_lcd_ctrl, 1))
+    if (checkbit(m_lcd_ctrl, 1) && !check_line)
     {
+        check_line = true;
         visible_sprites.clear();
         uint8_t const sprite_high = checkbit(m_lcd_ctrl, 2) ? 16 : 8;
 
         for (int addr = OAM_ADDR; addr < OAM_ADDR + (40 * sizeof(sprite)); addr += sizeof(sprite))
         {
             sprite s{load_sprite(m_rw_device, addr)};
-            if (m_current_line >= (s.y_pos - 16) && m_current_line <= (s.y_pos - 16 + sprite_high))
+            if (m_current_line >= (s.m_y_pos - 16) && m_current_line <= (s.m_y_pos - 16 + sprite_high))
             {
                 visible_sprites.push_back(s);
                 if (visible_sprites.size() == 10)
@@ -42,6 +45,7 @@ void ppu::ppu_impl::OAM_SCAN()
 
     if (m_current_dot == 80)
     {
+        check_line = false;
         m_pixel_fetcher.update_addresses();
         m_pixel_fetcher.set_background_mode();
         m_current_state = STATE::DRAWING_PIXELS;
@@ -78,7 +82,7 @@ void ppu::ppu_impl::VERTICAL_BLANK()
 {
     if (m_current_dot == 456)
     {
-        m_current_dot = 0;
+        m_current_dot = -1;
         ++m_current_line;
         if (m_current_line == 154)
         {

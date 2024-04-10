@@ -25,7 +25,7 @@ class pixel_fetcher
     } m_mode{fetching_mode::background};
     rw_device &m_rw;
 
-    static constexpr int delay_value{5};
+    static constexpr int delay_value{0};
 
     int m_delay{delay_value};
     int m_sprite_delay{delay_value};
