@@ -55,6 +55,6 @@ target_compile_definitions(
   RM_GB_Emu_App
   PRIVATE
     BOOT_ROM_FILE="${CMAKE_CURRENT_LIST_DIR}/src/resources/dmg_boot_rom.gb"
-    ROM_FILE="${CMAKE_CURRENT_LIST_DIR}/src/resources/TetrisWorld.gb")
+    ROM_FILE="${CMAKE_CURRENT_LIST_DIR}/src/resources/TetrisJUEV1.1.gb")
 
 target_link_libraries(RM_GB_Emu_App PRIVATE decoder cpu ppu lcd common)

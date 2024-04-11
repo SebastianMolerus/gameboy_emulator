@@ -22,8 +22,6 @@ class cpu
 
     void tick();
 
-    void tick_test();
-
     struct cpu_impl;
 
   private:

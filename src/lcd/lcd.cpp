@@ -19,6 +19,7 @@ HGLRC rendering_context;
 HDC device_context;
 
 std::function<void()> quit_button_cb;
+std::function<void(key_action, key)> keyboard_button_cb;
 
 const unsigned int PIXEL_SIZE = 5;
 const unsigned int SCR_WIDTH = 160 * PIXEL_SIZE;
@@ -102,15 +103,67 @@ LRESULT CALLBACK main_window_proc(HWND hWnd, UINT message, WPARAM wParam, LPARAM
 {
     switch (message)
     {
-    case WM_KEYDOWN: {
+    case WM_KEYDOWN:
         switch (wParam)
         {
         case VK_ESCAPE:
             ::PostQuitMessage(0);
             break;
+        case VK_LEFT:
+            std::invoke(keyboard_button_cb, key_action::down, key::LEFT);
+            break;
+        case VK_RIGHT:
+            std::invoke(keyboard_button_cb, key_action::down, key::RIGHT);
+            break;
+        case VK_UP:
+            std::invoke(keyboard_button_cb, key_action::down, key::UP);
+            break;
+        case VK_DOWN:
+            std::invoke(keyboard_button_cb, key_action::down, key::DOWN);
+            break;
+        case 0x41: // A
+            std::invoke(keyboard_button_cb, key_action::down, key::A);
+            break;
+        case 0x42: // B
+            std::invoke(keyboard_button_cb, key_action::down, key::B);
+            break;
+        case 0x51: // Q
+            std::invoke(keyboard_button_cb, key_action::down, key::START);
+            break;
+        case 0x57: // Q
+            std::invoke(keyboard_button_cb, key_action::down, key::SELECT);
+            break;
         }
-    }
-        return 0;
+        return DefWindowProc(hWnd, message, wParam, lParam);
+    case WM_KEYUP:
+        switch (wParam)
+        {
+        case VK_LEFT:
+            std::invoke(keyboard_button_cb, key_action::up, key::LEFT);
+            break;
+        case VK_RIGHT:
+            std::invoke(keyboard_button_cb, key_action::up, key::RIGHT);
+            break;
+        case VK_UP:
+            std::invoke(keyboard_button_cb, key_action::up, key::UP);
+            break;
+        case VK_DOWN:
+            std::invoke(keyboard_button_cb, key_action::up, key::DOWN);
+            break;
+        case 0x41: // A
+            std::invoke(keyboard_button_cb, key_action::up, key::A);
+            break;
+        case 0x42: // B
+            std::invoke(keyboard_button_cb, key_action::up, key::B);
+            break;
+        case 0x51: // Q
+            std::invoke(keyboard_button_cb, key_action::up, key::START);
+            break;
+        case 0x57: // Q
+            std::invoke(keyboard_button_cb, key_action::up, key::SELECT);
+            break;
+        }
+        return DefWindowProc(hWnd, message, wParam, lParam);
     case WM_DESTROY:
         ::PostQuitMessage(0);
         return 0;
@@ -214,9 +267,10 @@ LRESULT CALLBACK opengl_window_proc(HWND hWnd, UINT message, WPARAM wParam, LPAR
     }
 }
 
-lcd::lcd(std::function<void()> quit_cb)
+lcd::lcd(std::function<void()> quit_cb, std::function<void(key_action, key)> keyboard_cb)
 {
     quit_button_cb = quit_cb;
+    keyboard_button_cb = keyboard_cb;
     HINSTANCE hInstance = GetModuleHandle(NULL);
 
     // ******************************************
