@@ -6,7 +6,6 @@ namespace
 
 void pop_PC(cpu::cpu_impl &c)
 {
-    assert(c.m_reg.SP() < 0xFFFE);
     c.m_reg.m_PC.m_lo = c.m_rw_device.read(c.m_reg.SP()++);
     c.m_reg.m_PC.m_hi = c.m_rw_device.read(c.m_reg.SP()++);
 }

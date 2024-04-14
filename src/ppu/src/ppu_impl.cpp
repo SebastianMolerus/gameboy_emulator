@@ -24,6 +24,23 @@ void ppu::ppu_impl::dot()
 
     m_rw_device.write(LCD_Y_COORDINATE, m_current_line, device::PPU);
 
+    auto const LY_COMPARE = m_rw_device.read(0xFF45, device::PPU, true);
+
+    if (LY_COMPARE == m_current_line)
+    {
+        uint8_t STAT = m_rw_device.read(0xFF41, device::PPU, true);
+        setbit(STAT, 2);
+        m_rw_device.write(0xFF41, STAT, device::PPU, true);
+
+        // LYC == LY INT
+        if (checkbit(STAT, 6))
+        {
+            uint8_t IF = m_rw_device.read(0xFF0F, device::PPU, true);
+            setbit(IF, 1);
+            m_rw_device.write(0xFF0F, IF, device::PPU, true);
+        }
+    }
+
     switch (m_current_state)
     {
     case STATE::OAM_SCAN:

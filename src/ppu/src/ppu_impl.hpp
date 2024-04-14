@@ -18,6 +18,8 @@ struct ppu::ppu_impl
     // temporary value of visible sprites in each drawing line
     std::vector<sprite> visible_sprites{};
 
+    void update_stat(STATE s);
+
     bool draw_pixel_line();
 
     void dot();

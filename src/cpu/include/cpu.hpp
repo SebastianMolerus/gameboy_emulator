@@ -22,6 +22,8 @@ class cpu
 
     void tick();
 
+    void resume(); // to resume after STOP opcode
+
     struct cpu_impl;
 
   private:

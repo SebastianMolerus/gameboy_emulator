@@ -16,7 +16,7 @@ memory::memory()
         write(i, room[i]);
 }
 
-uint8_t memory::read(uint16_t addr, device d)
+uint8_t memory::read(uint16_t addr, device d, bool direct)
 {
     if (boot && d == device::CPU && addr <= 0x100)
         return boot_rom[addr];
@@ -24,7 +24,7 @@ uint8_t memory::read(uint16_t addr, device d)
         return whole_memory[addr];
 }
 
-void memory::write(uint16_t addr, uint8_t data, device d)
+void memory::write(uint16_t addr, uint8_t data, device d, bool direct)
 {
     if (addr == 0xFF50 && data == 0x1)
     {

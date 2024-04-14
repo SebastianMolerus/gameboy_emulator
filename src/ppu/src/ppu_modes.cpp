@@ -27,6 +27,8 @@ void ppu::ppu_impl::OAM_SCAN()
     // Do it once for each line
     if (checkbit(m_lcd_ctrl, 1) && !check_line)
     {
+        update_stat(STATE::OAM_SCAN);
+
         check_line = true;
         visible_sprites.clear();
         uint8_t const sprite_high = checkbit(m_lcd_ctrl, 2) ? 16 : 8;
@@ -49,13 +51,17 @@ void ppu::ppu_impl::OAM_SCAN()
         m_pixel_fetcher.update_addresses();
         m_pixel_fetcher.set_background_mode();
         m_current_state = STATE::DRAWING_PIXELS;
+        update_stat(STATE::DRAWING_PIXELS);
     }
 }
 
 void ppu::ppu_impl::DRAWING_PIXELS()
 {
     if (draw_pixel_line())
+    {
         m_current_state = STATE::HORIZONTAL_BLANK;
+        update_stat(STATE::HORIZONTAL_BLANK);
+    }
 }
 
 void ppu::ppu_impl::HORIZONTAL_BLANK()
@@ -67,6 +73,7 @@ void ppu::ppu_impl::HORIZONTAL_BLANK()
         if (m_current_line == 144)
         {
             m_current_state = STATE::VERTICAL_BLANK;
+            update_stat(STATE::VERTICAL_BLANK);
             auto interrupt_flag = m_rw_device.read(INTERRUPT_FLAG, device::PPU); // load old if
             setbit(interrupt_flag, 0);                                           // activate Vblank
             m_rw_device.write(INTERRUPT_FLAG, interrupt_flag, device::PPU);      // save new if

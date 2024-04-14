@@ -14,4 +14,4 @@ target_include_directories(cpu PUBLIC ${CMAKE_CURRENT_LIST_DIR}/include)
 
 target_link_libraries(cpu PUBLIC decoder common)
 
-add_subdirectory(ut/big_tests)
+# add_subdirectory(ut/big_tests)

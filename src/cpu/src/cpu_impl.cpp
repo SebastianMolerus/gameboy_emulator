@@ -4,6 +4,7 @@
 #include <stdexcept>
 #include <unordered_map>
 #include <iostream>
+#include <fstream>
 
 extern void check_interrupt(cpu::cpu_impl &cpu);
 
@@ -28,7 +29,8 @@ const mapper_T mapper{
     {"RRA", &cpu::cpu_impl::srb},       {"PREFIX", &cpu::cpu_impl::misc},     {"RLC", &cpu::cpu_impl::pref_srb}, {"RRC", &cpu::cpu_impl::pref_srb},
     {"RL", &cpu::cpu_impl::pref_srb},   {"RR", &cpu::cpu_impl::pref_srb},     {"SLA", &cpu::cpu_impl::pref_srb}, {"SRA", &cpu::cpu_impl::pref_srb},
     {"SWAP", &cpu::cpu_impl::pref_srb}, {"SRL", &cpu::cpu_impl::pref_srb},    {"BIT", &cpu::cpu_impl::pref_srb}, {"RES", &cpu::cpu_impl::pref_srb},
-    {"SET", &cpu::cpu_impl::pref_srb},  {"ILLEGAL_D3", &cpu::cpu_impl::misc}, {"DI", &cpu::cpu_impl::misc},      {"EI", &cpu::cpu_impl::misc}};
+    {"SET", &cpu::cpu_impl::pref_srb},  {"ILLEGAL_D3", &cpu::cpu_impl::misc}, {"DI", &cpu::cpu_impl::misc},      {"STOP", &cpu::cpu_impl::misc},
+    {"EI", &cpu::cpu_impl::misc},       {"HALT", &cpu::cpu_impl::misc}};
 
 instruction instruction_lookup(const char *mnemonic)
 {
@@ -69,6 +71,9 @@ uint8_t wait_cycles(cpu::cpu_impl &c)
     }
 }
 
+constexpr int M128{128 * 4};
+int serial_transfer_cc{M128};
+
 } // namespace
 
 cpu::cpu_impl::cpu_impl(rw_device &rw_device, cb callback) : m_rw_device{rw_device}, m_callback{callback}
@@ -93,16 +98,45 @@ void cpu::cpu_impl::adjust_ime()
     }
 }
 
+bool cpu::cpu_impl::is_int_pending()
+{
+    uint8_t const IF = m_rw_device.read(0xFF0F, device::CPU, true);
+    uint8_t const IE = m_rw_device.read(0xFFFF, device::CPU, true);
+    return IF & IE;
+}
+
 void cpu::cpu_impl::push_PC()
 {
-    assert(m_reg.SP() > 0x1);
     m_rw_device.write(--m_reg.SP(), m_reg.PC() >> 8);
     m_rw_device.write(--m_reg.SP(), m_reg.PC());
 }
 
 void cpu::cpu_impl::tick()
 {
+    if (m_is_stopped)
+        return;
+
     timer();
+
+    uint8_t const SC = m_rw_device.read(0xFF02);
+
+    if (checkbit(SC, 7))
+    {
+        if (checkbit(SC, 0))
+        {
+            --serial_transfer_cc;
+            if (!serial_transfer_cc)
+            {
+                m_rw_device.write(0xFF02, (SC & 0x7F));
+                uint8_t IF = m_rw_device.read(0xFF0F);
+                setbit(IF, 3);
+                m_rw_device.write(0xFF0F, IF);
+                serial_transfer_cc = M128;
+            }
+        }
+    }
+    else
+        serial_transfer_cc = M128;
 
     --m_T_states;
     if (m_T_states > 0)
@@ -112,15 +146,29 @@ void cpu::cpu_impl::tick()
         return;
     }
 
+    check_interrupt(*this);
+
+    if (m_is_halted && is_int_pending() && m_IME == IME::DISABLED)
+        m_is_halted = false;
+
+    if (m_is_halted)
+    {
+        return;
+    }
+
     adjust_ime();
 
     m_op = get_opcode(read_byte(), false);
+    m_T_states = wait_cycles(*this);
     if (std::strcmp(m_op.m_mnemonic, "PREFIX") == 0)
     {
         m_op = get_opcode(read_byte(), true);
-    }
 
-    m_T_states = wait_cycles(*this);
+        if (m_op.m_immediate)
+            m_T_states = 8;
+        else
+            m_T_states = 16;
+    }
 
     // fill data needed by opcode
     // only for opcodes which size is greater than 1B
@@ -131,16 +179,6 @@ void cpu::cpu_impl::tick()
     std::invoke(instruction_lookup(m_op.m_mnemonic), *this);
 
     std::invoke(m_callback, m_reg, m_op);
-
-    check_interrupt(*this);
-
-    // previous opcode was from prefixed table
-    // turn this of to get next opcode from non prefixed table
-    if (m_pref)
-        m_pref = false;
-
-    if (std::strcmp(m_op.m_mnemonic, "PREFIX") == 0)
-        m_pref = true;
 }
 
 uint8_t cpu::cpu_impl::read_byte()
@@ -208,6 +246,11 @@ uint16_t cpu::cpu_impl::combined_data()
     return addr;
 }
 
+void cpu::cpu_impl::resume()
+{
+    m_is_stopped = false;
+}
+
 // ******************************************
 //                  CPU PART
 // ******************************************
@@ -222,4 +265,9 @@ void cpu::tick()
 {
     assert(m_pimpl);
     m_pimpl->tick();
+}
+
+void cpu::resume()
+{
+    m_pimpl->resume();
 }

@@ -19,8 +19,8 @@ enum class device
 struct rw_device
 {
     virtual ~rw_device() = default;
-    virtual uint8_t read(uint16_t addr, device d = device::CPU) = 0;
-    virtual void write(uint16_t addr, uint8_t data, device d = device::CPU) = 0;
+    virtual uint8_t read(uint16_t addr, device d = device::CPU, bool direct = false) = 0;
+    virtual void write(uint16_t addr, uint8_t data, device d = device::CPU, bool direct = false) = 0;
 };
 
 struct screen_coordinates

@@ -19,6 +19,8 @@ struct cpu::cpu_impl
     opcode m_op;
     cb m_callback;
     uint8_t m_T_states{1};
+    bool m_is_stopped{};
+    bool m_is_halted{};
 
     enum class IME
     {
@@ -30,13 +32,15 @@ struct cpu::cpu_impl
     IME m_IME{IME::DISABLED};
     void adjust_ime();
 
-    bool m_pref{};
+    bool is_int_pending();
 
     void push_PC();
 
     void tick();
 
     void timer();
+
+    void resume();
 
     // read byte from memory pointed by PC
     // increment PC
@@ -162,6 +166,8 @@ struct cpu::cpu_impl
     // Main entry for misc
     void misc();
     void NOP();
+    void STOP();
+    void HALT();
 };
 
 #endif

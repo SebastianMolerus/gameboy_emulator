@@ -3,6 +3,8 @@
 #include <lcd.hpp>
 #include "mem.hpp"
 #include <iostream>
+#include <fstream>
+#include <iomanip>
 
 namespace
 {
@@ -20,8 +22,12 @@ void quit_cb()
     quit = true;
 }
 
+std::ofstream ofs{"dr_logs.txt"};
+
 uint8_t joypad_buttons{0xFF};
 uint8_t joypad_input{0xFF};
+
+memory *ptr;
 
 void keyboard_cb(key_action a, key k)
 {
@@ -44,6 +50,11 @@ void keyboard_cb(key_action a, key k)
             clearbit(joypad_buttons, 2);
         if (k == key::START)
             clearbit(joypad_buttons, 3);
+
+        // Joypad INT
+        uint8_t IF = ptr->read(0xFF0F);
+        setbit(IF, 4);
+        ptr->write(0xFF0F, IF);
     }
     else
     {
@@ -67,8 +78,54 @@ void keyboard_cb(key_action a, key k)
     }
 }
 
-void cpu_callback(registers const &, opcode const &op)
+void add_to_log(const char *reg_name, uint8_t reg_value)
 {
+    ofs << reg_name << std::setw(2) << std::setfill('0') << std::hex << (int)reg_value << " ";
+}
+
+void cpu_callback(registers const &regs, opcode const &op)
+{
+
+    // add_to_log("A:", regs.m_AF.m_hi);
+    // add_to_log("F:", regs.m_AF.m_lo);
+    // add_to_log("B:", regs.m_BC.m_hi);
+    // add_to_log("C:", regs.m_BC.m_lo);
+    // add_to_log("D:", regs.m_DE.m_hi);
+    // add_to_log("E:", regs.m_DE.m_lo);
+    // add_to_log("H:", regs.m_HL.m_hi);
+    // add_to_log("L:", regs.m_HL.m_lo);
+    // ofs << "SP:" << std::setw(4) << std::setfill('0') << std::hex << (int)regs.m_SP.m_u16 << " ";
+    // ofs << "PC:" << std::setw(4) << std::setfill('0') << std::hex << (int)regs.m_PC.m_u16 << " ";
+
+    // auto pc = regs.m_PC.m_u16;
+
+    // auto v1 = ptr->whole_memory[pc++];
+    // auto v2 = ptr->whole_memory[pc++];
+    // auto v3 = ptr->whole_memory[pc++];
+    // auto v4 = ptr->whole_memory[pc++];
+
+    // ofs << "PCMEM:" << std::setw(2) << std::setfill('0') << std::hex << (int)v1 << ",";
+    // ofs << std::setw(2) << std::setfill('0') << std::hex << (int)v2 << ",";
+    // ofs << std::setw(2) << std::setfill('0') << std::hex << (int)v3 << ",";
+    // ofs << std::setw(2) << std::setfill('0') << std::hex << (int)v4;
+
+    // ofs << "\n";
+}
+
+registers get_start_values()
+{
+    registers sv;
+    sv.A() = 1;
+    sv.F() = 0xB0;
+    sv.B() = 0;
+    sv.C() = 0x13;
+    sv.D() = 0;
+    sv.E() = 0xD8;
+    sv.H() = 1;
+    sv.L() = 0x4D;
+    sv.SP() = 0xFFFE;
+    sv.PC() = 0x0100;
+    return sv;
 }
 
 struct dmg : public rw_device
@@ -80,9 +137,11 @@ struct dmg : public rw_device
 
     dmg() : m_lcd{quit_cb, keyboard_cb}, m_cpu{*this, cpu_callback}, m_ppu{*this, m_lcd}
     {
+        ofs << "A:01 F:b0 B:00 C:13 D:00 E:d8 H:01 L:4d SP:fffe PC:0100 PCMEM:00,c3,13,02" << '\n';
+        ptr = &mem;
     }
 
-    uint8_t read(uint16_t addr, device d) override
+    uint8_t read(uint16_t addr, device d, bool direct) override
     {
         if (d == device::PPU)
             m_cpu.tick();
@@ -96,32 +155,27 @@ struct dmg : public rw_device
             {
             case Joypad::ALL:
                 return 0xFF;
-            case Joypad::BUTTONS:
+            case Joypad::BUTTONS: {
+                if ((joypad_buttons & 0x03) < 7)
+                    m_cpu.resume();
                 return joypad_buttons;
+            }
             case Joypad::INPUT:
+                if ((joypad_buttons & 0x03) < 7)
+                    m_cpu.resume();
                 return joypad_input;
             }
-        }
-
-        if (d == device::CPU && addr >= 0x8000 && addr <= 0x9FFF && (m_ppu.current_state() == STATE::DRAWING_PIXELS))
-        {
-            // ignore VRAM read during Pixel Drawing
-            return 0xFF;
-        }
-
-        // OAM $FE00-FE9F
-        if (d == device::CPU && addr >= 0xFE00 && addr <= 0xFE9F &&
-            ((m_ppu.current_state() == STATE::OAM_SCAN) || (m_ppu.current_state() == STATE::DRAWING_PIXELS)))
-        {
-            // ignore OAM read during Pixel Drawing & OAM SCAN
-            return 0xFF;
         }
 
         return mem.read(addr, d);
     }
 
-    void write(uint16_t addr, uint8_t data, device d) override
+    void write(uint16_t addr, uint8_t data, device d, bool direct) override
     {
+        if (addr == 0xFF40)
+        {
+            int a = 10;
+        }
         // Joypad
         if (addr == 0xFF00)
         {
@@ -133,23 +187,12 @@ struct dmg : public rw_device
                 joypad_mode = Joypad::ALL;
         }
 
-        if (d == device::CPU && addr == 0xff40 && !checkbit(data, 7) && m_ppu.current_state() != STATE::VERTICAL_BLANK)
+        // Divider register, any value resets its value to 0x00
+        // Normal CPU update of this registry is with flag "direct"
+        if (addr == 0xFF04 && !direct)
         {
-            // Cpu can disable LCD only while Vertical Blank
-            return;
-        }
-
-        if (d == device::CPU && addr >= 0x8000 && addr <= 0x9FFF && (m_ppu.current_state() == STATE::DRAWING_PIXELS))
-        {
-            // ignore CPUs VRAM write during Pixel Drawing
-            return;
-        }
-
-        // OAM $FE00-FE9F
-        if (d == device::CPU && addr >= 0xFE00 && addr <= 0xFE9F &&
-            ((m_ppu.current_state() == STATE::OAM_SCAN) || (m_ppu.current_state() == STATE::DRAWING_PIXELS)))
-        {
-            // ignore CPUs OAM write during Pixel Drawing & OAM SCAN
+            std::cout << "Divider reset\n";
+            mem.write(0xFF04, 0);
             return;
         }
 

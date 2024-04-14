@@ -1,4 +1,5 @@
 #include "cpu_impl.hpp"
+#include <iostream>
 
 void cpu::cpu_impl::misc()
 {
@@ -6,6 +7,12 @@ void cpu::cpu_impl::misc()
     {
     case 0x00:
         NOP();
+        break;
+    case 0x76:
+        HALT();
+        break;
+    case 0x10:
+        STOP();
         break;
     case 0xF3:
         m_IME = IME::DISABLED;
@@ -20,4 +27,14 @@ void cpu::cpu_impl::misc()
 
 void cpu::cpu_impl::NOP()
 {
+}
+
+void cpu::cpu_impl::STOP()
+{
+    m_is_stopped = true;
+}
+
+void cpu::cpu_impl::HALT()
+{
+    m_is_halted = true;
 }

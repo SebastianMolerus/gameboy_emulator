@@ -82,8 +82,8 @@ std::array<uint8_t, 8> convert_tile_line_to_color_ids(uint16_t line)
 
 uint16_t read_two_bytes(rw_device &rw, uint16_t addr)
 {
-    uint8_t const tile_lo = rw.read(addr, device::PPU);
-    uint8_t const tile_hi = rw.read(addr + 1, device::PPU);
+    uint8_t const tile_lo = rw.read(addr, device::PPU, true);
+    uint8_t const tile_hi = rw.read(addr + 1, device::PPU, true);
     uint16_t line = tile_hi;
     line <<= 8;
     line |= tile_lo;
@@ -92,7 +92,7 @@ uint16_t read_two_bytes(rw_device &rw, uint16_t addr)
 
 } // namespace
 
-namespace
+namespace lol
 {
 uint8_t current_x{};
 uint8_t scroll_x{};
@@ -111,20 +111,59 @@ enum pixel_type
 using final_pixel = std::variant<bgw_pixel, sprite_pixel>;
 std::deque<final_pixel> pixel_fifo;
 
-} // namespace
+} // namespace lol
+
+using namespace lol;
+
+void ppu::ppu_impl::update_stat(STATE s)
+{
+    uint8_t STAT = m_rw_device.read(0xFF41, device::PPU, true);
+
+    if (s == STATE::OAM_SCAN)
+    {
+        setbit(STAT, 1); // mode 2
+        clearbit(STAT, 0);
+    }
+    else if (s == STATE::DRAWING_PIXELS)
+    {
+        STAT |= 0x03; // mode 3
+    }
+    else if (s == STATE::HORIZONTAL_BLANK)
+    {
+        STAT &= 0xFC; // mode 0
+    }
+    else
+    {
+        // Vertical Blank
+        setbit(STAT, 0); // mode 1
+        clearbit(STAT, 1);
+    }
+
+    uint8_t IF = m_rw_device.read(0xFF0F, device::PPU, true);
+
+    if ((checkbit(STAT, 3) && (s == STATE::HORIZONTAL_BLANK)) || (checkbit(STAT, 4) && (s == STATE::VERTICAL_BLANK)) ||
+        (checkbit(STAT, 5) && (s == STATE::OAM_SCAN)))
+    {
+        setbit(IF, 1);
+        m_rw_device.write(0xFF0F, IF, device::PPU, true);
+    }
+
+    m_rw_device.write(0xFF41, STAT, device::PPU, true);
+}
 
 bool ppu::ppu_impl::draw_pixel_line()
 {
     if (current_x == 0)
     {
-        scroll_x = m_rw_device.read(0xFF43, device::PPU);
-        scroll_y = m_rw_device.read(0xFF42, device::PPU);
+        scroll_x = m_rw_device.read(0xFF43, device::PPU, true);
+        scroll_y = m_rw_device.read(0xFF42, device::PPU, true);
         pixel_count_to_discard = scroll_x % 8;
         m_pixel_fetcher.set_background_mode();
     }
     else
-        scroll_x = m_rw_device.read(0xFF43, device::PPU) & 0xF8;
+        scroll_x = m_rw_device.read(0xFF43, device::PPU, true) & 0xF8;
 
+    uint8_t real_scx = static_cast<uint8_t>(current_x + scroll_x);
     screen_coordinates sc{static_cast<uint8_t>(current_x + scroll_x), static_cast<uint8_t>(m_current_line + scroll_y)};
 
     if (pixel_fifo.size() <= 8)
@@ -136,12 +175,15 @@ bool ppu::ppu_impl::draw_pixel_line()
         current_x += 8;
     }
 
+    auto window_y = m_rw_device.read(0xFF42);
+    auto window_x = m_rw_device.read(0xFF43);
+
     if (!visible_sprites.empty())
     {
         assert(pixel_fifo.size() >= 8);
         for (auto const &vs : visible_sprites)
         {
-            if (vs.m_x_pos > 0 && (vs.m_x_pos - 8) == pushed_pixels)
+            if (vs.m_x_pos > 0 && ((vs.m_x_pos - 8) == pushed_pixels))
             {
                 uint8_t const sprite_top_y = vs.m_y_pos - 16;
                 uint8_t const diff = m_current_line - sprite_top_y;
