@@ -71,9 +71,6 @@ uint8_t wait_cycles(cpu::cpu_impl &c)
     }
 }
 
-constexpr int M128{128 * 4};
-int serial_transfer_cc{M128};
-
 } // namespace
 
 cpu::cpu_impl::cpu_impl(rw_device &rw_device, cb callback) : m_rw_device{rw_device}, m_callback{callback}
@@ -105,21 +102,32 @@ bool cpu::cpu_impl::is_int_pending()
     return IF & IE;
 }
 
+void cpu::cpu_impl::SERIAL_INT()
+{
+    uint8_t IF = m_rw_device.read(0xFF0F);
+    setbit(IF, 3);
+    m_rw_device.write(0xFF0F, IF);
+}
+
+void cpu::cpu_impl::TIMER_INT()
+{
+    uint8_t IF = m_rw_device.read(0xFF0F);
+    setbit(IF, 2);
+    m_rw_device.write(0xFF0F, IF);
+}
+
 void cpu::cpu_impl::push_PC()
 {
     m_rw_device.write(--m_reg.SP(), m_reg.PC() >> 8);
     m_rw_device.write(--m_reg.SP(), m_reg.PC());
 }
 
-void cpu::cpu_impl::tick()
+void cpu::cpu_impl::serial_transfer()
 {
-    if (m_is_stopped)
-        return;
-
-    timer();
+    constexpr int M128{128 * 4};
+    static int serial_transfer_cc{M128};
 
     uint8_t const SC = m_rw_device.read(0xFF02);
-
     if (checkbit(SC, 7))
     {
         if (checkbit(SC, 0))
@@ -128,15 +136,21 @@ void cpu::cpu_impl::tick()
             if (!serial_transfer_cc)
             {
                 m_rw_device.write(0xFF02, (SC & 0x7F));
-                uint8_t IF = m_rw_device.read(0xFF0F);
-                setbit(IF, 3);
-                m_rw_device.write(0xFF0F, IF);
+                SERIAL_INT();
                 serial_transfer_cc = M128;
             }
         }
     }
     else
         serial_transfer_cc = M128;
+}
+
+void cpu::cpu_impl::tick()
+{
+    if (m_is_stopped)
+        return;
+
+    timer();
 
     --m_T_states;
     if (m_T_states > 0)
@@ -148,6 +162,15 @@ void cpu::cpu_impl::tick()
 
     check_interrupt(*this);
 
+    // Interrupt takes some cycles
+    if (m_interrupt_wait != 0)
+    {
+        --m_interrupt_wait;
+        return;
+    }
+
+    serial_transfer();
+
     if (m_is_halted && is_int_pending() && m_IME == IME::DISABLED)
         m_is_halted = false;
 
@@ -158,16 +181,19 @@ void cpu::cpu_impl::tick()
 
     adjust_ime();
 
+    uint16_t const curr_PC = m_reg.PC();
+
     m_op = get_opcode(read_byte(), false);
     m_T_states = wait_cycles(*this);
     if (std::strcmp(m_op.m_mnemonic, "PREFIX") == 0)
     {
+        m_T_states = 4; // 4 clocks for 0xCB ( Prefix )
         m_op = get_opcode(read_byte(), true);
 
         if (m_op.m_immediate)
-            m_T_states = 8;
+            m_T_states += 8;
         else
-            m_T_states = 16;
+            m_T_states += 16;
     }
 
     // fill data needed by opcode

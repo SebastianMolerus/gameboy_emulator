@@ -13,10 +13,12 @@ ppu::ppu_impl::ppu_impl(rw_device &rw_device, drawing_device &drawing_device)
 void ppu::ppu_impl::dot()
 {
     m_lcd_ctrl = m_rw_device.read(0xFF40, device::PPU);
+
     if (!checkbit(m_lcd_ctrl, 7))
     {
         m_current_dot = m_current_line = 0;
         m_current_state = STATE::OAM_SCAN;
+        update_stat(STATE::OAM_SCAN);
         return;
     }
 
@@ -35,9 +37,7 @@ void ppu::ppu_impl::dot()
         // LYC == LY INT
         if (checkbit(STAT, 6))
         {
-            uint8_t IF = m_rw_device.read(0xFF0F, device::PPU, true);
-            setbit(IF, 1);
-            m_rw_device.write(0xFF0F, IF, device::PPU, true);
+            STAT_INT();
         }
     }
 

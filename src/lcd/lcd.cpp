@@ -21,7 +21,7 @@ HDC device_context;
 std::function<void()> quit_button_cb;
 std::function<void(key_action, key)> keyboard_button_cb;
 
-const unsigned int PIXEL_SIZE = 5;
+const unsigned int PIXEL_SIZE = 6;
 const unsigned int SCR_WIDTH = 160 * PIXEL_SIZE;
 const unsigned int SCR_HEIGHT = 144 * PIXEL_SIZE;
 glm::mat4 const projection = glm::ortho<float>(0.0f, SCR_WIDTH, SCR_HEIGHT, 0.0f, -0.1f, 0.1f);

@@ -13,7 +13,7 @@ memory::memory()
 
     std::vector<uint8_t> const room{load_rom()};
     for (int i = 0; i < room.size(); ++i)
-        write(i, room[i]);
+        whole_memory[i] = room[i];
 }
 
 uint8_t memory::read(uint16_t addr, device d, bool direct)
@@ -30,6 +30,12 @@ void memory::write(uint16_t addr, uint8_t data, device d, bool direct)
     {
         std::cout << "[BOOT-ROM SWAP]\n";
         boot = false;
+        return;
+    }
+
+    if (addr >= 0 && addr <= 0x7fff)
+    {
+        std::cout << "WRITING TO ROM!!!!\n";
         return;
     }
 

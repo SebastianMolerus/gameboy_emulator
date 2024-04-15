@@ -33,6 +33,7 @@ void int_handler(uint8_t bit_to_clear, uint16_t addr_to_jump)
     g_cpu->m_rw_device.write(IF_ADDR, IF);
     g_cpu->push_PC();
     g_cpu->m_reg.PC() = addr_to_jump;
+    g_cpu->m_interrupt_wait = 20;
 }
 
 } // namespace
@@ -41,11 +42,11 @@ void check_interrupt(cpu::cpu_impl &cpu)
 {
     g_cpu = &cpu;
 
-    if (cpu.m_IME != cpu::cpu_impl::IME::ENABLED)
-        return;
-
     uint8_t IE = cpu.m_rw_device.read(0xFFFF);
     uint8_t IF = cpu.m_rw_device.read(0xFF0F);
+
+    if (cpu.m_IME != cpu::cpu_impl::IME::ENABLED)
+        return;
 
     if (checkbit(IF & IE, VBLANK_BIT))
     {

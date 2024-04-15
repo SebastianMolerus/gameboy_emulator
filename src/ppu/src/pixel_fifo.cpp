@@ -92,7 +92,7 @@ uint16_t read_two_bytes(rw_device &rw, uint16_t addr)
 
 } // namespace
 
-namespace lol
+namespace
 {
 uint8_t current_x{};
 uint8_t scroll_x{};
@@ -111,14 +111,13 @@ enum pixel_type
 using final_pixel = std::variant<bgw_pixel, sprite_pixel>;
 std::deque<final_pixel> pixel_fifo;
 
-} // namespace lol
-
-using namespace lol;
+} // namespace
 
 void ppu::ppu_impl::update_stat(STATE s)
 {
     uint8_t STAT = m_rw_device.read(0xFF41, device::PPU, true);
 
+    // Update FF41, PPU MODE
     if (s == STATE::OAM_SCAN)
     {
         setbit(STAT, 1); // mode 2
@@ -139,16 +138,20 @@ void ppu::ppu_impl::update_stat(STATE s)
         clearbit(STAT, 1);
     }
 
-    uint8_t IF = m_rw_device.read(0xFF0F, device::PPU, true);
+    m_rw_device.write(0xFF41, STAT, device::PPU, true);
 
     if ((checkbit(STAT, 3) && (s == STATE::HORIZONTAL_BLANK)) || (checkbit(STAT, 4) && (s == STATE::VERTICAL_BLANK)) ||
         (checkbit(STAT, 5) && (s == STATE::OAM_SCAN)))
     {
-        setbit(IF, 1);
-        m_rw_device.write(0xFF0F, IF, device::PPU, true);
+        STAT_INT();
     }
+}
 
-    m_rw_device.write(0xFF41, STAT, device::PPU, true);
+void ppu::ppu_impl::STAT_INT()
+{
+    uint8_t IF = m_rw_device.read(0xFF0F, device::PPU, true);
+    setbit(IF, 1);
+    m_rw_device.write(0xFF0F, IF, device::PPU, true);
 }
 
 bool ppu::ppu_impl::draw_pixel_line()
@@ -163,7 +166,6 @@ bool ppu::ppu_impl::draw_pixel_line()
     else
         scroll_x = m_rw_device.read(0xFF43, device::PPU, true) & 0xF8;
 
-    uint8_t real_scx = static_cast<uint8_t>(current_x + scroll_x);
     screen_coordinates sc{static_cast<uint8_t>(current_x + scroll_x), static_cast<uint8_t>(m_current_line + scroll_y)};
 
     if (pixel_fifo.size() <= 8)
@@ -174,9 +176,6 @@ bool ppu::ppu_impl::draw_pixel_line()
             pixel_fifo.push_back(bgw_pixel{c});
         current_x += 8;
     }
-
-    auto window_y = m_rw_device.read(0xFF42);
-    auto window_x = m_rw_device.read(0xFF43);
 
     if (!visible_sprites.empty())
     {

@@ -34,15 +34,12 @@ void cpu::cpu_impl::timer()
     {
         ++overflow_value;
 
-        if (overflow_value == 4)
+        if (overflow_value == 5)
         {
             uint8_t const timer_modulo = m_rw_device.read(0xFF06);
             m_rw_device.write(0xFF05, timer_modulo, device::CPU, true);
 
-            // Set Timer interrupt flag
-            uint8_t IF = m_rw_device.read(0xFF0F);
-            setbit(IF, 2);
-            m_rw_device.write(0xFF0F, IF);
+            TIMER_INT();
             overflow_value = 0;
             return;
         }

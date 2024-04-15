@@ -137,7 +137,7 @@ struct dmg : public rw_device
 
     dmg() : m_lcd{quit_cb, keyboard_cb}, m_cpu{*this, cpu_callback}, m_ppu{*this, m_lcd}
     {
-        ofs << "A:01 F:b0 B:00 C:13 D:00 E:d8 H:01 L:4d SP:fffe PC:0100 PCMEM:00,c3,13,02" << '\n';
+        // ofs << "A:01 F:b0 B:00 C:13 D:00 E:d8 H:01 L:4d SP:fffe PC:0100 PCMEM:00,c3,13,02" << '\n';
         ptr = &mem;
     }
 
@@ -172,9 +172,14 @@ struct dmg : public rw_device
 
     void write(uint16_t addr, uint8_t data, device d, bool direct) override
     {
-        if (addr == 0xFF40)
+        if (addr == 0xFFFF && !direct && !checkbit(data, 0))
         {
-            int a = 10;
+            std::cout << "IE VBLANK DISABLED\n";
+        }
+
+        if (addr == 0xFFFF && checkbit(data, 0))
+        {
+            std::cout << "IE VBLANK ENABLED\n";
         }
         // Joypad
         if (addr == 0xFF00)

@@ -20,6 +20,8 @@ struct ppu::ppu_impl
 
     void update_stat(STATE s);
 
+    void STAT_INT();
+
     bool draw_pixel_line();
 
     void dot();

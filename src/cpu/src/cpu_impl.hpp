@@ -22,6 +22,8 @@ struct cpu::cpu_impl
     bool m_is_stopped{};
     bool m_is_halted{};
 
+    uint8_t m_interrupt_wait{};
+
     enum class IME
     {
         ENABLED,
@@ -34,11 +36,16 @@ struct cpu::cpu_impl
 
     bool is_int_pending();
 
+    void SERIAL_INT();
+    void TIMER_INT();
+
     void push_PC();
 
     void tick();
 
     void timer();
+
+    void serial_transfer();
 
     void resume();
 
