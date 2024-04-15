@@ -2,6 +2,8 @@
     "dependencies": [
         "gtest",
         "json-spirit",
-        "boost-algorithm"
+        "glad",
+        "glfw3",
+        "glm"
     ]
 }

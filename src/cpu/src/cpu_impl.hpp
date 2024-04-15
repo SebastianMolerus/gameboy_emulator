@@ -14,18 +14,40 @@ struct cpu::cpu_impl
     cpu_impl(rw_device &rw_device, cb callback = nullptr);
     ~cpu_impl() = default;
 
-    using instruction = void (cpu::cpu_impl::*)();
-    instruction m_cur_instr;
-
     registers m_reg;
     rw_device &m_rw_device;
     opcode m_op;
     cb m_callback;
     uint8_t m_T_states{1};
-    bool m_IME{};
-    bool m_pref{};
+    bool m_is_stopped{};
+    bool m_is_halted{};
+
+    uint8_t m_interrupt_wait{};
+
+    enum class IME
+    {
+        ENABLED,
+        WANT_ENABLE,
+        ENABLING_IN_PROGRESS,
+        DISABLED
+    };
+    IME m_IME{IME::DISABLED};
+    void adjust_ime();
+
+    bool is_int_pending();
+
+    void SERIAL_INT();
+    void TIMER_INT();
+
+    void push_PC();
 
     void tick();
+
+    void timer();
+
+    void serial_transfer();
+
+    void resume();
 
     // read byte from memory pointed by PC
     // increment PC
@@ -151,8 +173,8 @@ struct cpu::cpu_impl
     // Main entry for misc
     void misc();
     void NOP();
-
-    void ILLEGAL();
+    void STOP();
+    void HALT();
 };
 
 #endif

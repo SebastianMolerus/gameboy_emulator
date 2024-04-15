@@ -25,6 +25,11 @@ enum flag : uint8_t
 
 struct registers
 {
+    registers() = default;
+    registers(uint16_t PC, uint16_t SP) : m_PC{PC}, m_SP{SP}
+    {
+    }
+
     register_u16 m_AF{0x0000};
     register_u16 m_BC{0x0000};
     register_u16 m_DE{0x0000};
@@ -89,7 +94,7 @@ struct registers
         return m_PC.m_u16;
     }
 
-    uint16_t get_pc() const
+    uint16_t const &PC() const
     {
         return m_PC.m_u16;
     }

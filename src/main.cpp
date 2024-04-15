@@ -1,124 +1,183 @@
-#include <array>
-#include <cassert>
 #include <cpu.hpp>
-#include <decoder.hpp>
-#include <filesystem>
-#include <fstream>
-#include <iostream>
-#include <vector>
-
-extern std::vector<uint8_t> load_rom();
-extern std::array<uint8_t, 256> load_boot_rom();
-extern void print_op(registers const &reg, opcode const &op);
+#include <ppu.hpp>
+#include <lcd.hpp>
+#include "mem.hpp"
 
 namespace
 {
 
-void cpu_cb(registers const &reg, opcode const &op)
+enum class Joypad
 {
-    print_op(reg, op);
+    BUTTONS,
+    INPUT,
+    ALL
+} joypad_mode = Joypad::ALL;
+
+bool quit{};
+void quit_cb()
+{
+    quit = true;
 }
 
-struct memory_area
+uint8_t joypad_buttons{0xFF};
+uint8_t joypad_input{0xFF};
+
+memory *ptr;
+
+void keyboard_cb(key_action a, key k)
 {
-    std::vector<uint8_t> m_mem;
-    uint16_t m_beg;
-    uint16_t m_end;
-};
-
-std::vector<memory_area> DMG_MEMORY;
-
-// swap boot_rom <-> rom
-void swap_rom()
-{
-    std::swap(DMG_MEMORY[0].m_mem, DMG_MEMORY[1].m_mem);
-    std::swap(DMG_MEMORY[0].m_beg, DMG_MEMORY[1].m_beg);
-    std::swap(DMG_MEMORY[0].m_end, DMG_MEMORY[1].m_end);
-}
-
-uint8_t dmg_memory_read(uint16_t addr)
-{
-    for (auto &area : DMG_MEMORY)
-        if (addr >= area.m_beg && addr <= area.m_end)
-            return area.m_mem[addr - area.m_beg];
-
-    static uint8_t def{0xFF};
-    return def;
-}
-
-void dmg_memory_write(uint16_t addr, uint8_t data)
-{
-    for (auto &area : DMG_MEMORY)
-        if (addr >= area.m_beg && addr <= area.m_end)
-        {
-            area.m_mem[addr - area.m_beg] = data;
-
-            if (addr == 0xFF50 && data == 0x1)
-                swap_rom();
-
-            return;
-        }
-}
-
-template <uint16_t beg, uint16_t end = beg> struct memory_block
-{
-    memory_block()
+    if (a == key_action::down) // press
     {
-        memory_area new_area;
-        new_area.m_mem = std::vector<uint8_t>(end - beg + 1, {});
-        new_area.m_beg = beg;
-        new_area.m_end = end;
-        DMG_MEMORY.push_back(std::move(new_area));
+        if (k == key::RIGHT)
+            clearbit(joypad_input, 0);
+        if (k == key::LEFT)
+            clearbit(joypad_input, 1);
+        if (k == key::UP)
+            clearbit(joypad_input, 2);
+        if (k == key::DOWN)
+            clearbit(joypad_input, 3);
+
+        if (k == key::A)
+            clearbit(joypad_buttons, 0);
+        if (k == key::B)
+            clearbit(joypad_buttons, 1);
+        if (k == key::SELECT)
+            clearbit(joypad_buttons, 2);
+        if (k == key::START)
+            clearbit(joypad_buttons, 3);
+
+        // Joypad INT
+        uint8_t IF = ptr->read(0xFF0F);
+        setbit(IF, 4);
+        ptr->write(0xFF0F, IF);
     }
-};
+    else
+    {
+        if (k == key::RIGHT)
+            setbit(joypad_input, 0);
+        if (k == key::LEFT)
+            setbit(joypad_input, 1);
+        if (k == key::UP)
+            setbit(joypad_input, 2);
+        if (k == key::DOWN)
+            setbit(joypad_input, 3);
+
+        if (k == key::A)
+            setbit(joypad_buttons, 0);
+        if (k == key::B)
+            setbit(joypad_buttons, 1);
+        if (k == key::SELECT)
+            setbit(joypad_buttons, 2);
+        if (k == key::START)
+            setbit(joypad_buttons, 3);
+    }
+}
+
+void cpu_callback(registers const &regs, opcode const &op)
+{
+}
+
+// for debugging
+registers get_start_values()
+{
+    registers sv;
+    sv.A() = 1;
+    sv.F() = 0xB0;
+    sv.B() = 0;
+    sv.C() = 0x13;
+    sv.D() = 0;
+    sv.E() = 0xD8;
+    sv.H() = 1;
+    sv.L() = 0x4D;
+    sv.SP() = 0xFFFE;
+    sv.PC() = 0x0100;
+    return sv;
+}
 
 struct dmg : public rw_device
 {
-    memory_block<0, 0xFF> m_BOOT_ROM; // swappable with m_ROM
-    memory_block<0, 0x7FFF> m_ROM;    // swappable with m_BOOT_ROM
-
-    memory_block<0x8000, 0x9fff> m_VRAM;
-    memory_block<0xFF11> m_CH1_T_D;           // Channel 1 length timer & duty cycle
-    memory_block<0xFF12> m_CH1_V_E;           // Channel 1 volume & envelope
-    memory_block<0xFF24> m_MASTER_VOLUME;     // Master volume & VIN panning
-    memory_block<0xFF25> m_SOUND_PANNING;     // Sound panning
-    memory_block<0xFF26> m_AUDIO_MASTER_CTRL; // Audio master control
-    memory_block<0xFF44> m_LY;                // LCD Y coordinate
-    memory_block<0xFF47> m_BGP;               // BG palette data
-    memory_block<0xFF50> m_BOOT_ROM_DISABLE;  // 0x1 hex here and boot rom is disabled
-
+    memory m_mem;
+    lcd m_lcd;
     cpu m_cpu;
+    ppu m_ppu;
 
-    dmg() : m_cpu{*this, cpu_cb}
+    dmg() : m_lcd{quit_cb, keyboard_cb}, m_cpu{*this, cpu_callback}, m_ppu{*this, m_lcd}
     {
-        std::array<uint8_t, 256> const boot_rom{load_boot_rom()};
-        for (int i = 0; i < boot_rom.size(); ++i)
-            dmg_memory_write(i, boot_rom[i]);
-
-        std::vector<uint8_t> const room{load_rom()};
-        // to propagate cart ROM
-        swap_rom();
-        for (int i = 0; i < room.size(); ++i)
-            dmg_memory_write(i, room[i]);
-        // switch to boot ROM
-        swap_rom();
+        ptr = &m_mem;
     }
 
-    uint8_t read(uint16_t addr) override
+    uint8_t read(uint16_t addr, device d, bool direct) override
     {
-        return dmg_memory_read(addr);
-    }
-
-    void write(uint16_t addr, uint8_t data) override
-    {
-        dmg_memory_write(addr, data);
-    }
-
-    void start()
-    {
-        while (1)
-        {
+        if (d == device::PPU)
             m_cpu.tick();
+
+        if (addr == 0xFF00)
+        {
+            // 1 - is not pressed
+            // 0 - is pressed
+            switch (joypad_mode)
+            {
+            case Joypad::ALL:
+                return 0xFF;
+            case Joypad::BUTTONS: {
+                if ((joypad_buttons & 0x03) < 7)
+                    m_cpu.resume();
+                return joypad_buttons;
+            }
+            case Joypad::INPUT:
+                if ((joypad_buttons & 0x03) < 7)
+                    m_cpu.resume();
+                return joypad_input;
+            }
+        }
+
+        return m_mem.read(addr, d);
+    }
+
+    void write(uint16_t addr, uint8_t data, device d, bool direct) override
+    {
+        // Joypad
+        if (addr == 0xFF00)
+        {
+            if (!checkbit(data, 5))
+                joypad_mode = Joypad::BUTTONS;
+            else if (!checkbit(data, 4))
+                joypad_mode = Joypad::INPUT;
+            else if (checkbit(data, 5) && checkbit(data, 4))
+                joypad_mode = Joypad::ALL;
+        }
+
+        // Divider register, any value resets its value to 0x00
+        // Normal CPU update of this registry is with flag "direct"
+        if (addr == 0xFF04 && !direct)
+        {
+            m_mem.write(0xFF04, 0);
+            return;
+        }
+
+        // DMA
+        if (addr == 0xFF46 && d == device::CPU)
+        {
+            m_ppu.dma(data);
+            return;
+        }
+
+        m_mem.write(addr, data, d);
+    }
+
+    void loop()
+    {
+        int cc{4};
+        while (!quit)
+        {
+            // 1 CPU tick == 4 PPU dots
+            m_ppu.dot();
+            --cc;
+            if (!cc)
+            {
+                m_cpu.tick();
+                cc = 4;
+            }
         }
     }
 };
@@ -128,6 +187,6 @@ struct dmg : public rw_device
 int main()
 {
     dmg gameboy;
-    gameboy.start();
+    gameboy.loop();
     return 0;
 }

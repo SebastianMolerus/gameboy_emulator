@@ -45,7 +45,8 @@ void cb(registers const &reg, opcode const &op)
 
 struct bus : public rw_device
 {
-    std::vector<std::tuple<uint16_t, uint8_t, std::string>> m_saved_cycles;
+    using ADDR_DATA_OP = std::tuple<uint16_t, uint8_t, std::string>;
+    std::vector<ADDR_DATA_OP> m_saved_cycles;
     std::array<uint8_t, 0x10000> m_ram{0x0};
     cpu m_cpu;
 
@@ -61,12 +62,12 @@ struct bus : public rw_device
             m_ram[i] = opcodes[i];
     }
 
-    virtual uint8_t read(uint16_t addr)
+    virtual uint8_t read(uint16_t addr, device d)
     {
         m_saved_cycles.push_back({addr, m_ram[addr], "read"});
         return m_ram[addr];
     }
-    virtual void write(uint16_t addr, uint8_t data)
+    virtual void write(uint16_t addr, uint8_t data, device d, bool direct)
     {
         m_saved_cycles.push_back({addr, data, "write"});
         m_ram[addr] = data;
