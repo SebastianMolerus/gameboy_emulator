@@ -33,11 +33,9 @@ void memory::write(uint16_t addr, uint8_t data, device d, bool direct)
         return;
     }
 
+    // prevent from changing Cardridge ROM by BootRom
     if (addr >= 0 && addr <= 0x7fff)
-    {
-        std::cout << "WRITING TO ROM!!!!\n";
         return;
-    }
 
     whole_memory[addr] = data;
 }

@@ -5,7 +5,6 @@
 #include <iostream>
 #include <vector>
 
-
 const std::filesystem::path boot_rom_file{BOOT_ROM_FILE};
 const std::filesystem::path rom_file{ROM_FILE};
 

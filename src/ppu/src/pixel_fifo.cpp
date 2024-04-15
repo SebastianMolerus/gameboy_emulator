@@ -177,6 +177,9 @@ bool ppu::ppu_impl::draw_pixel_line()
         current_x += 8;
     }
 
+    uint8_t const curr_window_x = m_rw_device.read(0xFF4A, device::PPU, true);
+    uint8_t const curr_window_y = m_rw_device.read(0xFF4B, device::PPU, true);
+
     if (!visible_sprites.empty())
     {
         assert(pixel_fifo.size() >= 8);

@@ -85,7 +85,6 @@ void add_to_log(const char *reg_name, uint8_t reg_value)
 
 void cpu_callback(registers const &regs, opcode const &op)
 {
-
     // add_to_log("A:", regs.m_AF.m_hi);
     // add_to_log("F:", regs.m_AF.m_lo);
     // add_to_log("B:", regs.m_BC.m_hi);
@@ -172,15 +171,6 @@ struct dmg : public rw_device
 
     void write(uint16_t addr, uint8_t data, device d, bool direct) override
     {
-        if (addr == 0xFFFF && !direct && !checkbit(data, 0))
-        {
-            std::cout << "IE VBLANK DISABLED\n";
-        }
-
-        if (addr == 0xFFFF && checkbit(data, 0))
-        {
-            std::cout << "IE VBLANK ENABLED\n";
-        }
         // Joypad
         if (addr == 0xFF00)
         {

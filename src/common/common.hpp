@@ -38,12 +38,12 @@ struct sprite
 
     uint8_t priority() const
     {
-        return checkbit(m_flags, 7);
+        return checkbit(m_flags, 7) ? 1 : 0;
     }
 
     uint8_t palette() const
     {
-        return checkbit(m_flags, 4);
+        return checkbit(m_flags, 4) ? 1 : 0;
     }
 
     uint16_t line_addr(uint8_t line) const
