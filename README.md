@@ -1,9 +1,10 @@
-# emulator project
+# Project of Gameboy ( DMG ) emulator.
 
-## Useful Links
+## Knowledge base: https://gbdev.io/pandocs/
 
-- https://gbdev.io/pandocs/
-- https://vcpkg.io/en/getting-started
+## Package manager: https://vcpkg.io/en/getting-started
 
-Animation from first working version:
+## Cmake used with arg: DCMAKE_TOOLCHAIN_FILE=<path to vcpkg folder>\scripts\buildsystems\vcpkg.cmake
+
+First working version:
 ![Animation2](https://github.com/SebastianMolerus/gameboy_emulator/assets/35743323/f5a62427-f475-41fc-9a71-1dace0967b0f)
