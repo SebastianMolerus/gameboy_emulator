@@ -130,7 +130,7 @@ LRESULT CALLBACK main_window_proc(HWND hWnd, UINT message, WPARAM wParam, LPARAM
         case 0x51: // Q
             std::invoke(keyboard_button_cb, key_action::down, key::START);
             break;
-        case 0x57: // Q
+        case 0x57: // W
             std::invoke(keyboard_button_cb, key_action::down, key::SELECT);
             break;
         }

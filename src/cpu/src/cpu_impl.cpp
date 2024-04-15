@@ -204,6 +204,7 @@ void cpu::cpu_impl::tick()
     // Execute opcode
     std::invoke(instruction_lookup(m_op.m_mnemonic), *this);
 
+    // for UT
     std::invoke(m_callback, m_reg, m_op);
 }
 

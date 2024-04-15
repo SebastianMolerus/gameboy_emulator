@@ -49,7 +49,6 @@ void ppu::ppu_impl::OAM_SCAN()
     {
         check_line = false;
         m_pixel_fetcher.update_addresses();
-        m_pixel_fetcher.set_background_mode();
         m_current_state = STATE::DRAWING_PIXELS;
         update_stat(STATE::DRAWING_PIXELS);
     }

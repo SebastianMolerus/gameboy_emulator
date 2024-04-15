@@ -2,9 +2,6 @@
 #include <ppu.hpp>
 #include <lcd.hpp>
 #include "mem.hpp"
-#include <iostream>
-#include <fstream>
-#include <iomanip>
 
 namespace
 {
@@ -21,8 +18,6 @@ void quit_cb()
 {
     quit = true;
 }
-
-std::ofstream ofs{"dr_logs.txt"};
 
 uint8_t joypad_buttons{0xFF};
 uint8_t joypad_input{0xFF};
@@ -78,39 +73,11 @@ void keyboard_cb(key_action a, key k)
     }
 }
 
-void add_to_log(const char *reg_name, uint8_t reg_value)
-{
-    ofs << reg_name << std::setw(2) << std::setfill('0') << std::hex << (int)reg_value << " ";
-}
-
 void cpu_callback(registers const &regs, opcode const &op)
 {
-    // add_to_log("A:", regs.m_AF.m_hi);
-    // add_to_log("F:", regs.m_AF.m_lo);
-    // add_to_log("B:", regs.m_BC.m_hi);
-    // add_to_log("C:", regs.m_BC.m_lo);
-    // add_to_log("D:", regs.m_DE.m_hi);
-    // add_to_log("E:", regs.m_DE.m_lo);
-    // add_to_log("H:", regs.m_HL.m_hi);
-    // add_to_log("L:", regs.m_HL.m_lo);
-    // ofs << "SP:" << std::setw(4) << std::setfill('0') << std::hex << (int)regs.m_SP.m_u16 << " ";
-    // ofs << "PC:" << std::setw(4) << std::setfill('0') << std::hex << (int)regs.m_PC.m_u16 << " ";
-
-    // auto pc = regs.m_PC.m_u16;
-
-    // auto v1 = ptr->whole_memory[pc++];
-    // auto v2 = ptr->whole_memory[pc++];
-    // auto v3 = ptr->whole_memory[pc++];
-    // auto v4 = ptr->whole_memory[pc++];
-
-    // ofs << "PCMEM:" << std::setw(2) << std::setfill('0') << std::hex << (int)v1 << ",";
-    // ofs << std::setw(2) << std::setfill('0') << std::hex << (int)v2 << ",";
-    // ofs << std::setw(2) << std::setfill('0') << std::hex << (int)v3 << ",";
-    // ofs << std::setw(2) << std::setfill('0') << std::hex << (int)v4;
-
-    // ofs << "\n";
 }
 
+// for debugging
 registers get_start_values()
 {
     registers sv;
@@ -129,15 +96,14 @@ registers get_start_values()
 
 struct dmg : public rw_device
 {
-    memory mem;
+    memory m_mem;
     lcd m_lcd;
     cpu m_cpu;
     ppu m_ppu;
 
     dmg() : m_lcd{quit_cb, keyboard_cb}, m_cpu{*this, cpu_callback}, m_ppu{*this, m_lcd}
     {
-        // ofs << "A:01 F:b0 B:00 C:13 D:00 E:d8 H:01 L:4d SP:fffe PC:0100 PCMEM:00,c3,13,02" << '\n';
-        ptr = &mem;
+        ptr = &m_mem;
     }
 
     uint8_t read(uint16_t addr, device d, bool direct) override
@@ -149,7 +115,6 @@ struct dmg : public rw_device
         {
             // 1 - is not pressed
             // 0 - is pressed
-
             switch (joypad_mode)
             {
             case Joypad::ALL:
@@ -166,7 +131,7 @@ struct dmg : public rw_device
             }
         }
 
-        return mem.read(addr, d);
+        return m_mem.read(addr, d);
     }
 
     void write(uint16_t addr, uint8_t data, device d, bool direct) override
@@ -186,8 +151,7 @@ struct dmg : public rw_device
         // Normal CPU update of this registry is with flag "direct"
         if (addr == 0xFF04 && !direct)
         {
-            std::cout << "Divider reset\n";
-            mem.write(0xFF04, 0);
+            m_mem.write(0xFF04, 0);
             return;
         }
 
@@ -198,7 +162,7 @@ struct dmg : public rw_device
             return;
         }
 
-        mem.write(addr, data, d);
+        m_mem.write(addr, data, d);
     }
 
     void loop()

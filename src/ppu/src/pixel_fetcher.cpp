@@ -71,65 +71,9 @@ pixel_fetcher::pixel_fetcher(rw_device &rw_device) : m_rw{rw_device}
     update_addresses();
 }
 
-std::optional<uint16_t> pixel_fetcher::fetch_tile_line(screen_coordinates sc)
+uint16_t pixel_fetcher::fetch_tile_line(screen_coordinates sc)
 {
-    if (!m_delay)
-    {
-        m_delay = delay_value;
-        if (m_mode == fetching_mode::background)
-            return get_background(sc);
-        else
-            return get_window(sc);
-    }
-    else
-    {
-        --m_delay;
-        return std::nullopt;
-    }
-}
-
-std::optional<uint16_t> pixel_fetcher::fetch_sprite_line(uint8_t sprite_index, uint8_t line)
-{
-    m_delay = delay_value;
-    if (!m_sprite_delay)
-    {
-        uint16_t sprite_begin_addr = 0x8000 + (sprite_index * 16);
-        m_sprite_delay = delay_value;
-        if (g_sprite_height == 8 || (g_sprite_height == 16 && line <= 7))
-            return read_two_bytes(sprite_begin_addr + (line * 2));
-        else
-        {
-            line -= 8;
-            uint16_t addr = sprite_begin_addr + (line * 2);
-            addr |= 1;
-            return read_two_bytes(addr);
-        }
-    }
-    else
-    {
-        --m_sprite_delay;
-        return std::nullopt;
-    }
-}
-
-void pixel_fetcher::set_background_mode()
-{
-    m_sprite_delay = delay_value;
-    if (m_mode != pixel_fetcher::fetching_mode::background)
-    {
-        m_delay = delay_value;
-        m_mode = pixel_fetcher::fetching_mode::background;
-    }
-}
-
-void pixel_fetcher::set_window_mode()
-{
-    m_sprite_delay = delay_value;
-    if (m_mode != pixel_fetcher::fetching_mode::window)
-    {
-        m_delay = delay_value;
-        m_mode = pixel_fetcher::fetching_mode::window;
-    }
+    return get_background(sc);
 }
 
 void pixel_fetcher::update_addresses()

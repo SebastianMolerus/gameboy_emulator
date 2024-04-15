@@ -161,7 +161,6 @@ bool ppu::ppu_impl::draw_pixel_line()
         scroll_x = m_rw_device.read(0xFF43, device::PPU, true);
         scroll_y = m_rw_device.read(0xFF42, device::PPU, true);
         pixel_count_to_discard = scroll_x % 8;
-        m_pixel_fetcher.set_background_mode();
     }
     else
         scroll_x = m_rw_device.read(0xFF43, device::PPU, true) & 0xF8;
@@ -170,7 +169,7 @@ bool ppu::ppu_impl::draw_pixel_line()
 
     if (pixel_fifo.size() <= 8)
     {
-        uint16_t background_line = m_pixel_fetcher.fetch_tile_line(sc).value();
+        uint16_t background_line = m_pixel_fetcher.fetch_tile_line(sc);
         auto const colors = convert_tile_line_to_color_ids(background_line);
         for (auto c : colors)
             pixel_fifo.push_back(bgw_pixel{c});
